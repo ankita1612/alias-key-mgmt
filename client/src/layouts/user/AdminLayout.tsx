@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
   FiHome,
-  FiUpload,
+  FiList,
   FiKey,
   FiMenu,
   FiMaximize2, // Add this for expand icon
@@ -211,7 +211,7 @@ const AdminLayout = () => {
               ${isActive ? "text-menuActive" : "text-gray-300 hover:text-menuActive"}`
             }
           >
-            <FiKey size={22} className="flex-shrink-0" />
+            <FiList size={22} className="flex-shrink-0" />
             {/* Only show text when expanded */}
             <span
               className={`

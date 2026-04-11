@@ -18,7 +18,9 @@ import {
   Mail,
   Globe,
   Database,
+  FileText,
 } from "lucide-react";
+import { MdClose } from "react-icons/md";
 
 function AliasKeyList() {
   const { user } = useAuth();
@@ -171,7 +173,7 @@ function AliasKeyList() {
             <h2 className="text-xl font-semibold tracking-tight text-gray-800 sm:text-2xl">
               Alias Keys
             </h2>
-            <p className="mt-1 text-xs text-gray-500 sm:text-base">
+            <p className="mt-1 text-base text-gray-500 sm:text-base">
               Manage and monitor alias key usage
             </p>
           </div>
@@ -211,7 +213,7 @@ function AliasKeyList() {
               <div className="overflow-hidden border border-gray-200 shadow-sm rounded-xl">
                 {/* Header Row */}
                 <div
-                  className={`grid ${gridColsClass} bg-gradient-to-r from-gray-50 to-gray-100 text-xs font-semibold text-gray-600  px-4 py-3 border-b border-gray-200`}
+                  className={`grid ${gridColsClass} bg-gradient-to-r from-gray-50 to-gray-100 text-base font-semibold text-gray-600  px-4 py-3 border-b border-gray-200`}
                 >
                   {columns.map((col) => (
                     <div
@@ -221,7 +223,7 @@ function AliasKeyList() {
                     >
                       {col.label}
                       {sortField === col.field && (
-                        <span className="text-xs text-primary">
+                        <span className="text-base text-primary">
                           {sortOrder === "asc" ? "↑" : "↓"}
                         </span>
                       )}
@@ -234,7 +236,7 @@ function AliasKeyList() {
                 {apiData.length === 0 ? (
                   <div className="py-10 text-center text-gray-500">
                     <p className="text-base font-semibold">No data found</p>
-                    <p className="mt-1 text-xs text-gray-400">
+                    <p className="mt-1 text-base text-gray-400">
                       Try adjusting your search or filters
                     </p>
                   </div>
@@ -261,7 +263,7 @@ function AliasKeyList() {
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={page === 1}
-                  className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-base border transition-all duration-200 ${
+                  className={`px-2 sm:px-3 py-1.5 rounded-md text-base sm:text-base border transition-all duration-200 ${
                     page === 1
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                       : "bg-white text-gray-600 hover:bg-gray-50 border-gray-300"
@@ -288,7 +290,7 @@ function AliasKeyList() {
                       <button
                         key={pageNum}
                         onClick={() => setPage(pageNum)}
-                        className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-base border transition-all duration-200 ${
+                        className={`px-2 sm:px-3 py-1.5 rounded-md text-base sm:text-base border transition-all duration-200 ${
                           page === pageNum
                             ? "bg-primary text-white border-primary shadow-sm"
                             : "bg-white text-gray-600 hover:bg-gray-50 border-gray-300"
@@ -302,7 +304,7 @@ function AliasKeyList() {
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={page === Math.ceil(total / limit)}
-                  className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-base border transition-all duration-200 ${
+                  className={`px-2 sm:px-3 py-1.5 rounded-md text-base sm:text-base border transition-all duration-200 ${
                     page === Math.ceil(total / limit)
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                       : "bg-white text-gray-600 hover:bg-gray-50 border-gray-300"
@@ -320,29 +322,30 @@ function AliasKeyList() {
       {showModal && selectedRow && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
           {/* Modal */}
-          <div className="relative w-full max-w-lg transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95">
+          <div className="relative w-full max-w-4xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95">
             {/* Decorative top bar */}
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary to-primaryHover rounded-t-2xl"></div>
 
-            {/* Close Icon */}
+            {/* Close Icon - Improved */}
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-1.5 transition-all duration-200 z-10"
+              className="absolute z-10 flex items-center justify-center w-10 h-10 text-gray-400 transition-all duration-200 bg-white rounded-full shadow-md top-4 right-4 hover:text-gray-600 hover:bg-gray-100 hover:shadow-lg group"
             >
-              <X className="w-4 h-4" />
+              <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>
 
             {/* Header */}
-            <div className="px-6 pt-8 text-center">
-              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full shadow-inner bg-gradient-to-br from-yellow-50 to-yellow-100">
-                <AlertTriangle className="w-8 h-8 text-yellow-600" />
+            <div className="px-6 pt-8 pb-4 text-left bg-gradient-to-b from-white to-gray-50">
+              <div className="flex items-center gap-3">
+                {/* Left Thick Line */}
+                <div className="w-1 h-6 rounded-full bg-primary"></div>
+
+                {/* Title */}
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Review Alias Key Request
+                </h3>
               </div>
 
-              <h3 className="mb-2 text-xl font-bold text-gray-800">
-                Review Alias Key Request
-              </h3>
-
-              <p className="text-base text-gray-500">
+              <p className="pl-4 mt-1 text-base text-gray-500">
                 Please review the details before approving or rejecting this
                 request
               </p>
@@ -350,11 +353,24 @@ function AliasKeyList() {
 
             {/* Key Details Card */}
             <div className="p-4 mx-6 mt-6 border border-gray-100 bg-gray-50 rounded-xl">
-              <h4 className="mb-3 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+              <h4 className="mb-3 text-base font-semibold tracking-wider text-gray-500 uppercase">
                 Request Details
               </h4>
 
               <div className="space-y-3">
+                {selectedRow?.user_id && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-gray-400" />
+                      <span className="text-base text-gray-600">
+                        Requested By
+                      </span>
+                    </div>
+                    <span className="text-base font-medium text-gray-800">
+                      {selectedRow.user_id.first_name || "-"}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Globe className="w-4 h-4 text-gray-400" />
@@ -375,19 +391,15 @@ function AliasKeyList() {
                   </span>
                 </div>
 
-                {selectedRow?.user_id && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-gray-400" />
-                      <span className="text-base text-gray-600">
-                        Requested By
-                      </span>
-                    </div>
-                    <span className="text-base font-medium text-gray-800">
-                      {selectedRow.user_id.email || "-"}
-                    </span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-gray-400" />
+                    <span className="text-base text-gray-600">Purpose</span>
                   </div>
-                )}
+                  <span className="text-base font-medium text-gray-800">
+                    {selectedRow.description || "-"}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -395,7 +407,7 @@ function AliasKeyList() {
             <div className="p-3 mx-6 mt-4 border border-blue-100 rounded-lg bg-blue-50">
               <div className="flex items-start gap-2">
                 <Clock className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-blue-700">
+                <p className="text-base text-blue-700">
                   This action can't be changed.
                 </p>
               </div>
