@@ -76,7 +76,7 @@ function AliasKeyRow({
   const handleGetProxyResponse = async () => {
     try {
       if (apiData.alias_key == "") return;
-      const result = await apiClient.post(
+      const result = await apiClient.get(
         `api/get-proxy-response?alias_key=${apiData.alias_key}`,
       );
 
