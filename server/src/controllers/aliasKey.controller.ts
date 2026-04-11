@@ -1,16 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { userService } from "../services/admin.user.service";
-//import { getIO } from "../utils/socket";
-import IUser, {
-  GetUsersQuery,
-  IUserAliasKey,
-} from "../interface/IAliasKey.interface";
+import IUser, {  IUserAliasKey,} from "../interface/IAliasKey.interface";
 import ApiError from "../utils/api.error";
 import { Types } from "mongoose";
 const msgTitle = "Alias key";
 import { UserType } from "../interface/user.interface";
 
-import { AliasKeyModel } from "../models/aliasKey.model";
+import  AliasKeyModel  from "../models/aliasKey.model";
 //import IUser from "../interface/IUserAliasKey.interface";
 
 const generateAliasKey = () => {
