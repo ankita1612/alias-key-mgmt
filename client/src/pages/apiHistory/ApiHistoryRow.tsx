@@ -30,6 +30,7 @@ function AliasKeyRow({
   const getStatusConfig = (status: string) => {
     switch (status) {
       case "Active":
+      case "Success":
         return {
           bg: "bg-green-50",
           text: "text-green-700",
@@ -43,6 +44,7 @@ function AliasKeyRow({
           dot: "bg-yellow-500",
           border: "border-yellow-200",
         };
+      case "fail":
       case "Rejected":
         return {
           bg: "bg-red-50",
@@ -61,18 +63,7 @@ function AliasKeyRow({
   };
 
   const statusConfig = getStatusConfig(apiData.status);
-  const handleGetProxyResponse = async () => {
-    try {
-      if (apiData.alias_key == "") return;
-      const result = await apiClient.post(
-        `api/get-proxy-response?alias_key=${apiData.alias_key}`,
-      );
 
-      console.log("API Response:", result);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
   // Desktop Table View
   return (
     <div
@@ -111,7 +102,11 @@ function AliasKeyRow({
       {/* Used Quota */}
       <div>
         <div className="flex items-center gap-2 text-base">
-          <span className="text-gray-700">{apiData.status}</span>
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-base font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
+          >
+            {apiData.status || "-"}
+          </span>
         </div>
         {/* Mini progress bar */}
       </div>

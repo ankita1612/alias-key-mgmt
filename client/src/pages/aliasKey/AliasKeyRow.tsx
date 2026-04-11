@@ -120,19 +120,16 @@ function AliasKeyRow({
         {apiData.status === "Pending" && userRole === "Admin" ? (
           <button
             onClick={() => onActionClick(apiData)}
-            className="inline-flex items-center gap-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 hover:text-yellow-800 text-base px-3 py-1.5 rounded-lg transition-all duration-200"
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-base font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
             title="Click here to change status"
           >
-            <Clock className="w-6 h-6" />
+            <Clock className="w-4 h-4" />
             {apiData.status || "-"}
           </button>
         ) : (
           <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-base font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
           >
-            <div
-              className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`}
-            ></div>
             {apiData.status || "-"}
           </span>
         )}

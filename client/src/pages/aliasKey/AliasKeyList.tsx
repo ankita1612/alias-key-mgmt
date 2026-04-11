@@ -160,7 +160,7 @@ function AliasKeyList() {
   };
   const gridColsClass =
     user?.role === "Admin"
-      ? "grid-cols-[40px_1.2fr_1.5fr_2fr_1.5fr_100px_80px_80px_80px_60px]"
+      ? "grid-cols-[40px_1.2fr_1.5fr_2fr_1.5fr_100px_80px_80px_80px_40px]"
       : "grid-cols-[40px_2fr_1.5fr_100px_100px_100px_100px_80px]";
   return (
     <div className="py-4">

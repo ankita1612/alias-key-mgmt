@@ -4,8 +4,8 @@ const routeNameMap: Record<string, string> = {
   admin: "Admin",
   dashboard: "Dashboard",
   "alias-key": "Alias Key",
-  show_imported_data: "Validation rules",
-  validation_result: "Validation Result",
+  "api-history": "API History",
+
   update_profile: "Update Profile",
   change_password: "Change Password",
 };
