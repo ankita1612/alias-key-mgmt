@@ -4,6 +4,7 @@ import { FiArrowDownRight, FiArrowRight, FiEdit2 } from "react-icons/fi"; // Fea
 import { FiTrash2 } from "react-icons/fi";
 import { CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
 import apiClient from "../../services/apiClient";
+import { History } from "lucide-react";
 
 interface AliasKeyRowProps {
   apiData: IAliasKey;
@@ -12,6 +13,7 @@ interface AliasKeyRowProps {
   onActionClick: (data: IAliasKey) => void;
   index: number;
   mobileView?: boolean;
+  gridColsClass: string;
 }
 
 function AliasKeyRow({
@@ -21,6 +23,7 @@ function AliasKeyRow({
   onActionClick,
   index,
   mobileView = false,
+  gridColsClass,
 }: AliasKeyRowProps) {
   const navigate = useNavigate();
 
@@ -73,7 +76,7 @@ function AliasKeyRow({
   const handleGetProxyResponse = async () => {
     try {
       if (apiData.alias_key == "") return;
-      const result = await apiClient.get(
+      const result = await apiClient.post(
         `api/get-proxy-response?alias_key=${apiData.alias_key}`,
       );
 
@@ -85,11 +88,7 @@ function AliasKeyRow({
   // Desktop Table View
   return (
     <div
-      className={`grid ${
-        userRole === "Admin"
-          ? "grid grid-cols-[40px_1.2fr_1.5fr_2fr_1.5fr_100px_100px_100px_100px_100px]"
-          : "grid grid-cols-[40px_2fr_1.5fr_100px_100px_100px_100px_100px]"
-      } bg-gradient-to-r from-gray-50 to-gray-100 text-base font-semibold text-gray-600  px-4 py-3 border-b border-gray-200`}
+      className={`grid ${gridColsClass}  text-base font-semibold text-gray-600  px-4 py-3 border-b border-gray-200`}
     >
       {/* Index */}
       <div className="font-medium text-gray-400">{index + 1}</div>
@@ -147,27 +146,21 @@ function AliasKeyRow({
       {/* Used Quota */}
       <div>
         <div className="flex items-center gap-2 text-base">
-          <span className="text-gray-700">
-            {apiData.remaining_quota || "-"}
-          </span>
-          {apiData.total_quota && apiData.remaining_quota && (
+          <span className="text-gray-700">{apiData.used_quota || "-"}</span>
+          {apiData.total_quota && apiData.used_quota && (
             <span className="text-base text-gray-400">
-              (
-              {Math.round(
-                (apiData.remaining_quota / apiData.total_quota) * 100,
-              )}
-              %)
+              ({Math.round((apiData.used_quota / apiData.total_quota) * 100)}%)
             </span>
           )}
         </div>
         {/* Mini progress bar */}
-        {apiData.total_quota && apiData.remaining_quota && (
+        {apiData.total_quota && apiData.used_quota && (
           <div className="w-16 h-1 mt-1 overflow-hidden text-base bg-gray-200 rounded-full">
             <div
               className="h-1 transition-all duration-300 rounded-full bg-primary"
               style={{
                 width: `${Math.min(
-                  (apiData.remaining_quota / apiData.total_quota) * 100,
+                  (apiData.used_quota / apiData.total_quota) * 100,
                   100,
                 )}%`,
               }}
@@ -188,38 +181,60 @@ function AliasKeyRow({
       </div>
 
       {/* Actions */}
-      <div className="flex justify-center gap-2">
+      <div className="flex items-center gap-0.5 p-0.5">
         {userRole === "User" ? (
           <>
             <button
               onClick={handleEdit}
-              className="inline-flex items-center gap-1 bg-primary/10 hover:bg-primary text-primary hover:text-white text-base px-3 py-1.5 rounded-lg transition-all duration-200"
+              className="p-1.5 text-blue-600 hover:text-white hover:bg-blue-500 rounded-md transition-all duration-200 group relative"
               title="Edit"
             >
-              <FiEdit2 className="w-3.5 h-3.5" />
+              <FiEdit2 className="w-4 h-4" />
+              <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+                Edit
+              </span>
             </button>
-            {apiData.status == "Pending" && (
+
+            {apiData.status === "Pending" && (
               <button
                 onClick={confirmDelete}
-                className="inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 text-base px-3 py-1.5 rounded-lg transition-all duration-200"
+                className="p-1.5 text-red-600 hover:text-white hover:bg-red-500 rounded-md transition-all duration-200 group relative"
                 title="Delete"
               >
-                <FiTrash2 className="w-3.5 h-3.5" />
+                <FiTrash2 className="w-4 h-4" />
+                <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+                  Delete
+                </span>
               </button>
             )}
 
-            {apiData.status == "Active" && (
+            {apiData.status === "Active" && (
               <button
                 type="button"
                 onClick={handleGetProxyResponse}
-                className="inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 text-base px-3 py-1.5 rounded-lg transition-all duration-200"
+                className="p-1.5 text-green-600 hover:text-white hover:bg-green-500 rounded-md transition-all duration-200 group relative"
+                title="Test Proxy"
               >
-                <FiArrowRight></FiArrowRight>
+                <FiArrowRight className="w-4 h-4" />
+                <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+                  Test Proxy
+                </span>
               </button>
             )}
           </>
-        ) : (
-          <></>
+        ) : null}
+
+        {apiData.status === "Active" && (
+          <button
+            onClick={() => navigate(`/api-history/${apiData._id}`)}
+            className="p-1.5 text-purple-600 hover:text-white hover:bg-purple-500 rounded-md transition-all duration-200 group relative"
+            title="View Requests"
+          >
+            <History className="w-4 h-4" />
+            <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+              History
+            </span>
+          </button>
         )}
       </div>
     </div>

@@ -9,7 +9,7 @@ import PageNotFound from "../pages/PageNotFound";
 import ChangePassword from "../pages/ChangePassword";
 import AliasKeyList from "../pages/aliasKey/AliasKeyList";
 import AliasKeyAdd from "../pages/aliasKey/AliasKeyAdd";
-import ApiHistory from "../pages/ApiHistory";
+import ApiHistory from "../pages/apiHistory/ApiHistory";
 
 const AppRoutes = () => {
   return (
@@ -39,7 +39,7 @@ const AppRoutes = () => {
         <Route path="alias-key/add" element={<AliasKeyAdd />} />
         <Route path="alias-key/add/:id?" element={<AliasKeyAdd />} />
 
-        <Route path="api-history" element={<ApiHistory />} />
+        <Route path="api-history/:aliasKeyId?" element={<ApiHistory />} />
 
         <Route path="*" element={<PageNotFound />} />
       </Route>

@@ -199,7 +199,7 @@ const AdminLayout = () => {
                 ${showExpanded ? "inline-block opacity-100" : "hidden"}
               `}
             >
-              Alias Key Request
+              Alias Key
             </span>
           </NavLink>
           <NavLink

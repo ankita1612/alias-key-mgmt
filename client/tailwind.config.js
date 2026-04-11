@@ -11,6 +11,7 @@ export default {
         secondary: "#3B82F6", //secondary text color
         secondaryHover: "#2563EB",
       },
+       fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
     },
   },
   plugins: [],

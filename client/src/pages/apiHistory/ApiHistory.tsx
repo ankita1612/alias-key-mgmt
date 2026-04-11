@@ -1,0 +1,534 @@
+import { Key, Calendar, Send, Copy, Activity } from "lucide-react";
+import { useParams } from "react-router-dom";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Link, useLocation } from "react-router-dom";
+import type { IAliasKey } from "../../interface/aliasKey.interface";
+import ApiHistoryRow from "./ApiHistoryRow";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+import { useAuth } from "../../context/AuthContext";
+import toast from "react-hot-toast";
+import apiClient from "../../services/apiClient";
+
+import { FiSearch } from "react-icons/fi";
+import { X, CheckCircle, Clock } from "lucide-react";
+
+function AliasKeyList() {
+  const { aliasKeyId } = useParams();
+  const { user } = useAuth();
+  const [apiData, setApiData] = useState<IAliasKey[]>([]);
+  const [loading, setLoading] = useState(false);
+  const location = useLocation();
+  const [page, setPage] = useState(1);
+  const [limit] = useState(5);
+  const [total, setTotal] = useState(0);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState("_id");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [selectedRow, setSelectedRow] = useState<IAliasKey | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [mobileView, setMobileView] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [aliasKeys, setAliasKeys] = useState([]);
+
+  const [selectedUser, setSelectedUser] = useState("");
+  const [selectedAliasKey, setSelectedAliasKey] = useState("");
+
+  // Check screen size for mobile view
+
+  const handleActionClick = (row: IAliasKey) => {
+    setSelectedRow(row);
+    setShowModal(true);
+  };
+
+  const fetchData = useCallback(async () => {
+    const controller = new AbortController();
+    setLoading(true);
+    try {
+      const { data } = await apiClient.get(BACKEND_URL + "/api/api-hisory", {
+        signal: controller.signal,
+        params: {
+          page,
+          limit,
+          search,
+          sortField,
+          sortOrder,
+          user: selectedUser,
+          alias_key: selectedAliasKey,
+        },
+      });
+      setApiData(data.data);
+      setTotal(data.pagination.total);
+      setUsers(data.usersList || []);
+      setAliasKeys(data.aliasKeysList || []);
+    } catch (error: any) {
+      if (error.name !== "CanceledError") {
+        toast.error(
+          error?.response?.data?.message ||
+            error?.message ||
+            "Failed to load data",
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+    return () => controller.abort();
+  }, [
+    page,
+    limit,
+    search,
+    sortField,
+    sortOrder,
+    selectedUser,
+    selectedAliasKey,
+  ]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+  useEffect(() => {
+    if (aliasKeyId && aliasKeys.length > 0) {
+      setSelectedAliasKey(aliasKeyId);
+    }
+  }, [aliasKeyId, aliasKeys]);
+  const handleDelete = async (id: string) => {
+    const previousData = apiData;
+    setApiData((prev) => prev.filter((p) => p._id !== id));
+    try {
+      const res = await apiClient.delete(`${BACKEND_URL}/api/alias-key/${id}`);
+      toast.success(res.data.message);
+    } catch (error: any) {
+      setApiData(previousData);
+      toast.error(error.response?.data?.message || "Delete failed");
+    }
+  };
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  };
+
+  useEffect(() => {
+    if (searchRef.current) {
+      searchRef.current.focus();
+    }
+  }, [apiData]);
+
+  const isAdmin = user?.role === "Admin";
+
+  const columns = [
+    { label: "#", field: "_id" },
+    ...(isAdmin
+      ? [
+          { label: "User", field: "user_id.first_name" },
+          { label: "Email", field: "user_id.email" },
+        ]
+      : []),
+    { label: "Key", field: "user_alias_key_id.alias_key" },
+    { label: "Request", field: "request_info" },
+
+    { label: "Time", field: "execution_time" },
+    { label: "Status", field: "status" },
+    { label: "Created", field: "createdAt" },
+  ];
+
+  // Responsive grid columns based on screen size and admin status
+
+  const gridColsClass =
+    user?.role === "Admin"
+      ? "grid-cols-[40px_1.2fr_1.5fr_2fr_100px_100px_80px_80px_80px]"
+      : "grid-cols-[40px_2fr_100px_100px_100px_100px_80px]";
+  return (
+    <div className="py-4">
+      <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl sm:p-5">
+        {/* Header - Responsive */}
+        <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight text-gray-800 sm:text-2xl">
+              API History
+            </h2>
+            <p className="mt-1 text-xs text-gray-500 sm:text-base">
+              API history
+            </p>
+          </div>
+        </div>
+
+        {/* Loading */}
+        {loading ? (
+          <div className="flex justify-center py-10">
+            <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-col gap-2 mb-5 sm:flex-row sm:items-center sm:gap-3">
+              <select
+                value={selectedUser}
+                onChange={(e) => setSelectedUser(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2.5 text-base shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
+              >
+                <option value="">All Users</option>
+                {users.map((u) => (
+                  <option key={u._id} value={u._id}>
+                    {u.first_name}
+                  </option>
+                ))}
+              </select>
+              {/* Alias Key Dropdown */}
+              <select
+                value={selectedAliasKey}
+                onChange={(e) => setSelectedAliasKey(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2.5 text-base shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
+              >
+                <option value="">All Keys</option>
+                {aliasKeys.map((k) => (
+                  <option key={k._id} value={k._id}>
+                    {k.alias_key}
+                  </option>
+                ))}
+              </select>
+              {/* Search - Responsive */}
+              <div className="relative w-full sm:w-80">
+                <input
+                  ref={searchRef}
+                  type="text"
+                  placeholder="Search alias keys..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2.5 text-base shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all duration-200"
+                />
+                <FiSearch className="absolute w-4 h-4 text-gray-400 left-3 top-3" />
+              </div>
+            </div>
+            {/* Table - Responsive with Card View on Mobile */}
+            <div className="overflow-x-auto border border-gray-200 shadow-sm rounded-xl">
+              <div className="overflow-hidden border border-gray-200 shadow-sm rounded-xl">
+                {/* Header Row */}
+                <div
+                  className={`grid ${gridColsClass} bg-gradient-to-r from-gray-50 to-gray-100 text-xs font-semibold text-gray-600  px-4 py-3 border-b border-gray-200`}
+                >
+                  {columns.map((col) => (
+                    <div
+                      key={col.field}
+                      onClick={() => handleSort(col.field)}
+                      className="flex items-center gap-1 text-base transition-colors duration-200 cursor-pointer hover:text-primary"
+                    >
+                      {col.label}
+                      {sortField === col.field && (
+                        <span className="text-xs text-primary">
+                          {sortOrder === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                  <div className="text-base text-center">Actions</div>
+                </div>
+
+                {/* Rows */}
+                {apiData.length === 0 ? (
+                  <div className="py-10 text-center text-gray-500">
+                    <p className="text-base font-semibold">No data found</p>
+                    <p className="mt-1 text-xs text-gray-400">
+                      Try adjusting your search or filters
+                    </p>
+                  </div>
+                ) : (
+                  apiData.map((item, index) => (
+                    <ApiHistoryRow
+                      key={item._id}
+                      index={index}
+                      apiData={item}
+                      handleDelete={handleDelete}
+                      userRole={user?.role}
+                      onActionClick={handleActionClick}
+                      mobileView={false}
+                      gridColsClass={gridColsClass}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+            {/* Pagination - Responsive */}
+            {total > limit && (
+              <div className="flex flex-wrap justify-center gap-1 mt-6 sm:gap-2">
+                <button
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                  className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-base border transition-all duration-200 ${
+                    page === 1
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-gray-600 hover:bg-gray-50 border-gray-300"
+                  }`}
+                >
+                  Previous
+                </button>
+                {Array.from(
+                  { length: Math.min(5, Math.ceil(total / limit)) },
+                  (_, i) => {
+                    // Show limited pages on mobile
+                    let pageNum;
+                    if (Math.ceil(total / limit) <= 5) {
+                      pageNum = i + 1;
+                    } else if (page <= 3) {
+                      pageNum = i + 1;
+                    } else if (page >= Math.ceil(total / limit) - 2) {
+                      pageNum = Math.ceil(total / limit) - 4 + i;
+                    } else {
+                      pageNum = page - 2 + i;
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setPage(pageNum)}
+                        className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-base border transition-all duration-200 ${
+                          page === pageNum
+                            ? "bg-primary text-white border-primary shadow-sm"
+                            : "bg-white text-gray-600 hover:bg-gray-50 border-gray-300"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  },
+                )}
+                <button
+                  onClick={() => setPage(page + 1)}
+                  disabled={page === Math.ceil(total / limit)}
+                  className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-base border transition-all duration-200 ${
+                    page === Math.ceil(total / limit)
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-gray-600 hover:bg-gray-50 border-gray-300"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Modal - Responsive */}
+      {showModal && selectedRow && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
+          {/* Modal */}
+          <div className="relative w-full max-w-4xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95">
+            {/* Decorative top bar */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-t-2xl"></div>
+
+            {/* Close Icon */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-1.5 transition-all duration-200 z-10"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Header */}
+            <div className="px-6 pt-8 pb-4 text-center bg-gradient-to-b from-white to-gray-50">
+              <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full shadow-lg bg-gradient-to-br from-blue-500 to-purple-600">
+                <Key className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900">
+                API Request Details
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Complete information about this API call
+              </p>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
+              {/* Alias Key Card */}
+              <div className="mb-6 overflow-hidden border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
+                <div className="px-4 py-3 border-b border-blue-100 bg-blue-100/50">
+                  <div className="flex items-center gap-2">
+                    <Key className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-semibold tracking-wide text-blue-900 uppercase">
+                      Alias Key
+                    </span>
+                  </div>
+                </div>
+                <div className="px-4 py-3">
+                  <p className="font-mono text-base font-medium text-gray-900 break-all">
+                    {selectedRow?.user_alias_key_id?.alias_key}
+                  </p>
+                </div>
+              </div>
+
+              {/* Two Column Grid for Metadata */}
+              <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-3">
+                <div className="p-4 border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="w-4 h-4 text-blue-500" />
+                    <span className="text-xs font-semibold text-gray-500 uppercase">
+                      Execution Time
+                    </span>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">
+                    {selectedRow?.execution_time || "-"}
+                  </p>
+                </div>
+
+                <div className="p-4 border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Activity className="w-4 h-4 text-blue-500" />
+                    <span className="text-xs font-semibold text-gray-500 uppercase">
+                      Status
+                    </span>
+                  </div>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
+                      selectedRow?.status === "Success"
+                        ? "bg-green-100 text-green-700"
+                        : selectedRow?.status === "Failed"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-yellow-100 text-yellow-700"
+                    }`}
+                  >
+                    <div
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        selectedRow?.status === "Success"
+                          ? "bg-green-500"
+                          : selectedRow?.status === "Failed"
+                            ? "bg-red-500"
+                            : "bg-yellow-500"
+                      }`}
+                    ></div>
+                    {selectedRow?.status || "-"}
+                  </span>
+                </div>
+
+                <div className="p-4 border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar className="w-4 h-4 text-blue-500" />
+                    <span className="text-xs font-semibold text-gray-500 uppercase">
+                      Created On
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {new Date(selectedRow?.createdAt || "").toLocaleString(
+                      "en-US",
+                      {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      },
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Request Info Section */}
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="p-1.5 rounded-lg bg-blue-100">
+                    <Send className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <h4 className="text-base font-semibold text-gray-900">
+                    Request Information
+                  </h4>
+                  <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+                    {Object.keys(selectedRow?.request_info || {}).length} fields
+                  </span>
+                </div>
+                <div className="overflow-hidden bg-gray-900 border border-gray-800 shadow-lg rounded-xl">
+                  <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
+                    <span className="font-mono text-xs text-gray-400">
+                      JSON
+                    </span>
+                    <button
+                      onClick={() =>
+                        navigator.clipboard.writeText(
+                          JSON.stringify(selectedRow?.request_info, null, 2),
+                        )
+                      }
+                      className="text-gray-400 transition-colors hover:text-white"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <pre className="p-4 overflow-auto font-mono text-xs text-gray-300 max-h-48 scrollbar-thin">
+                    {JSON.stringify(selectedRow?.request_info, null, 2)}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Response Section */}
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="p-1.5 rounded-lg bg-green-100">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                  </div>
+                  <h4 className="text-base font-semibold text-gray-900">
+                    Response Data
+                  </h4>
+                  <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+                    API Response
+                  </span>
+                </div>
+                <div className="overflow-hidden bg-gray-900 border border-gray-800 shadow-lg rounded-xl">
+                  <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
+                    <span className="font-mono text-xs text-gray-400">
+                      JSON
+                    </span>
+                    <button
+                      onClick={() =>
+                        navigator.clipboard.writeText(
+                          JSON.stringify(selectedRow?.response, null, 2),
+                        )
+                      }
+                      className="text-gray-400 transition-colors hover:text-white"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <pre className="p-4 overflow-auto font-mono text-xs text-gray-300 max-h-48 scrollbar-thin">
+                    {JSON.stringify(selectedRow?.response, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 px-4 py-2.5 text-base font-medium bg-white text-gray-700 rounded-xl border border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    const data = {
+                      alias_key: selectedRow?.user_alias_key_id?.alias_key,
+                      request_info: selectedRow?.request_info,
+                      response: selectedRow?.response,
+                      execution_time: selectedRow?.execution_time,
+                      status: selectedRow?.status,
+                      created_at: selectedRow?.createdAt,
+                    };
+                    navigator.clipboard.writeText(
+                      JSON.stringify(data, null, 2),
+                    );
+                    toast.success("Copied to clipboard");
+                  }}
+                  className="flex-1 px-4 py-2.5 text-base font-medium bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                >
+                  <Copy className="w-4 h-4" />
+                  Copy All Details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default AliasKeyList;

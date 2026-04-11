@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import apiClient from "../../services/apiClient";
 import { FiPlus } from "react-icons/fi";
 import { FiSearch } from "react-icons/fi";
+import { FiAlertTriangle } from "react-icons/fi";
 import {
   AlertTriangle,
   X,
@@ -139,15 +140,15 @@ function AliasKeyList() {
     { label: "#", field: "_id" },
     ...(isAdmin
       ? [
-          { label: "User Name", field: "user_id.first_name" },
+          { label: "User", field: "user_id.first_name" },
           { label: "Email", field: "user_id.email" },
         ]
       : []),
-    { label: "Alias Key", field: "alias_key" },
+    { label: "Key", field: "alias_key" },
     { label: "Domain", field: "domain" },
     { label: "Status", field: "status" },
-    { label: "Total Quota", field: "total_quota" },
-    { label: "Used Quota", field: "remaining_quota" },
+    { label: "# Quota", field: "total_quota" },
+    { label: "# Avaiable", field: "used_quota" },
     { label: "Created", field: "createdAt" },
   ];
 
@@ -157,9 +158,12 @@ function AliasKeyList() {
     const baseCols = isAdmin ? 10 : 8;
     return `grid-cols-${baseCols}`;
   };
-
+  const gridColsClass =
+    user?.role === "Admin"
+      ? "grid-cols-[40px_1.2fr_1.5fr_2fr_1.5fr_100px_80px_80px_80px_60px]"
+      : "grid-cols-[40px_2fr_1.5fr_100px_100px_100px_100px_80px]";
   return (
-    <div className="py-4 bg-gray-50">
+    <div className="py-4">
       <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl sm:p-5">
         {/* Header - Responsive */}
         <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
@@ -207,11 +211,7 @@ function AliasKeyList() {
               <div className="overflow-hidden border border-gray-200 shadow-sm rounded-xl">
                 {/* Header Row */}
                 <div
-                  className={`grid ${
-                    user?.role === "Admin"
-                      ? "grid grid-cols-[40px_1.2fr_1.5fr_2fr_1.5fr_100px_100px_100px_100px_100px]"
-                      : "grid grid-cols-[40px_2fr_1.5fr_100px_100px_100px_100px_100px]"
-                  } bg-gradient-to-r from-gray-50 to-gray-100 text-xs font-semibold text-gray-600  px-4 py-3 border-b border-gray-200`}
+                  className={`grid ${gridColsClass} bg-gradient-to-r from-gray-50 to-gray-100 text-xs font-semibold text-gray-600  px-4 py-3 border-b border-gray-200`}
                 >
                   {columns.map((col) => (
                     <div
@@ -248,6 +248,7 @@ function AliasKeyList() {
                       userRole={user?.role}
                       onActionClick={handleActionClick}
                       mobileView={false}
+                      gridColsClass={gridColsClass}
                     />
                   ))
                 )}
@@ -395,7 +396,7 @@ function AliasKeyList() {
               <div className="flex items-start gap-2">
                 <Clock className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-blue-700">
-                  This action can be changed later from the alias key settings.
+                  This action can't be changed.
                 </p>
               </div>
             </div>

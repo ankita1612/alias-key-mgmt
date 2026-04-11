@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import ApiError from "../utils/api.error";
 import  ApiHistoryModel from "../models/apiHistory.model";
-
+import  User from "../models/user.model";
+import  AliasKeyModel from "../models/aliasKey.model";
 class ApiHistoryController {
 
    getApiHistory = async (
@@ -18,7 +19,8 @@ class ApiHistoryController {
       const search = (req.query.search as string) || "";
       const sortBy = (req.query.sortBy as string) || "createdAt";
       const order = (req.query.order as string) === "asc" ? 1 : -1;
-
+      const userFilter = req.query.user as string;
+      const aliasKeyFilter = req.query.alias_key as string;
       const skip = (page - 1) * limit;
 
       // ✅ Base filter
@@ -28,7 +30,12 @@ class ApiHistoryController {
       if (user.role !== "Admin") {
         filter.user_id = user._id;
       }
-
+        if (userFilter) {
+          filter.user_id = userFilter;
+        }
+        if (aliasKeyFilter) {
+          filter.user_alias_key_id = aliasKeyFilter;
+        }
       // 🔍 Search filter
       if (search) {
         filter.$or = [
@@ -51,6 +58,18 @@ class ApiHistoryController {
         ApiHistoryModel.countDocuments(filter),
       ]);
 
+      const [users, aliasKeys] = await Promise.all([
+      
+      
+      User.find({ role: "User" })
+        .select("_id first_name ")
+        .lean(),
+
+      
+      AliasKeyModel.find({ status: "Active" })
+        .select("_id alias_key")
+        .lean(),
+    ]);
       res.status(200).json({
         success: true,
         data,
@@ -60,6 +79,8 @@ class ApiHistoryController {
           limit,
           totalPages: Math.ceil(total / limit),
         },
+        usersList:users, 
+        aliasKeysList:aliasKeys
       });
     } catch (error) {
       next(error);

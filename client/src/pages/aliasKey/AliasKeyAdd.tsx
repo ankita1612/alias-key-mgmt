@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
+import { Key } from "lucide-react";
+
 import toast from "react-hot-toast";
 import apiClient from "../../services/apiClient";
 import { useForm } from "react-hook-form";
@@ -114,36 +116,24 @@ function AliasKeyAdd() {
   const totalQuotaValue = watch("total_quota");
 
   return (
-    <div className=" bg-gradient-to-br from-gray-50 to-gray-100 flex justify-center items-center px-4 py-8 sm:py-12">
-      <div className="w-full  mx-auto">
+    <div className="py-4">
+      <div>
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="overflow-hidden bg-white border border-gray-200 shadow-xl rounded-2xl ">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary to-primaryHover px-6 sm:px-8 py-6">
+          <div className="px-2 py-3 border border-gray-200 sm:px-8 ">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg
-                  className="w-5 h-5 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                  />
-                </svg>
+              <div className="flex items-center justify-center w-10 h-10 ">
+                <Key className="w-5 h-5" />
               </div>
               <div>
                 <h2
                   ref={topRef}
-                  className="text-xl sm:text-2xl font-bold text-white"
+                  className="text-xl font-semibold tracking-tight text-gray-800 sm:text-2xl"
                 >
-                  {mode === "add" ? "Create Alias Key" : "Edit Alias Key"}
+                  {mode === "add" ? "Add Alias Key" : "Edit Alias Key"}
                 </h2>
-                <p className="text-white/80 text-base mt-1">
+                <p className="mt-1 text-base">
                   {mode === "add"
                     ? "Add a new alias key to your collection"
                     : "Update your alias key information"}
@@ -161,11 +151,11 @@ function AliasKeyAdd() {
             >
               {/* Domain Field */}
               <div>
-                <label className="block text-base font-semibold text-gray-700 mb-2">
+                <label className="block mb-2 text-base font-semibold text-gray-700">
                   Domain <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"></div>
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
                   <input
                     autoFocus
                     type="text"
@@ -182,7 +172,7 @@ function AliasKeyAdd() {
 
               {/* Total Quota Field */}
               <div>
-                <label className="block text-base font-semibold text-gray-700 mb-2">
+                <label className="block mb-2 text-base font-semibold text-gray-700">
                   Total Quota <span className="text-red-500">*</span>
                 </label>
                 <div>
@@ -211,11 +201,11 @@ function AliasKeyAdd() {
 
               {/* Description Field */}
               <div>
-                <label className="block text-base font-semibold text-gray-700 mb-2">
+                <label className="block mb-2 text-base font-semibold text-gray-700">
                   Purpose / Description
                 </label>
                 <div className="relative">
-                  <div className="absolute top-3 left-3 pointer-events-none"></div>
+                  <div className="absolute pointer-events-none top-3 left-3"></div>
                   <textarea
                     rows={4}
                     placeholder="Describe the purpose of this alias key..."
@@ -231,7 +221,7 @@ function AliasKeyAdd() {
 
               {/* Info Box for Edit Mode */}
               {mode === "edit" && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
                   <div className="flex items-start gap-3">
                     <svg
                       className="w-5 h-5 text-blue-600 mt-0.5"
@@ -250,7 +240,7 @@ function AliasKeyAdd() {
                       <h4 className="text-base font-semibold text-blue-800">
                         Editing Mode
                       </h4>
-                      <p className="text-xs text-blue-600 mt-1">
+                      <p className="mt-1 text-xs text-blue-600">
                         You are editing an existing alias key. Note that total
                         quota can not be modified.
                       </p>
@@ -260,7 +250,7 @@ function AliasKeyAdd() {
               )}
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 justify-center pt-6">
+              <div className="flex flex-col justify-center gap-3 pt-6 sm:flex-row">
                 <button
                   type="submit"
                   disabled={loading}
@@ -290,9 +280,7 @@ function AliasKeyAdd() {
                       Saving...
                     </>
                   ) : (
-                    <>
-                      {mode === "add" ? "Create Alias Key" : "Update Changes"}
-                    </>
+                    <>{mode === "add" ? "Add Alias Key" : "Update Changes"}</>
                   )}
                 </button>
 
@@ -309,7 +297,7 @@ function AliasKeyAdd() {
         </div>
 
         {/* Help Text */}
-        <div className="text-center mt-6">
+        <div className="mt-6 text-center">
           <p className="text-xs text-gray-400">
             Fields marked with <span className="text-red-500">*</span> are
             required
