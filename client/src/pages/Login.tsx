@@ -1,0 +1,207 @@
+import { useForm } from "react-hook-form";
+import { useEffect } from "react";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import { useNavigate } from "react-router-dom";
+import type { loginInterface } from "../interface/login.interface";
+import { useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
+import apiClient from "../services/apiClient";
+
+interface LoginFormData {
+  email: string;
+  password: string;
+}
+
+const schema = yup.object({
+  email: yup
+    .string()
+    .email("Invalid email address") // replaces your regex
+    .required("Email is required"),
+  password: yup
+    .string()
+    .min(6, "Password must be at least 6 characters")
+    .required("Password is required"),
+});
+const Login = () => {
+  const { setUserData } = useAuth();
+  const navigate = useNavigate();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: yupResolver(schema),
+  });
+
+  const onSubmit = async (data: loginInterface) => {
+    try {
+      const userData = {
+        email: data.email,
+        password: data.password,
+      };
+
+      const result = await apiClient.post("/api/auth/login", userData);
+      const apiUser = result.data.data.user;
+      setUserData(apiUser);
+      toast.success("Logged in successfully!"); // ✅ success toast
+
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Login failed"); // ✅ error toast
+    }
+  };
+  useEffect(() => {
+    if (errors) {
+      const firstError = Object.values(errors)[0];
+      if (firstError?.message) {
+        toast.error(firstError.message as string);
+      }
+    }
+  }, [errors]);
+  const label_style = "block text-base font-medium text-gray-700 mb-1.5";
+  const textbox_style =
+    "w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all duration-200";
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
+      {/* Card */}
+      <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl border border-gray-100">
+        {/* Title Section */}
+        <div className="mb-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 mb-4 bg-primary/10 rounded-full">
+            <svg
+              className="w-8 h-8 text-primary"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+              />
+            </svg>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
+          <p className="mt-2 text-base text-gray-600">
+            Please sign in to your account
+          </p>
+        </div>
+
+        {/* Form */}
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-5"
+          noValidate
+        >
+          {/* Email Field */}
+          <div>
+            <label htmlFor="email" className={label_style}>
+              Email Address
+            </label>
+            <input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              autoComplete="email"
+              className={`${textbox_style} ${
+                errors.email
+                  ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+                  : ""
+              }`}
+              {...register("email")}
+            />
+          </div>
+
+          {/* Password Field */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="password" className={label_style}>
+                Password
+              </label>
+              {/* <button
+                type="button"
+                className="text-base text-primary hover:text-primaryHover transition-colors duration-200"
+              >
+                Forgot password?
+              </button> */}
+            </div>
+            <input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              autoComplete="current-password"
+              className={`${textbox_style} ${
+                errors.password
+                  ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+                  : ""
+              }`}
+              {...register("password")}
+            />
+          </div>
+
+          {/* Remember Me */}
+          {/* <div className="flex items-center justify-between">
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary focus:ring-2"
+                {...register("rememberMe")}
+              />
+              <span className="text-base text-gray-700">Remember me</span>
+            </label>
+          </div> */}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="relative w-full py-2.5 px-4 bg-primary hover:bg-primaryHover text-white font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          >
+            {isSubmitting ? (
+              <div className="flex items-center justify-center space-x-2">
+                <svg
+                  className="w-5 h-5 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                <span>Signing in...</span>
+              </div>
+            ) : (
+              "Sign In"
+            )}
+          </button>
+
+          {/* Sign Up Link */}
+          {/* <p className="text-center text-base text-gray-600">
+            Don't have an account?{" "}
+            <button
+              type="button"
+              className="text-primary hover:text-primaryHover font-medium transition-colors duration-200"
+            >
+              Create account
+            </button>
+          </p> */}
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default Login;
