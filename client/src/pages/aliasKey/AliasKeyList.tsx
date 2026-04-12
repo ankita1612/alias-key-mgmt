@@ -1,4 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  FiChevronLeft,
+  FiChevronRight,
+  FiChevronsLeft,
+  FiChevronsRight,
+  FiSearch,
+  FiPlus,
+} from "react-icons/fi";
+
 import { Link, useLocation } from "react-router-dom";
 import type { IAliasKey } from "../../interface/aliasKey.interface";
 import AliasKeyRow from "./AliasKeyRow";
@@ -6,9 +15,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import apiClient from "../../services/apiClient";
-import { FiPlus } from "react-icons/fi";
-import { FiSearch } from "react-icons/fi";
-import { FiAlertTriangle } from "react-icons/fi";
+
 import {
   AlertTriangle,
   X,
@@ -28,7 +35,7 @@ function AliasKeyList() {
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const [page, setPage] = useState(1);
-  const [limit] = useState(5);
+  const [limit] = useState(10);
   const [total, setTotal] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
@@ -150,7 +157,7 @@ function AliasKeyList() {
     { label: "Domain", field: "domain" },
     { label: "Status", field: "status" },
     { label: "# Quota", field: "total_quota" },
-    { label: "# Avaiable", field: "used_quota" },
+    { label: "# Avaiable", field: "remaining_quota" },
     { label: "Created", field: "createdAt" },
   ];
 
@@ -207,7 +214,6 @@ function AliasKeyList() {
               />
               <FiSearch className="absolute w-4 h-4 text-gray-400 left-3 top-3" />
             </div>
-
             {/* Table - Responsive with Card View on Mobile */}
             <div className="overflow-x-auto border border-gray-200 shadow-sm rounded-xl">
               <div className="overflow-hidden border border-gray-200 shadow-sm rounded-xl">
@@ -257,61 +263,100 @@ function AliasKeyList() {
               </div>
             </div>
 
-            {/* Pagination - Responsive */}
             {total > limit && (
-              <div className="flex flex-wrap justify-center gap-1 mt-6 sm:gap-2">
-                <button
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
-                  className={`px-2 sm:px-3 py-1.5 rounded-md text-base sm:text-base border transition-all duration-200 ${
-                    page === 1
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-white text-gray-600 hover:bg-gray-50 border-gray-300"
-                  }`}
-                >
-                  Previous
-                </button>
-                {Array.from(
-                  { length: Math.min(5, Math.ceil(total / limit)) },
-                  (_, i) => {
-                    // Show limited pages on mobile
-                    let pageNum;
-                    if (Math.ceil(total / limit) <= 5) {
-                      pageNum = i + 1;
-                    } else if (page <= 3) {
-                      pageNum = i + 1;
-                    } else if (page >= Math.ceil(total / limit) - 2) {
-                      pageNum = Math.ceil(total / limit) - 4 + i;
-                    } else {
-                      pageNum = page - 2 + i;
-                    }
+              <div className="flex flex-col items-center justify-between gap-4 mt-8 sm:flex-row">
+                {/* Page info */}
+                <div className="text-sm text-gray-600">
+                  Showing{" "}
+                  <span className="font-semibold text-gray-900">
+                    {Math.min((page - 1) * limit + 1, total)}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-semibold text-gray-900">
+                    {Math.min(page * limit, total)}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-semibold text-gray-900">{total}</span>{" "}
+                  entries
+                </div>
 
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setPage(pageNum)}
-                        className={`px-2 sm:px-3 py-1.5 rounded-md text-base sm:text-base border transition-all duration-200 ${
-                          page === pageNum
-                            ? "bg-primary text-white border-primary shadow-sm"
-                            : "bg-white text-gray-600 hover:bg-gray-50 border-gray-300"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  },
-                )}
-                <button
-                  onClick={() => setPage(page + 1)}
-                  disabled={page === Math.ceil(total / limit)}
-                  className={`px-2 sm:px-3 py-1.5 rounded-md text-base sm:text-base border transition-all duration-200 ${
-                    page === Math.ceil(total / limit)
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-white text-gray-600 hover:bg-gray-50 border-gray-300"
-                  }`}
-                >
-                  Next
-                </button>
+                {/* Pagination controls */}
+                <div className="flex items-center gap-1">
+                  {/* First Page */}
+                  <button
+                    onClick={() => setPage(1)}
+                    disabled={page === 1}
+                    className="items-center justify-center hidden text-gray-600 transition-all duration-200 bg-white border border-gray-300 rounded-lg md:flex w-9 h-9 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    title="First page"
+                  >
+                    <FiChevronsLeft className="w-4 h-4" />
+                  </button>
+
+                  {/* Previous */}
+                  <button
+                    onClick={() => setPage(page - 1)}
+                    disabled={page === 1}
+                    className="flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    <FiChevronLeft className="w-4 h-4" />
+                    <span className="hidden sm:inline">Previous</span>
+                  </button>
+
+                  {/* Page Numbers */}
+                  <div className="flex gap-1">
+                    {Array.from(
+                      { length: Math.min(5, Math.ceil(total / limit)) },
+                      (_, i) => {
+                        let pageNum;
+                        const totalPages = Math.ceil(total / limit);
+
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (page <= 3) {
+                          pageNum = i + 1;
+                        } else if (page >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = page - 2 + i;
+                        }
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setPage(pageNum)}
+                            className={`relative min-w-[36px] h-9 px-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                              page === pageNum
+                                ? "bg-gradient-to-r from-primary to-primaryHover text-white shadow-md scale-105"
+                                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      },
+                    )}
+                  </div>
+
+                  {/* Next */}
+                  <button
+                    onClick={() => setPage(page + 1)}
+                    disabled={page === Math.ceil(total / limit)}
+                    className="flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    <span className="hidden sm:inline">Next</span>
+                    <FiChevronRight className="w-4 h-4" />
+                  </button>
+
+                  {/* Last Page */}
+                  <button
+                    onClick={() => setPage(Math.ceil(total / limit))}
+                    disabled={page === Math.ceil(total / limit)}
+                    className="items-center justify-center hidden text-gray-600 transition-all duration-200 bg-white border border-gray-300 rounded-lg md:flex w-9 h-9 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    title="Last page"
+                  >
+                    <FiChevronsRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             )}
           </>

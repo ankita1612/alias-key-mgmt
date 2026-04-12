@@ -143,21 +143,27 @@ function AliasKeyRow({
       {/* Used Quota */}
       <div>
         <div className="flex items-center gap-2 text-base">
-          <span className="text-gray-700">{apiData.used_quota || "-"}</span>
-          {apiData.total_quota && apiData.used_quota && (
+          <span className="text-gray-700">
+            {apiData.remaining_quota || "-"}
+          </span>
+          {apiData.total_quota && apiData.remaining_quota && (
             <span className="text-base text-gray-400">
-              ({Math.round((apiData.used_quota / apiData.total_quota) * 100)}%)
+              (
+              {Math.round(
+                (apiData.remaining_quota / apiData.total_quota) * 100,
+              )}
+              %)
             </span>
           )}
         </div>
         {/* Mini progress bar */}
-        {apiData.total_quota && apiData.used_quota && (
+        {apiData.total_quota && apiData.remaining_quota && (
           <div className="w-16 h-1 mt-1 overflow-hidden text-base bg-gray-200 rounded-full">
             <div
               className="h-1 transition-all duration-300 rounded-full bg-primary"
               style={{
                 width: `${Math.min(
-                  (apiData.used_quota / apiData.total_quota) * 100,
+                  (apiData.remaining_quota / apiData.total_quota) * 100,
                   100,
                 )}%`,
               }}
