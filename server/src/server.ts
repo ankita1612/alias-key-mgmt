@@ -18,6 +18,7 @@ import adminUserRouter from "./routes/admin.user.route";
 import aliasKeyRouter from "./routes/admin.aliasKey.route";
 import proxyRouter from "./routes/admin.proxy.route";
 import apiHisoryRouter from "./routes/admin.apiHistory.route";
+import dashboardRouter from "./routes/admin.dashbaord.route";
 
 // import reportRouter from "./routes/user.report.route";
 import errorHandler from "./middleware/error.handler";
@@ -47,18 +48,19 @@ if (cluster.isPrimary) {
 
   app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true })); //Allows browser to send secure credentials with request
   //credentials: true => if you are passing cookie from frontend
-  app.use(helmet({ crossOriginResourcePolicy: false }));
+  app.use(helmet({ crossOrigisnResourcePolicy: false }));
   // Rate limit for general routes, but allow higher for proxy
   app.use('/api/get-proxy-response', rateLimit({ windowMs: 60 * 1000, max: 200000  })); // 200k per minute for proxy
   app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 })); // 100 per 15 min for others
   app.use(express.json({ limit: "500mb" }));
   app.use(express.urlencoded({ limit: "500mb", extended: true }));
-
+``
   app.use("/api/auth", adminAuthRouter);
   app.use("/api/user", adminUserRouter);
   app.use("/api/alias-key", aliasKeyRouter);
   app.use("/api/get-proxy-response", proxyRouter);
   app.use("/api/api-hisory", apiHisoryRouter);
+  app.use("/api/dashboard", dashboardRouter);
 
 
   //page not found

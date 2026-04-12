@@ -32,7 +32,7 @@ const ApiHistorySchema = new Schema<IApiHistory>(
 
     status: {
       type: String,
-      enum: ["Success", "Fail"],
+      enum: ["Success", "Fail","Limit_exceed","Alias_key_inactive"],
       required: true,
     },
   },
