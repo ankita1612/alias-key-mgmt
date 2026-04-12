@@ -53,5 +53,8 @@ const AliasKeySchema: Schema = new Schema(
 // ✅ Optional compound index (useful for queries)
 AliasKeySchema.index({ user_id: 1, parent_key: 1 });
 
+// Add index for getProxyResponse query
+AliasKeySchema.index({ alias_key: 1, status: 1, remaining_quota: 1 });
+
 const AliasKeyModel = model<IAliasKeyDocument>("alias_keys", AliasKeySchema);
 export default  AliasKeyModel;

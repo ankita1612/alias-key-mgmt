@@ -3,9 +3,9 @@ import { userService } from "../services/admin.user.service";
 import IUser, { GetUsersQuery } from "../interface/user.interface";
 import { Types } from "mongoose";
 import ApiError from "../utils/api.error";
-import { AliasKeyModel } from "../models/aliasKey.model";
-import ApiHistoryModel from "../models/apiHistory.model" 
-import { json } from "node:stream/consumers";
+import AliasKeyModel from "../models/aliasKey.model";
+import ApiHistoryModel from "../models/apiHistory.model";
+import redisClient from "../config/redis.config";
 class ProxyController {
   
   handleResponse = async (req: Request, res: Response, user_id: any, alias_key_id: any,  response: any,  startTime: number,  statusCode: number) => {
@@ -27,73 +27,56 @@ class ProxyController {
     execution_time: `${execTime}ms`,
   });
 };
- getProxyResponse = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const startTime = Date.now();
+getProxyResponse = async ( req: Request, res: Response): Promise<any> => {
+  const alias_key = req.query.alias_key || req.body.alias_key;
+  if (!alias_key) {
+    return res.status(400).json({ success: false,  message: "Alias key not exist", });
+  }
 
-  try {
-    // ✅ 1. Extract alias key (GET / POST)
-    const alias_key =
-      req.method === "GET"
-        ? (req.query.alias_key as string)
-        : req.body.alias_key;
-    if (!alias_key) {
-      return this.handleResponse(req, res, null, null, {
-        success: false,
-        message: "Alias key not exist",
-      }, startTime, 400);
-    }
+  const startTime = Date.now();
+  try {    
     const aliasKey = await AliasKeyModel.findOneAndUpdate(
       {
-        alias_key:alias_key,
+        alias_key,
         status: "Active",
         remaining_quota: { $gt: 0 },
       },
-      {
-        $inc: { remaining_quota: -1 },
-      },
-      {
-        new: true,
-      }
+      { $inc: { remaining_quota: -1 } },
+      { new: true }
     );
 
-    // ❌ If failed → check exact reason
-    if (!aliasKey) {
-      // Check existence separately (for proper message)
-      const existingKey = await AliasKeyModel.findOne({ alias_key });
+    if (aliasKey) {
+      return this.handleResponse( req, res,  aliasKey.user_id, aliasKey._id,
+        { success: true, message: "Api call success",  },
+        startTime,
+        200
+      );
+    }
+    
+    const existing = await AliasKeyModel.findOne({ alias_key });
 
-      let message = "Invalid alias key";
-
-      if (existingKey) {
-        if (existingKey.status !== "Active") {
-          message = "Alias key is not active";
-        } else if (existingKey.remaining_quota <= 0) {
-          message = "Alias key limit exceed";
-        }
-      }
-
-      return this.handleResponse(req, res, existingKey?.user_id, existingKey?._id, {
-        success: false,
-        message,
-      }, startTime, 400);
+    if (!existing) {
+      return res.status(400).json({  success: false,  message: "Invalid alias key", });
     }
 
-    // ✅ 6. Success
+    let message = "Something went wrong";
+
+    if (existing.status !== "Active") {
+      message = "Alias key is not active";
+    } else if (existing.remaining_quota <= 0) {
+      message = "Alias key limit exceed";
+    }
+
     return this.handleResponse(
       req,
       res,
-      aliasKey.user_id,
-      aliasKey._id,
-      {
-        success: true,
-        message: "Api call success",
-      },
+      existing.user_id,
+      existing._id,
+      { success: false, message, },
       startTime,
-      200
+      400
     );
+
   } catch (error) {
     return this.handleResponse(
       req,

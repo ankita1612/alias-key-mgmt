@@ -8,7 +8,10 @@ if (!DB_URI) {
 
 const connectDB = async (): Promise<void> => {
   try {
-    await mongoose.connect(DB_URI);
+    await mongoose.connect(DB_URI, {
+      maxPoolSize: 100, // Increase connection pool for high concurrency
+      serverSelectionTimeoutMS: 5000,
+    });
     console.log("MongoDB connected successfully");
   } catch (error) {
     console.error("MongoDB connection failed:", error);

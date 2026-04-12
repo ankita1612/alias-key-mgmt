@@ -6,6 +6,7 @@ const msgTitle = "Alias key";
 import { UserType } from "../interface/user.interface";
 
 import  AliasKeyModel  from "../models/aliasKey.model";
+import redisClient from "../config/redis.config";
 //import IUser from "../interface/IUserAliasKey.interface";
 
 const generateAliasKey = () => {
@@ -141,7 +142,7 @@ class AliasKeyController {
 
   // ✅ UPDATE
   updateData = async (
-    req: Request<{ id: string }, {}, Partial<IUser>>,
+    req: Request<{ id: string }, {}, Partial<IUserAliasKey>>,
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
@@ -254,6 +255,11 @@ class AliasKeyController {
       { $set: updateData },
       { new: true }
     );
+    res.json(updated)
+    // Update Redis cache if alias_key exists
+    if (updated && updated.alias_key && action === "Active") {
+      await redisClient.setEx(`alias_key:${updated.alias_key}`, 300, JSON.stringify(updated));
+    }
 
     res.status(200).json({
       success: true,
