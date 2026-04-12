@@ -10,7 +10,27 @@ import {
   YAxis,
   Tooltip,
   Legend,
+  Area,
+  AreaChart,
 } from "recharts";
+import {
+  Key,
+  CheckCircle,
+  Clock,
+  Calendar,
+  TrendingUp,
+  Activity,
+  Gauge,
+  AlertCircle,
+  Zap,
+  RefreshCw,
+  BarChart3,
+  PieChart,
+  User,
+  Shield,
+  ArrowUpRight,
+  ArrowDownRight,
+} from "lucide-react";
 
 interface DashboardData {
   totalAliasKeys: number;
@@ -41,12 +61,14 @@ interface DashboardData {
 function UserDashboard() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const response = await apiClient.get<DashboardData>("/api/dashboard");
       setDashboard(response.data);
+      setLastUpdated(new Date());
     } catch (caughtError) {
       const error = caughtError as unknown as {
         name?: string;
@@ -69,204 +91,417 @@ function UserDashboard() {
     fetchData();
   }, [fetchData]);
 
-  const renderMetricCard = (
-    title: string,
-    value: number | string,
-    description: string,
-  ) => (
-    <div className="p-5 transition bg-white border shadow-sm rounded-2xl border-slate-200 hover:shadow-md">
-      <p className="text-sm text-slate-500">{title}</p>
-      <h2 className="mt-3 text-3xl font-semibold text-slate-900">{value}</h2>
-      <p className="mt-2 text-sm text-slate-500">{description}</p>
-    </div>
-  );
+  const MetricCard = ({
+    title,
+    value,
+    description,
+    icon: Icon,
+    trend,
+    color = "primary",
+  }: any) => {
+    const gradientColors = {
+      primary: "from-blue-500 to-indigo-600",
+      success: "from-emerald-500 to-teal-600",
+      warning: "from-amber-500 to-orange-600",
+      info: "from-cyan-500 to-blue-600",
+    };
+
+    return (
+      <div className="relative overflow-hidden transition-all duration-300 bg-white border border-gray-100 shadow-sm group rounded-2xl hover:shadow-xl">
+        <div className="absolute inset-0 transition-opacity duration-500 opacity-0 bg-gradient-to-r from-gray-50 to-transparent group-hover:opacity-100" />
+        <div className="relative p-6">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <p className="text-sm font-medium tracking-wider text-gray-500 uppercase">
+                {title}
+              </p>
+              <div className="flex items-baseline mt-2 space-x-2">
+                <p className="text-3xl font-bold text-gray-900">{value}</p>
+                {trend && (
+                  <div
+                    className={`flex items-center ${trend >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                  >
+                    {trend >= 0 ? (
+                      <ArrowUpRight className="w-4 h-4" />
+                    ) : (
+                      <ArrowDownRight className="w-4 h-4" />
+                    )}
+                    <span className="text-sm font-semibold">
+                      {Math.abs(trend)}%
+                    </span>
+                  </div>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-gray-500">{description}</p>
+            </div>
+            <div
+              className={`p-3 rounded-xl bg-gradient-to-br ${gradientColors[color]} shadow-lg`}
+            >
+              <Icon className="w-5 h-5 text-white" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-lg">
+          <p className="text-sm font-semibold text-gray-900">{label}</p>
+          <p className="text-sm text-gray-600">
+            Requests: <span className="font-medium">{payload[0].value}</span>
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="px-6 py-10 bg-white shadow rounded-2xl">
-          <p className="text-lg font-medium">Loading dashboard...</p>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 animate-pulse">
+            <Shield className="w-10 h-10 text-white" />
+          </div>
+          <p className="mt-6 text-xl font-semibold text-gray-900">
+            Loading Dashboard
+          </p>
+          <p className="mt-2 text-sm text-gray-500">
+            Fetching your latest analytics...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-8 md:p-10">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
-            Dashboard
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold text-slate-900">
-            Your usage summary
-          </h1>
-        </div>
-        <div className="px-4 py-3 text-sm shadow-sm rounded-2xl bg-slate-50 text-slate-700">
-          Data updated for your current user account
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      {/* Background Pattern */}
+      <div className="fixed inset-0 pointer-events-none opacity-5">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 2px 2px, rgba(0,0,0,0.1) 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+          }}
+        />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {dashboard
-          ? [
-              {
-                title: "Total alias keys",
-                value: dashboard.totalAliasKeys,
-                description: "All alias keys created by you.",
-              },
-              {
-                title: "Active alias keys",
-                value: dashboard.activeAliasKeys,
-                description: "Keys ready to use today.",
-              },
-              {
-                title: "Pending alias keys",
-                value: dashboard.pendingAliasKeys,
-                description: "Keys awaiting approval.",
-              },
-              {
-                title: "Aliases this month",
-                value: dashboard.totalAliasRequestsCurrentMonth,
-                description: "Alias requests created this month.",
-              },
-            ].map((card) => (
-              <div key={card.title}>
-                {renderMetricCard(card.title, card.value, card.description)}
+      <div className="relative px-6 py-8 md:px-8 lg:px-10">
+        {/* Header */}
+        <div className="mb-10">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="flex items-center space-x-3">
+                <div className="p-2 shadow-lg rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600">
+                  <User className="text-white w-7 h-7" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    User Dashboard
+                  </h1>
+                  <p className="mt-1 text-gray-500">
+                    Monitor your alias keys and API usage
+                  </p>
+                </div>
               </div>
-            ))
-          : null}
-      </div>
-
-      {dashboard && (
-        <div className="grid gap-6 xl:grid-cols-[0.9fr_0.7fr]">
-          <div className="p-6 space-y-6 bg-white border shadow-sm rounded-3xl border-slate-200">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">
-                  Request activity
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Last 7 days of API requests.
+            </div>
+            <div className="flex items-center mt-4 space-x-4 lg:mt-0">
+              <div className="flex items-center px-4 py-2 space-x-2 bg-white border border-gray-100 shadow-sm rounded-xl">
+                <Activity className="w-4 h-4 text-emerald-500" />
+                <span className="text-sm text-gray-600">Active</span>
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Last updated</p>
+                <p className="text-sm font-medium text-gray-700">
+                  {lastUpdated.toLocaleTimeString()}
                 </p>
               </div>
-            </div>
-
-            <div className="h-[320px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={dashboard.requestsLast7Days}
-                  margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
-                >
-                  <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
-                  <XAxis dataKey="date" tickLine={false} axisLine={false} />
-                  <YAxis tickLine={false} axisLine={false} />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="count"
-                    stroke="#2563eb"
-                    strokeWidth={3}
-                    dot={{ r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <button
+                onClick={fetchData}
+                className="p-2.5 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 hover:border-gray-200"
+              >
+                <RefreshCw className="w-5 h-5 text-gray-600" />
+              </button>
             </div>
           </div>
+        </div>
 
-          <div className="p-6 space-y-6 bg-white border shadow-sm rounded-3xl border-slate-200">
-            <div>
-              <h2 className="text-xl font-semibold text-slate-900">
-                Quota usage
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Active aliases quota and consumption overview.
-              </p>
+        {/* Stats Grid */}
+        {dashboard && (
+          <>
+            <div className="grid gap-6 mb-10 sm:grid-cols-2 lg:grid-cols-4">
+              <MetricCard
+                title="Total Alias Keys"
+                value={dashboard.totalAliasKeys.toLocaleString()}
+                description="All alias keys created by you"
+                icon={Key}
+                color="primary"
+              />
+              <MetricCard
+                title="Active Keys"
+                value={dashboard.activeAliasKeys.toLocaleString()}
+                description="Keys ready to use today"
+                icon={CheckCircle}
+                color="success"
+              />
+              <MetricCard
+                title="Pending Keys"
+                value={dashboard.pendingAliasKeys.toLocaleString()}
+                description="Keys awaiting approval"
+                icon={Clock}
+                color="warning"
+              />
+              <MetricCard
+                title="Monthly Requests"
+                value={dashboard.totalAliasRequestsCurrentMonth.toLocaleString()}
+                description="Alias requests this month"
+                icon={Calendar}
+                color="info"
+              />
             </div>
 
-            <div className="p-4 space-y-4 rounded-3xl bg-slate-50">
-              <div className="flex items-center justify-between text-sm text-slate-600">
-                <span>Total quota</span>
-                <span>{dashboard.quota.totalQuota.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm text-slate-600">
-                <span>Used quota</span>
-                <span>{dashboard.quota.usedQuota.toLocaleString()}</span>
-              </div>
-              <div className="h-3 overflow-hidden rounded-full bg-slate-200">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-600"
-                  style={{ width: `${dashboard.quota.usedPercent}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between text-sm text-slate-600">
-                <span>Remaining</span>
-                <span>{dashboard.quota.remainingQuota.toLocaleString()}</span>
-              </div>
-              <div className="text-sm font-semibold text-slate-900">
-                {dashboard.quota.usedPercent}% of quota used
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="p-4 rounded-3xl bg-slate-50">
-                <h3 className="text-sm font-medium text-slate-900">
-                  Status breakdown
-                </h3>
-                <div className="mt-4 space-y-3">
-                  {[
-                    {
-                      label: "Success",
-                      value: dashboard.statusCounts.Success,
-                      percent: dashboard.statusPercentages.Success,
-                      color: "bg-emerald-500",
-                    },
-                    {
-                      label: "Fail",
-                      value: dashboard.statusCounts.Fail,
-                      percent: dashboard.statusPercentages.Fail,
-                      color: "bg-rose-500",
-                    },
-                    {
-                      label: "Limit exceed",
-                      value: dashboard.statusCounts.Limit_exceed,
-                      percent: dashboard.statusPercentages.Limit_exceed,
-                      color: "bg-amber-500",
-                    },
-                  ].map((item) => (
-                    <div key={item.label} className="space-y-2">
-                      <div className="flex items-center justify-between text-sm text-slate-700">
-                        <span>{item.label}</span>
-                        <span>
-                          {item.value} requests • {item.percent}%
-                        </span>
-                      </div>
-                      <div className="h-2 rounded-full bg-slate-200">
-                        <div
-                          className={`${item.color} h-full rounded-full`}
-                          style={{ width: `${item.percent}%` }}
-                        />
-                      </div>
+            <div className="grid gap-8 mb-10 lg:grid-cols-2">
+              {/* Request Activity Chart */}
+              <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
+                <div className="p-6 border-b border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Request Activity
+                      </h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        API requests over the last 7 days
+                      </p>
                     </div>
-                  ))}
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50">
+                      <TrendingUp className="w-5 h-5 text-blue-600" />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={dashboard.requestsLast7Days}>
+                        <defs>
+                          <linearGradient
+                            id="colorRequests"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#3b82f6"
+                              stopOpacity={0.3}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="#3b82f6"
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis
+                          dataKey="date"
+                          stroke="#9ca3af"
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis stroke="#9ca3af" tick={{ fontSize: 12 }} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Area
+                          type="monotone"
+                          dataKey="count"
+                          stroke="#3b82f6"
+                          strokeWidth={3}
+                          fill="url(#colorRequests)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               </div>
 
-              <div className="p-4 rounded-3xl bg-slate-50">
-                <h3 className="text-sm font-medium text-slate-900">
-                  Latest request
-                </h3>
-                <p className="mt-3 text-sm text-slate-600">
-                  {dashboard.lastRequestMinutesAgo !== null
-                    ? `${dashboard.lastRequestMinutesAgo} minutes ago`
-                    : "No requests found yet."}
-                </p>
+              {/* Right Column */}
+              <div className="space-y-8">
+                {/* Quota Usage */}
+                <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
+                  <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Quota Usage
+                        </h3>
+                        <p className="mt-1 text-sm text-gray-500">
+                          Active aliases quota consumption
+                        </p>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50">
+                        <Gauge className="w-5 h-5 text-blue-600" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">
+                          Total Quota
+                        </span>
+                        <span className="text-lg font-semibold text-gray-900">
+                          {dashboard.quota.totalQuota.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">
+                          Used Quota
+                        </span>
+                        <span className="text-lg font-semibold text-blue-600">
+                          {dashboard.quota.usedQuota.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">Usage</span>
+                          <span className="font-semibold text-gray-900">
+                            {dashboard.quota.usedPercent}%
+                          </span>
+                        </div>
+                        <div className="w-full h-3 overflow-hidden bg-gray-100 rounded-full">
+                          <div
+                            className="h-full transition-all duration-700 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600"
+                            style={{ width: `${dashboard.quota.usedPercent}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between pt-2">
+                        <span className="text-sm text-gray-600">
+                          Remaining Quota
+                        </span>
+                        <span className="text-lg font-semibold text-emerald-600">
+                          {dashboard.quota.remainingQuota.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Breakdown */}
+                <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
+                  <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Request Status
+                        </h3>
+                        <p className="mt-1 text-sm text-gray-500">
+                          API response distribution
+                        </p>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50">
+                        <PieChart className="w-5 h-5 text-blue-600" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="space-y-4">
+                      {[
+                        {
+                          label: "Success",
+                          value: dashboard.statusCounts.Success,
+                          percent: dashboard.statusPercentages.Success,
+                          color: "bg-emerald-500",
+                          icon: CheckCircle,
+                        },
+                        {
+                          label: "Failed",
+                          value: dashboard.statusCounts.Fail,
+                          percent: dashboard.statusPercentages.Fail,
+                          color: "bg-rose-500",
+                          icon: AlertCircle,
+                        },
+                        {
+                          label: "Rate Limited",
+                          value: dashboard.statusCounts.Limit_exceed,
+                          percent: dashboard.statusPercentages.Limit_exceed,
+                          color: "bg-amber-500",
+                          icon: Zap,
+                        },
+                      ].map((item) => (
+                        <div key={item.label} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <item.icon className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm font-medium text-gray-700">
+                                {item.label}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm font-semibold text-gray-900">
+                                {item.value.toLocaleString()}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                ({item.percent}%)
+                              </span>
+                            </div>
+                          </div>
+                          <div className="w-full h-2 overflow-hidden bg-gray-100 rounded-full">
+                            <div
+                              className={`${item.color} h-full transition-all duration-700 rounded-full`}
+                              style={{ width: `${item.percent}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Latest Request */}
+                <div className="overflow-hidden shadow-xl bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        <Clock className="w-5 h-5 text-blue-200" />
+                        <h3 className="text-lg font-semibold text-white">
+                          Latest Activity
+                        </h3>
+                      </div>
+                      <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm">
+                        <Activity className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-3xl font-bold text-white">
+                        {dashboard.lastRequestMinutesAgo !== null
+                          ? `${dashboard.lastRequestMinutesAgo}`
+                          : "0"}
+                      </p>
+                      <p className="text-sm text-blue-200">
+                        {dashboard.lastRequestMinutesAgo !== null
+                          ? `minutes since last request`
+                          : "No requests found yet"}
+                      </p>
+                      {dashboard.lastRequestAt && (
+                        <p className="mt-2 text-xs text-blue-300">
+                          Last request at:{" "}
+                          {new Date(dashboard.lastRequestAt).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

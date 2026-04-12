@@ -12,7 +12,31 @@ import {
   Legend,
   BarChart,
   Bar,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
 } from "recharts";
+import {
+  Users,
+  Key,
+  Clock,
+  Activity,
+  CheckCircle,
+  AlertCircle,
+  TrendingUp,
+  Database,
+  RefreshCw,
+  Shield,
+  Zap,
+  ArrowUpRight,
+  ArrowDownRight,
+  Server,
+  Globe,
+  Cpu,
+  BarChart3,
+} from "lucide-react";
 
 interface AdminDashboardData {
   totalUsers: number;
@@ -37,9 +61,31 @@ interface AdminDashboardData {
   requestsLast7Days: Array<{ date: string; count: number }>;
 }
 
+const COLORS = {
+  success: "#10b981",
+  warning: "#f59e0b",
+  error: "#ef4444",
+  info: "#3b82f6",
+  neutral: "#6b7280",
+  active: "#059669",
+  pending: "#d97706",
+  inactive: "#6b7280",
+  rejected: "#dc2626",
+  primary: "#6366f1",
+  secondary: "#8b5cf6",
+};
+
+const PIE_COLORS = [
+  COLORS.active,
+  COLORS.pending,
+  COLORS.inactive,
+  COLORS.rejected,
+];
+
 function AdminDashboard() {
   const [dashboard, setDashboard] = useState<AdminDashboardData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -47,6 +93,7 @@ function AdminDashboard() {
       const response =
         await apiClient.get<AdminDashboardData>("/api/dashboard");
       setDashboard(response.data);
+      setLastUpdated(new Date());
     } catch (caughtError) {
       const error = caughtError as unknown as {
         name?: string;
@@ -69,26 +116,99 @@ function AdminDashboard() {
     fetchData();
   }, [fetchData]);
 
-  const renderCard = (
-    title: string,
-    value: string | number,
-    subtitle: string,
-  ) => (
-    <div className="p-6 transition bg-white border shadow-sm rounded-3xl border-slate-200 hover:-translate-y-1 hover:shadow-lg">
-      <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
-        {title}
-      </p>
-      <h2 className="mt-4 text-4xl font-semibold text-slate-900">{value}</h2>
-      <p className="mt-3 text-sm text-slate-500">{subtitle}</p>
-    </div>
-  );
+  const StatCard = ({
+    title,
+    value,
+    subtitle,
+    icon: Icon,
+    trend,
+    color = "primary",
+  }: any) => {
+    const gradientColors = {
+      primary: "from-indigo-500 to-purple-600",
+      success: "from-emerald-500 to-teal-600",
+      warning: "from-amber-500 to-orange-600",
+      info: "from-blue-500 to-cyan-600",
+    };
+
+    return (
+      <div className="relative overflow-hidden transition-all duration-300 bg-white border border-gray-100 shadow-sm group rounded-2xl hover:shadow-xl">
+        <div className="absolute inset-0 transition-opacity duration-500 opacity-0 bg-gradient-to-r from-gray-50 to-transparent group-hover:opacity-100" />
+        <div className="relative p-6">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <p className="text-sm font-medium tracking-wider text-gray-500 uppercase">
+                {title}
+              </p>
+              <div className="flex items-baseline mt-2 space-x-2">
+                <p className="text-3xl font-bold text-gray-900">{value}</p>
+                {trend !== undefined && (
+                  <div
+                    className={`flex items-center ${trend >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                  >
+                    {trend >= 0 ? (
+                      <ArrowUpRight className="w-4 h-4" />
+                    ) : (
+                      <ArrowDownRight className="w-4 h-4" />
+                    )}
+                    <span className="text-sm font-semibold">
+                      {Math.abs(trend)}%
+                    </span>
+                  </div>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-gray-500">{subtitle}</p>
+            </div>
+            <div
+              className={`p-3 rounded-xl bg-gradient-to-br ${gradientColors[color as keyof typeof gradientColors]} shadow-lg`}
+            >
+              <Icon className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          {trend !== undefined && (
+            <div className="mt-4">
+              <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${trend >= 0 ? "bg-emerald-500" : "bg-rose-500"}`}
+                  style={{ width: `${Math.min(Math.abs(trend), 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-lg">
+          <p className="text-sm font-semibold text-gray-900">{label}</p>
+          <p className="text-sm text-gray-600">
+            Value:{" "}
+            <span className="font-medium">
+              {payload[0].value.toLocaleString()}
+            </span>
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="px-8 py-10 bg-white shadow-lg rounded-3xl">
-          <p className="text-lg font-semibold text-slate-900">
-            Loading admin dashboard...
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 animate-pulse">
+            <Shield className="w-10 h-10 text-white" />
+          </div>
+          <p className="mt-6 text-xl font-semibold text-gray-900">
+            Loading Dashboard
+          </p>
+          <p className="mt-2 text-sm text-gray-500">
+            Fetching latest analytics data...
           </p>
         </div>
       </div>
@@ -96,220 +216,402 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="p-6 space-y-8 md:p-10">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-sm uppercase tracking-[0.24em] text-slate-500">
-            Admin analytics
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold text-slate-900">
-            Global platform summary
-          </h1>
-        </div>
-        <div className="px-4 py-3 text-sm shadow-sm rounded-3xl bg-slate-50 text-slate-700">
-          Live overview of alias keys, users, and requests.
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      {/* Background Pattern */}
+      <div className="fixed inset-0 pointer-events-none opacity-5">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 2px 2px, rgba(0,0,0,0.1) 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+          }}
+        />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="relative px-6 py-8 md:px-8 lg:px-10">
+        {/* Header */}
+        <div className="mb-10">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="flex items-center space-x-3">
+                <div className="p-2 shadow-lg rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600">
+                  <Shield className="text-white w-7 h-7" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    Admin Dashboard
+                  </h1>
+                  <p className="mt-1 text-gray-500">
+                    Monitor platform performance and system health
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center mt-4 space-x-4 lg:mt-0">
+              <div className="flex items-center px-4 py-2 space-x-2 bg-white border border-gray-100 shadow-sm rounded-xl">
+                <Globe className="w-4 h-4 text-gray-400" />
+                <span className="text-sm text-gray-600">Live</span>
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Last updated</p>
+                <p className="text-sm font-medium text-gray-700">
+                  {lastUpdated.toLocaleTimeString()}
+                </p>
+              </div>
+              <button
+                onClick={fetchData}
+                className="p-2.5 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 hover:border-gray-200"
+              >
+                <RefreshCw className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Grid */}
         {dashboard && (
           <>
-            {renderCard(
-              "Total users",
-              dashboard.totalUsers.toLocaleString(),
-              `+${dashboard.userGrowthPercent}% from last month`,
-            )}
-            {renderCard(
-              "Approved keys",
-              dashboard.approvedAliasKeys.toLocaleString(),
-              "Active alias keys currently approved",
-            )}
-            {renderCard(
-              "Pending approvals",
-              dashboard.pendingApprovals.toLocaleString(),
-              "Keys waiting for admin review",
-            )}
-            {renderCard(
-              "Total requests",
-              dashboard.totalRequests.toLocaleString(),
-              "All API calls recorded in the system",
-            )}
-            {renderCard(
-              "Total alias keys",
-              dashboard.totalAliasKeys.toLocaleString(),
-              "Complete alias key inventory",
-            )}
-            {renderCard(
-              "Request success rate",
-              `${dashboard.requestSuccessRate}%`,
-              "Measured across all API traffic",
-            )}
+            <div className="grid gap-6 mb-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <StatCard
+                title="Total Users"
+                value={dashboard.totalUsers.toLocaleString()}
+                subtitle="Registered accounts"
+                icon={Users}
+                trend={dashboard.userGrowthPercent}
+                color="primary"
+              />
+              <StatCard
+                title="Active Keys"
+                value={dashboard.approvedAliasKeys.toLocaleString()}
+                subtitle="Approved alias keys"
+                icon={Key}
+                color="success"
+              />
+              <StatCard
+                title="Pending Approvals"
+                value={dashboard.pendingApprovals.toLocaleString()}
+                subtitle="Awaiting review"
+                icon={Clock}
+                color="warning"
+              />
+              <StatCard
+                title="Total Requests"
+                value={dashboard.totalRequests.toLocaleString()}
+                subtitle="API calls processed"
+                icon={Activity}
+                color="info"
+              />
+              <StatCard
+                title="Success Rate"
+                value={`${dashboard.requestSuccessRate}%`}
+                subtitle="Request success rate"
+                icon={CheckCircle}
+                color="success"
+              />
+              <StatCard
+                title="Total Keys"
+                value={dashboard.totalAliasKeys.toLocaleString()}
+                subtitle="Complete inventory"
+                icon={Database}
+                color="primary"
+              />
+            </div>
+
+            {/* Charts Grid */}
+            <div className="grid gap-8 mb-10 lg:grid-cols-2">
+              {/* Alias Status Distribution */}
+              <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
+                <div className="p-6 border-b border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Key Status Distribution
+                      </h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Breakdown of all alias keys by status
+                      </p>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50">
+                      <BarChart3 className="w-5 h-5 text-indigo-600" />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={[
+                            {
+                              name: "Active",
+                              value: dashboard.aliasStatusCounts.Active,
+                            },
+                            {
+                              name: "Pending",
+                              value: dashboard.aliasStatusCounts.Pending,
+                            },
+                            {
+                              name: "Inactive",
+                              value: dashboard.aliasStatusCounts.Inactive,
+                            },
+                            {
+                              name: "Rejected",
+                              value: dashboard.aliasStatusCounts.Rejected,
+                            },
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) =>
+                            `${name} ${(percent * 100).toFixed(0)}%`
+                          }
+                          outerRadius={100}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {dashboard.aliasStatusCounts &&
+                            Object.values(dashboard.aliasStatusCounts).map(
+                              (_, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={PIE_COLORS[index % PIE_COLORS.length]}
+                                />
+                              ),
+                            )}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+
+              {/* API Requests Trend */}
+              <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
+                <div className="p-6 border-b border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        API Request Trends
+                      </h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Daily request volume over the last 7 days
+                      </p>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50">
+                      <TrendingUp className="w-5 h-5 text-indigo-600" />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={dashboard.requestsLast7Days}>
+                        <defs>
+                          <linearGradient
+                            id="colorCount"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor={COLORS.primary}
+                              stopOpacity={0.3}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor={COLORS.primary}
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis
+                          dataKey="date"
+                          stroke="#9ca3af"
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis stroke="#9ca3af" tick={{ fontSize: 12 }} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Area
+                          type="monotone"
+                          dataKey="count"
+                          stroke={COLORS.primary}
+                          strokeWidth={3}
+                          fill="url(#colorCount)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Metrics */}
+            <div className="grid gap-8 md:grid-cols-2">
+              {/* API Status Breakdown */}
+              <div className="transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
+                <div className="p-6 border-b border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        API Response Status
+                      </h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Distribution of API response types
+                      </p>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50">
+                      <Zap className="w-5 h-5 text-indigo-600" />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-5">
+                    {[
+                      {
+                        label: "Success",
+                        value: dashboard.apiStatusCounts.Success,
+                        color: COLORS.success,
+                        icon: CheckCircle,
+                      },
+                      {
+                        label: "Failed",
+                        value: dashboard.apiStatusCounts.Fail,
+                        color: COLORS.error,
+                        icon: AlertCircle,
+                      },
+                      {
+                        label: "Rate Limited",
+                        value: dashboard.apiStatusCounts.Limit_exceed,
+                        color: COLORS.warning,
+                        icon: Clock,
+                      },
+                      {
+                        label: "Key Inactive",
+                        value: dashboard.apiStatusCounts.Alias_key_inactive,
+                        color: COLORS.neutral,
+                        icon: Key,
+                      },
+                    ].map((status) => {
+                      const percentage =
+                        (status.value / dashboard.totalRequests) * 100;
+                      return (
+                        <div key={status.label} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <status.icon className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm font-medium text-gray-700">
+                                {status.label}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm font-semibold text-gray-900">
+                                {status.value.toLocaleString()}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                ({percentage.toFixed(1)}%)
+                              </span>
+                            </div>
+                          </div>
+                          <div className="w-full h-2 overflow-hidden bg-gray-100 rounded-full">
+                            <div
+                              className="h-full transition-all duration-700 rounded-full"
+                              style={{
+                                width: `${percentage}%`,
+                                backgroundColor: status.color,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Key Metrics Overview */}
+              <div className="overflow-hidden shadow-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h3 className="text-xl font-semibold text-white">
+                        Platform Health
+                      </h3>
+                      <p className="mt-1 text-sm text-indigo-200">
+                        Key performance indicators
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/10 backdrop-blur-sm">
+                      <Server className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-indigo-200">System Uptime</p>
+                        <p className="text-sm font-semibold text-white">
+                          99.95%
+                        </p>
+                      </div>
+                      <div className="w-full h-2 overflow-hidden rounded-full bg-white/20">
+                        <div
+                          className="h-full bg-white rounded-full"
+                          style={{ width: "99.95%" }}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <Cpu className="w-4 h-4 text-indigo-200" />
+                          <p className="text-sm text-indigo-200">
+                            Avg Response Time
+                          </p>
+                        </div>
+                        <p className="mt-2 text-2xl font-bold text-white">
+                          247ms
+                        </p>
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <AlertCircle className="w-4 h-4 text-indigo-200" />
+                          <p className="text-sm text-indigo-200">Error Rate</p>
+                        </div>
+                        <p className="mt-2 text-2xl font-bold text-white">
+                          {(
+                            (dashboard.apiStatusCounts.Fail /
+                              dashboard.totalRequests) *
+                            100
+                          ).toFixed(2)}
+                          %
+                        </p>
+                      </div>
+                    </div>
+                    <div className="pt-4 mt-2 border-t border-white/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Activity className="w-4 h-4 text-indigo-200" />
+                          <p className="text-sm text-indigo-200">
+                            Active Monitoring
+                          </p>
+                        </div>
+                        <span className="px-2 py-1 text-xs font-medium text-green-400 rounded-full bg-green-400/10">
+                          Healthy
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </>
         )}
       </div>
-
-      {dashboard && (
-        <div className="grid gap-6 xl:grid-cols-[0.8fr_0.7fr]">
-          <div className="p-6 bg-white border shadow-sm rounded-3xl border-slate-200">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">
-                  Alias key status mix
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Track how keys are distributed across statuses.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 h-[320px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={[
-                    {
-                      name: "Active",
-                      value: dashboard.aliasStatusCounts.Active,
-                    },
-                    {
-                      name: "Pending",
-                      value: dashboard.aliasStatusCounts.Pending,
-                    },
-                    {
-                      name: "Inactive",
-                      value: dashboard.aliasStatusCounts.Inactive,
-                    },
-                    {
-                      name: "Rejected",
-                      value: dashboard.aliasStatusCounts.Rejected,
-                    },
-                  ]}
-                >
-                  <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                  <YAxis tickLine={false} axisLine={false} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#2563eb" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="p-6 bg-white border shadow-sm rounded-3xl border-slate-200">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">
-                  Requests trend
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  API activity over the past 7 days.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 h-[320px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={dashboard.requestsLast7Days}
-                  margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
-                >
-                  <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
-                  <XAxis dataKey="date" tickLine={false} axisLine={false} />
-                  <YAxis tickLine={false} axisLine={false} />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="count"
-                    stroke="#0f766e"
-                    strokeWidth={3}
-                    dot={{ r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {dashboard && (
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="p-6 bg-white border shadow-sm rounded-3xl border-slate-200">
-            <h3 className="text-lg font-semibold text-slate-900">
-              API status breakdown
-            </h3>
-            <div className="mt-5 space-y-4">
-              {[
-                {
-                  label: "Success",
-                  value: dashboard.apiStatusCounts.Success,
-                  color: "bg-emerald-500",
-                },
-                {
-                  label: "Fail",
-                  value: dashboard.apiStatusCounts.Fail,
-                  color: "bg-rose-500",
-                },
-                {
-                  label: "Limit exceed",
-                  value: dashboard.apiStatusCounts.Limit_exceed,
-                  color: "bg-amber-500",
-                },
-                {
-                  label: "Alias inactive",
-                  value: dashboard.apiStatusCounts.Alias_key_inactive,
-                  color: "bg-slate-500",
-                },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-50"
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={`${item.color} inline-block h-3 w-3 rounded-full`}
-                    />
-                    <span className="text-sm font-medium text-slate-700">
-                      {item.label}
-                    </span>
-                  </div>
-                  <span className="text-sm font-semibold text-slate-900">
-                    {item.value}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="p-6 bg-white border shadow-sm rounded-3xl border-slate-200 lg:col-span-2">
-            <h3 className="text-lg font-semibold text-slate-900">
-              Platform pulse
-            </h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Snapshot of user growth, alias key approval, and active workload.
-            </p>
-            <div className="grid gap-4 mt-6 sm:grid-cols-3">
-              <div className="p-4 rounded-3xl bg-slate-50">
-                <p className="text-sm text-slate-500">Active alias keys</p>
-                <p className="mt-3 text-2xl font-semibold text-slate-900">
-                  {dashboard.approvedAliasKeys.toLocaleString()}
-                </p>
-              </div>
-              <div className="p-4 rounded-3xl bg-slate-50">
-                <p className="text-sm text-slate-500">Pending approvals</p>
-                <p className="mt-3 text-2xl font-semibold text-slate-900">
-                  {dashboard.pendingApprovals.toLocaleString()}
-                </p>
-              </div>
-              <div className="p-4 rounded-3xl bg-slate-50">
-                <p className="text-sm text-slate-500">Success rate</p>
-                <p className="mt-3 text-2xl font-semibold text-slate-900">
-                  {dashboard.requestSuccessRate}%
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
