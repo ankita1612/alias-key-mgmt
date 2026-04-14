@@ -173,7 +173,9 @@ function AliasKeyRow({
           </div>
         )}
       </div>
-
+      <div className="text-base font-semibold text-gray-800">
+        {apiData.total_quota || "-"}
+      </div>
       {/* Created Date */}
       <div className="text-base text-gray-500">
         {apiData.createdAt

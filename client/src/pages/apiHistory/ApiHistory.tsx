@@ -5,6 +5,8 @@ import {
   FiChevronsRight,
   FiSearch,
   FiPlus,
+  FiArrowUp,
+  FiArrowDown,
 } from "react-icons/fi";
 import {
   Key,
@@ -27,7 +29,8 @@ import apiClient from "../../services/apiClient";
 
 import { CheckCircle, Clock } from "lucide-react";
 import { MdClose } from "react-icons/md";
-
+const capitalize = (text?: string) =>
+  text ? text.charAt(0).toUpperCase() + text.slice(1) : "-";
 function AliasKeyList() {
   const { aliasKeyId } = useParams();
   const { user } = useAuth();
@@ -200,7 +203,7 @@ function AliasKeyList() {
         {/* Loading */}
         {loading ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-10 h-10 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
           </div>
         ) : (
           <>
@@ -247,7 +250,13 @@ function AliasKeyList() {
                       {col.label}
                       {sortField === col.field && (
                         <span className="text-base text-primary">
-                          {sortOrder === "asc" ? "↑" : "↓"}
+                          <span className="text-base text-primary">
+                            {sortOrder === "asc" ? (
+                              <FiArrowUp />
+                            ) : (
+                              <FiArrowDown />
+                            )}
+                          </span>
                         </span>
                       )}
                     </div>
@@ -382,9 +391,15 @@ function AliasKeyList() {
 
       {/* Modal - Responsive */}
       {showModal && selectedRow && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md"
+          onClick={() => setShowModal(false)}
+        >
           {/* Modal */}
-          <div className="relative w-full max-w-4xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95">
+          <div
+            className="relative w-full max-w-4xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Decorative top bar */}
 
             {/* Close Icon - Improved */}
@@ -459,12 +474,12 @@ function AliasKeyList() {
                   <div className="px-4 py-3">
                     <div className="flex items-center justify-between gap-2">
                       <p className="flex-1 font-mono text-base font-medium text-gray-900 break-all">
-                        {selectedRow?.user_alias_key_id?.alias_key}
+                        {selectedRow?.alias_key}
                       </p>
                       <button
                         onClick={() => {
                           navigator.clipboard.writeText(
-                            selectedRow?.user_alias_key_id?.alias_key || "",
+                            selectedRow?.alias_key || "",
                           );
                           toast.success("Alias key copied");
                         }}
@@ -488,7 +503,7 @@ function AliasKeyList() {
                     </span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">
-                    {selectedRow?.execution_time || "-"}
+                    {selectedRow?.execution_time || "-"}ms
                   </p>
                 </div>
 
@@ -501,23 +516,23 @@ function AliasKeyList() {
                   </div>
                   <span
                     className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-base font-medium ${
-                      selectedRow?.status === "Success"
+                      selectedRow?.response_status === "success"
                         ? "bg-green-100 text-green-700"
-                        : selectedRow?.status === "Failed"
+                        : selectedRow?.status === "failed"
                           ? "bg-red-100 text-red-700"
                           : "bg-yellow-100 text-yellow-700"
                     }`}
                   >
                     <div
                       className={`w-1.5 h-1.5 rounded-full ${
-                        selectedRow?.status === "Success"
+                        selectedRow?.response_status === "success"
                           ? "bg-green-500"
-                          : selectedRow?.status === "Failed"
+                          : selectedRow?.response_status === "failed"
                             ? "bg-red-500"
                             : "bg-yellow-500"
                       }`}
                     ></div>
-                    {selectedRow?.response_status || "-"}
+                    {capitalize(selectedRow?.response_status)}
                   </span>
                 </div>
 
@@ -555,21 +570,11 @@ function AliasKeyList() {
                     <span className="font-mono text-base text-gray-400">
                       JSON
                     </span>
-                    <button
-                      onClick={() =>
-                        navigator.clipboard.writeText(
-                          JSON.stringify(selectedRow?.request_info, null, 2),
-                        )
-                      }
-                      className="text-gray-400 transition-colors hover:text-white"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                    </button>
                   </div>
                   <pre className="p-4 overflow-auto font-mono text-base text-gray-300 max-h-48 scrollbar-thin">
-                    Method:{selectedRow?.method}
+                    Method: {selectedRow?.method}
                     <br></br>
-                    Alias Key:{selectedRow?.user_alias_key_id}
+                    Alias Key: {selectedRow?.alias_key}
                   </pre>
                 </div>
               </div>
@@ -592,22 +597,12 @@ function AliasKeyList() {
                     <span className="font-mono text-base text-gray-400">
                       JSON
                     </span>
-                    <button
-                      onClick={() =>
-                        navigator.clipboard.writeText(
-                          JSON.stringify(selectedRow?.response, null, 2),
-                        )
-                      }
-                      className="text-gray-400 transition-colors hover:text-white"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                    </button>
                   </div>
                   <pre className="p-4 overflow-auto font-mono text-base text-gray-300 max-h-48 scrollbar-thin">
-                    Status : {selectedRow?.response_status} <br></br>
-                    Response Message:{selectedRow?.response_msg}
+                    Status: {capitalize(selectedRow?.response_status)} <br></br>
+                    Response Message: {selectedRow?.response_msg}
                     <br></br>
-                    Response code: {selectedRow?.response_code}
+                    Response Code: {selectedRow?.response_code}
                   </pre>
                 </div>
               </div>

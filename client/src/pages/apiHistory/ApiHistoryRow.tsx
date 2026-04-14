@@ -1,10 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import type { IAliasKey } from "../../../interface/aliasKey.interface";
-import { FiArrowDownRight, FiArrowRight, FiEdit2 } from "react-icons/fi"; // Feather icons
-import { FiTrash2 } from "react-icons/fi";
-import { CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
-import apiClient from "../../services/apiClient";
+import type { IAliasKey } from "../../interface/aliasKey.interface";
 import { FiEye } from "react-icons/fi";
+const capitalize = (text?: string) =>
+  text ? text.charAt(0).toUpperCase() + text.slice(1) : "-";
 interface AliasKeyRowProps {
   apiData: IAliasKey;
   handleDelete: (id: string) => void;
@@ -93,7 +91,7 @@ function AliasKeyRow({
           <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-base font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
           >
-            {apiData.response_status || "-"}
+            {capitalize(apiData.response_status) || "-"}
           </span>
         </div>
         {/* Mini progress bar */}

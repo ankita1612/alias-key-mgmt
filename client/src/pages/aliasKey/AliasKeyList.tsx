@@ -6,6 +6,8 @@ import {
   FiChevronsRight,
   FiSearch,
   FiPlus,
+  FiArrowUp,
+  FiArrowDown,
 } from "react-icons/fi";
 
 import { Link, useLocation } from "react-router-dom";
@@ -47,7 +49,8 @@ function AliasKeyList() {
   const [selectedRow, setSelectedRow] = useState<IAliasKey | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [mobileView, setMobileView] = useState(false);
-
+  const deleteModalRef = useRef<HTMLDivElement>(null);
+  const actionModalRef = useRef<HTMLDivElement>(null);
   // Check screen size for mobile view
   useEffect(() => {
     const checkMobile = () => {
@@ -57,7 +60,33 @@ function AliasKeyList() {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Delete modal
+      if (
+        showDeleteModal &&
+        deleteModalRef.current &&
+        !deleteModalRef.current.contains(event.target as Node)
+      ) {
+        setShowDeleteModal(false);
+      }
 
+      // Action modal
+      if (
+        showModal &&
+        actionModalRef.current &&
+        !actionModalRef.current.contains(event.target as Node)
+      ) {
+        setShowModal(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDeleteModal, showModal]);
   const handleActionClick = (row: IAliasKey) => {
     setSelectedRow(row);
     setShowModal(true);
@@ -160,19 +189,20 @@ function AliasKeyList() {
   const isAdmin = user?.role === "Admin";
 
   const columns = [
-    { label: "#", field: "_id" },
+    { label: "#", field: "_id", sortable: true },
     ...(isAdmin
       ? [
-          { label: "User", field: "user.first_name" },
-          { label: "Email", field: "user.email" },
+          { label: "User", field: "user.first_name", sortable: true },
+          { label: "Email", field: "user.email", sortable: true },
         ]
       : []),
-    { label: "Key", field: "alias_key" },
-    { label: "Domain", field: "domain" },
-    { label: "Status", field: "status" },
-    { label: "# Quota", field: "total_quota" },
-    { label: "# Available", field: "remaining_quota" },
-    { label: "Created", field: "createdAt" },
+    { label: "Key", field: "alias_key", sortable: true },
+    { label: "Domain", field: "domain", sortable: true },
+    { label: "Status", field: "status", sortable: true },
+    { label: "# Quota", field: "total_quota", sortable: true },
+    { label: "# Available", field: "remaining_quota", sortable: true },
+    { label: "# Used", field: "", sortable: false },
+    { label: "Created", field: "createdAt", sortable: true },
   ];
 
   // Responsive grid columns based on screen size and admin status
@@ -183,8 +213,8 @@ function AliasKeyList() {
   };
   const gridColsClass =
     user?.role === "Admin"
-      ? "grid-cols-[40px_1.2fr_1.5fr_2fr_1.5fr_100px_80px_80px_80px_40px]"
-      : "grid-cols-[40px_2fr_1.5fr_100px_100px_100px_100px_80px]";
+      ? "grid-cols-[40px_1.2fr_1.5fr_2fr_1.5fr_100px_80px_80px_80px_80px_40px]"
+      : "grid-cols-[40px_2fr_1.5fr_100px_100px_100px_100px_100px_80px]";
   return (
     <div className="py-4">
       <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl sm:p-5">
@@ -237,14 +267,21 @@ function AliasKeyList() {
                 >
                   {columns.map((col) => (
                     <div
-                      key={col.field}
-                      onClick={() => handleSort(col.field)}
-                      className="flex items-center gap-1 text-base transition-colors duration-200 cursor-pointer hover:text-primary"
+                      key={col.label}
+                      onClick={() => col.sortable && handleSort(col.field)}
+                      className={`flex items-center gap-1 text-base transition-colors duration-200 
+      ${col.sortable ? "cursor-pointer hover:text-primary" : "cursor-default"}
+    `}
                     >
                       {col.label}
-                      {sortField === col.field && (
+
+                      {col.sortable && sortField === col.field && (
                         <span className="text-base text-primary">
-                          {sortOrder === "asc" ? "↑" : "↓"}
+                          {sortOrder === "asc" ? (
+                            <FiArrowUp />
+                          ) : (
+                            <FiArrowDown />
+                          )}
                         </span>
                       )}
                     </div>
@@ -382,7 +419,10 @@ function AliasKeyList() {
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
           {/* Modal */}
-          <div className="relative w-full max-w-2xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95">
+          <div
+            ref={deleteModalRef}
+            className="relative w-full max-w-2xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+          >
             {/* Close Icon */}
             <button
               onClick={() => setShowDeleteModal(false)}
@@ -411,7 +451,7 @@ function AliasKeyList() {
             {/* Warning Content */}
             <div className="px-6 mt-4">
               {/* Warning Card */}
-              <div className="p-4  rounded-xl">
+              <div className="p-4 rounded-xl">
                 <div className="flex items-start gap-3">
                   <div className="space-y-1">
                     <p className="text-lg ">
@@ -453,7 +493,10 @@ function AliasKeyList() {
       {showModal && selectedRow && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
           {/* Modal */}
-          <div className="relative w-full max-w-4xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95">
+          <div
+            ref={actionModalRef}
+            className="relative w-full max-w-4xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+          >
             {/* Decorative top bar */}
 
             {/* Close Icon - Improved */}
