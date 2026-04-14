@@ -14,59 +14,47 @@ class ApiHistoryController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       const search = (req.query.search as string) || "";
-
-      // ✅ FIXED: match frontend params
-      const sortFieldRaw = req.query.sortField as string;
-      const sortOrderRaw = req.query.sortOrder as string;
-
-      // ✅ Allowed sort fields (important for safety)
-      const allowedSortFields = [
-        "createdAt",
-        "execution_time",
-        "method",
-        "_id",
-        "response_status",
-        "response_msg",
-        "response_status_code",
-        "alias.alias_key",
-      ];
-
-      let sortField = "createdAt";
-
-      if (allowedSortFields.includes(sortFieldRaw)) {
-        if (sortFieldRaw === "alias.alias_key") {
-          sortField = "alias_key"; // ✅ use flattened field
-        } else {
-          sortField = sortFieldRaw;
-        }
-      }
-
-      const sortOrder = sortOrderRaw === "asc" ? 1 : -1;
-
+      const sortBy = (req.query.sortBy as string) || "createdAt";
+      const order = (req.query.order as string) === "asc" ? 1 : -1;
+      const userFilter = req.query.user as string;
       const aliasKeyFilter = req.query.alias_key as string;
+
       const skip = (page - 1) * limit;
 
       // 🔐 Base match
       const match: any = {};
 
-      // ✅ User restriction
       if (user.role !== "Admin") {
         match.user_id = new Types.ObjectId(user._id);
       }
 
-      // ✅ Alias filter
+      if (userFilter) {
+        match.user_id = new Types.ObjectId(userFilter);
+      }
+
       if (aliasKeyFilter) {
         match.user_alias_key_id = new Types.ObjectId(aliasKeyFilter);
       }
+
+      // 🔥 Sort mapping (for nested fields)
+      const sortMap: any = {
+        "user.first_name": "user_first_name",
+        "user.email": "user_email",
+        "alias.alias_key": "alias_key_name",
+      };
+
+      const finalSortField = sortMap[sortBy] || sortBy;
 
       // 🔍 Search condition
       const searchMatch = search
         ? {
             $or: [
-              { origin_url: { $regex: search, $options: "i" } },
-              { method: { $regex: search, $options: "i" } },
+              { "request_info.url": { $regex: search, $options: "i" } },
+              { "request_info.method": { $regex: search, $options: "i" } },
+              { status: { $regex: search, $options: "i" } },
+              { "user.first_name": { $regex: search, $options: "i" } },
+              { "user.email": { $regex: search, $options: "i" } },
               { "alias.alias_key": { $regex: search, $options: "i" } },
-              { response_msg: { $regex: search, $options: "i" } },
             ],
           }
         : {};
@@ -74,6 +62,17 @@ class ApiHistoryController {
       // 🔥 MAIN PIPELINE
       const pipeline: any[] = [
         { $match: match },
+
+        // 👤 Join user
+        {
+          $lookup: {
+            from: "users",
+            localField: "user_id",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
 
         // 🔑 Join alias key
         {
@@ -86,25 +85,21 @@ class ApiHistoryController {
         },
         { $unwind: { path: "$alias", preserveNullAndEmptyArrays: true } },
 
-        ...(search ? [{ $match: searchMatch }] : []),
-
-        // ✅ FIX: ensure numeric sorting
+        // ✅ Add flat fields for sorting
         {
           $addFields: {
-            execution_time: {
-              $convert: {
-                input: "$execution_time",
-                to: "double",
-                onError: 0,
-                onNull: 0,
-              },
-            },
-            alias_key: "$alias.alias_key", // ✅ required for sorting
+            user_first_name: { $ifNull: ["$user.first_name", ""] },
+            user_email: { $ifNull: ["$user.email", ""] },
+            alias_key_name: { $ifNull: ["$alias.alias_key", ""] },
           },
         },
+
+        ...(search ? [{ $match: searchMatch }] : []),
+
+        // 🔥 Sorting
         {
           $sort: {
-            [sortField]: sortOrder,
+            [finalSortField]: order,
           },
         },
 
@@ -116,6 +111,16 @@ class ApiHistoryController {
       // 🔥 COUNT PIPELINE
       const countPipeline: any[] = [
         { $match: match },
+
+        {
+          $lookup: {
+            from: "users",
+            localField: "user_id",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
 
         {
           $lookup: {
@@ -132,7 +137,7 @@ class ApiHistoryController {
         { $count: "total" },
       ];
 
-      // 🚀 Execute in parallel
+      // 🚀 Execute
       const [data, countResult] = await Promise.all([
         ApiHistoryModel.aggregate(pipeline),
         ApiHistoryModel.aggregate(countPipeline),
@@ -140,23 +145,27 @@ class ApiHistoryController {
 
       const total = countResult[0]?.total || 0;
 
-      // 🔽 Alias dropdown
+      // 🔽 Dropdown data
+      let users = [];
       let aliasKeys = [];
 
-      if (user.role === "Admin") {
-        aliasKeys = await AliasKeyModel.find({ status: "Active" })
-          .select("_id alias_key")
-          .lean();
+      if (req.user.role === "Admin") {
+        [users, aliasKeys] = await Promise.all([
+          User.find({ role: "User" }).select("_id first_name").lean(),
+
+          AliasKeyModel.find({ status: "Active" })
+            .select("_id alias_key")
+            .lean(),
+        ]);
       } else {
+        // USER role
         aliasKeys = await AliasKeyModel.find({
           status: "Active",
-          user_id: user._id,
+          user_id: req.user._id, // 🔥 important
         })
           .select("_id alias_key")
           .lean();
       }
-
-      // ✅ Response
       res.status(200).json({
         success: true,
         data,
@@ -166,6 +175,7 @@ class ApiHistoryController {
           limit,
           totalPages: Math.ceil(total / limit),
         },
+        usersList: users,
         aliasKeysList: aliasKeys,
       });
     } catch (error) {

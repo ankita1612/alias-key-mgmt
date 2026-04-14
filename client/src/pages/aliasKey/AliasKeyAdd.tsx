@@ -13,7 +13,23 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const schema = yup.object().shape({
   domain: yup.string().required("Domain is required"),
-  total_quota: yup.string().required("Total quota is required"),
+  total_quota: yup
+    .number()
+    .transform((value, originalValue) => {
+      // ✅ handle empty, null, NaN
+      if (
+        originalValue === "" ||
+        originalValue === null ||
+        Number.isNaN(value)
+      ) {
+        return undefined;
+      }
+      return value;
+    })
+    .required("Total quota is required") // ✅ FIRST
+    .typeError("Total quota must be a number") // ✅ SECOND
+    .positive("Total quota must be greater than 0")
+    .integer("Total quota must be an integer"),
   description: yup.string().optional(),
 });
 
@@ -181,7 +197,7 @@ function AliasKeyAdd() {
                       <input
                         type="text"
                         placeholder="Enter total quota"
-                        {...register("total_quota")}
+                        {...register("total_quota", { valueAsNumber: true })}
                         onChange={(e) => {
                           const val = e.target.value.replace(/[^0-9]/g, ""); // keep only numbers
                           setValue("total_quota", val); // ✅ correct usage
@@ -250,7 +266,7 @@ function AliasKeyAdd() {
                       Saving...
                     </>
                   ) : (
-                    <>{mode === "add" ? "Add Alias Key" : "Update Changes"}</>
+                    <>{mode === "add" ? "Add" : "Update"}</>
                   )}
                 </button>
 

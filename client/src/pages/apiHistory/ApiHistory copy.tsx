@@ -51,29 +51,9 @@ function AliasKeyList() {
 
   // Check screen size for mobile view
 
-  const handleActionClick = async (row: IAliasKey) => {
-    try {
-      setLoading(true);
-
-      const { data } = await apiClient.get(
-        `${BACKEND_URL}/api/user/${row.user_id}`,
-      );
-
-      // merge API response into row
-      const updatedRow = {
-        ...row,
-        user_id: data.data, // assuming API returns { user: {...} }
-      };
-
-      setSelectedRow(updatedRow);
-      setShowModal(true);
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message || "Failed to fetch user details",
-      );
-    } finally {
-      setLoading(false);
-    }
+  const handleActionClick = (row: IAliasKey) => {
+    setSelectedRow(row);
+    setShowModal(true);
   };
   useEffect(() => {
     setPage(1);
@@ -167,12 +147,17 @@ function AliasKeyList() {
 
   const columns = [
     { label: "#", field: "_id" },
+    ...(isAdmin
+      ? [
+          { label: "User", field: "user_id.first_name" },
+          { label: "Email", field: "user_id.email" },
+        ]
+      : []),
     { label: "Key", field: "user_alias_key_id.alias_key" },
     { label: "Request", field: "request_info" },
+
     { label: "Time", field: "execution_time" },
-    { label: "Status", field: "response_status" },
-    { label: "Message", field: "response_msg" },
-    { label: "Code", field: "response_code" },
+    { label: "Status", field: "status" },
     { label: "Created", field: "createdAt" },
   ];
 
@@ -180,8 +165,8 @@ function AliasKeyList() {
 
   const gridColsClass =
     user?.role === "Admin"
-      ? "grid-cols-[40px_1.2fr_100px_100px_100px_1.2fr_80px_80px_80px]"
-      : "grid-cols-[40px_1.2fr_100px_100px_100px_1.2fr_80px_80px_80px]";
+      ? "grid-cols-[40px_1.2fr_1.5fr_2fr_100px_100px_80px_80px_80px]"
+      : "grid-cols-[40px_2fr_100px_100px_100px_100px_80px]";
   return (
     <div className="py-4">
       <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl sm:p-5">
@@ -205,6 +190,20 @@ function AliasKeyList() {
         ) : (
           <>
             <div className="flex flex-col gap-2 mb-5 sm:flex-row sm:items-center sm:gap-3">
+              {user?.role === "Admin" && (
+                <select
+                  value={selectedUser}
+                  onChange={(e) => setSelectedUser(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2.5 text-base shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
+                >
+                  <option value="">All Users</option>
+                  {users.map((u) => (
+                    <option key={u._id} value={u._id}>
+                      {u.first_name}
+                    </option>
+                  ))}
+                </select>
+              )}
               {/* Alias Key Dropdown */}
               <select
                 value={selectedAliasKey}
@@ -517,7 +516,7 @@ function AliasKeyList() {
                             : "bg-yellow-500"
                       }`}
                     ></div>
-                    {selectedRow?.response_status || "-"}
+                    {selectedRow?.status || "-"}
                   </span>
                 </div>
 
@@ -549,6 +548,9 @@ function AliasKeyList() {
                   <h4 className="text-base font-semibold text-gray-900">
                     Request Information
                   </h4>
+                  <span className="px-2 py-0.5 text-base font-medium bg-gray-100 text-gray-600 rounded-full">
+                    {Object.keys(selectedRow?.request_info || {}).length} fields
+                  </span>
                 </div>
                 <div className="overflow-hidden bg-gray-900 border border-gray-800 shadow-lg rounded-xl">
                   <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
@@ -567,9 +569,7 @@ function AliasKeyList() {
                     </button>
                   </div>
                   <pre className="p-4 overflow-auto font-mono text-base text-gray-300 max-h-48 scrollbar-thin">
-                    Method:{selectedRow?.method}
-                    <br></br>
-                    Alias Key:{selectedRow?.user_alias_key_id}
+                    {JSON.stringify(selectedRow?.request_info, null, 2)}
                   </pre>
                 </div>
               </div>
@@ -604,10 +604,7 @@ function AliasKeyList() {
                     </button>
                   </div>
                   <pre className="p-4 overflow-auto font-mono text-base text-gray-300 max-h-48 scrollbar-thin">
-                    Status : {selectedRow?.response_status} <br></br>
-                    Response Message:{selectedRow?.response_msg}
-                    <br></br>
-                    Response code: {selectedRow?.response_code}
+                    {JSON.stringify(selectedRow?.response, null, 2)}
                   </pre>
                 </div>
               </div>

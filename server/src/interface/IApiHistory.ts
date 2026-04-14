@@ -3,14 +3,12 @@ import { Document, Types } from "mongoose";
 export interface IApiHistory extends Document {
   user_id: Types.ObjectId;
   user_alias_key_id: Types.ObjectId;
-
-  request_info: Record<string, any>;
-  response: Record<string, any>;
-
+  method: string;
+  response_code_str: string;
   execution_time: string; // in ms
-
-  status: "Success" | "Fail";
-
+  response_status: string;
+  response_msg: string;
+  response_status_code: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

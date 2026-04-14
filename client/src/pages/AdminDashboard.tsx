@@ -53,10 +53,10 @@ interface AdminDashboardData {
     Rejected: number;
   };
   apiStatusCounts: {
-    Success: number;
-    Fail: number;
-    Limit_exceed: number;
-    Alias_key_inactive: number;
+    SUCCESS: number;
+    LIMIT_EXCEED: number;
+    INTERNAL_SERVER: number;
+    KEY_NOT_ACTIVE: number;
   };
   requestsLast7Days: Array<{ date: string; count: number }>;
 }
@@ -341,7 +341,9 @@ function AdminDashboard() {
                 <div className="p-6">
                   <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
+                      <PieChart
+                        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                      >
                         <Pie
                           data={[
                             {
@@ -367,7 +369,7 @@ function AdminDashboard() {
                           label={({ name, percent }) =>
                             `${name} ${(percent * 100).toFixed(0)}%`
                           }
-                          outerRadius={100}
+                          outerRadius={90}
                           fill="#8884d8"
                           dataKey="value"
                         >
@@ -475,27 +477,27 @@ function AdminDashboard() {
                     {[
                       {
                         label: "Success",
-                        value: dashboard.apiStatusCounts.Success,
+                        value: dashboard.apiStatusCounts.SUCCESS,
                         color: COLORS.success,
                         icon: CheckCircle,
                       },
                       {
-                        label: "Failed",
-                        value: dashboard.apiStatusCounts.Fail,
-                        color: COLORS.error,
-                        icon: AlertCircle,
+                        label: "Key Not Active",
+                        value: dashboard.apiStatusCounts.KEY_NOT_ACTIVE,
+                        color: COLORS.neutral,
+                        icon: Key,
                       },
                       {
-                        label: "Rate Limited",
-                        value: dashboard.apiStatusCounts.Limit_exceed,
+                        label: "Limit Exceeded",
+                        value: dashboard.apiStatusCounts.LIMIT_EXCEED,
                         color: COLORS.warning,
                         icon: Clock,
                       },
                       {
-                        label: "Key Inactive",
-                        value: dashboard.apiStatusCounts.Alias_key_inactive,
-                        color: COLORS.neutral,
-                        icon: Key,
+                        label: "Internal Server Error",
+                        value: dashboard.apiStatusCounts.INTERNAL_SERVER,
+                        color: COLORS.error,
+                        icon: AlertCircle,
                       },
                     ].map((status) => {
                       const percentage =
@@ -514,7 +516,9 @@ function AdminDashboard() {
                                 {status.value.toLocaleString()}
                               </span>
                               <span className="text-xs text-gray-500">
-                                ({percentage.toFixed(1)}%)
+                                {Number.isNaN(percentage) || percentage === 0
+                                  ? "0%"
+                                  : `${percentage.toFixed(1)}%`}
                               </span>
                             </div>
                           </div>
@@ -535,7 +539,7 @@ function AdminDashboard() {
               </div>
 
               {/* Key Metrics Overview */}
-              <div className="overflow-hidden shadow-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl">
+              {/* <div className="overflow-hidden shadow-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl">
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <div>
@@ -584,7 +588,7 @@ function AdminDashboard() {
                         </div>
                         <p className="mt-2 text-2xl font-bold text-white">
                           {(
-                            (dashboard.apiStatusCounts.Fail /
+                            (dashboard.apiStatusCounts.INTERNAL_SERVER /
                               dashboard.totalRequests) *
                             100
                           ).toFixed(2)}
@@ -607,7 +611,7 @@ function AdminDashboard() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
           </>
         )}

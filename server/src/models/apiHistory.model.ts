@@ -8,20 +8,13 @@ const ApiHistorySchema = new Schema<IApiHistory>(
       ref: "User",
       required: true,
     },
-
     user_alias_key_id: {
       type: Schema.Types.ObjectId,
       ref: "alias_keys",
       required: true,
     },
-
-    request_info: {
-      type: Schema.Types.Mixed, // JSON
-      required: true,
-    },
-
-    response: {
-      type: Schema.Types.Mixed, // JSON
+    method: {
+      type: String,
       required: true,
     },
 
@@ -29,21 +22,32 @@ const ApiHistorySchema = new Schema<IApiHistory>(
       type: String,
       required: true,
     },
-
-    status: {
+    response_status: {
       type: String,
-      enum: ["Success", "Fail","Limit_exceed","Alias_key_inactive"],
       required: true,
+    },
+    response_msg: {
+      type: String,
+      required: true,
+    },
+    response_code: {
+      type: Number,
+      required: true,
+    },
+    response_code_str: {
+      type: String,
+      enum: ["LIMIT_EXCEED", "SUCCESS", "INTERNAL_SEREVER", "KEY_NOT_ACTIVE"],
+      default: "SUCCESS",
     },
   },
   {
     timestamps: true, // adds createdAt & updatedAt
-  }
+  },
 );
 
 const ApiHistoryModel = mongoose.model<IApiHistory>(
   "api_call_history",
-  ApiHistorySchema
+  ApiHistorySchema,
 );
 
 export default ApiHistoryModel;

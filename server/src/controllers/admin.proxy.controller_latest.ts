@@ -41,18 +41,21 @@ class ProxyController {
   };
   getProxyResponse = async (req: Request, res: Response): Promise<any> => {
     const startTime = Date.now();
-    const alias_key = req.query.alias_key || req.body.alias_key;
 
-    // Early validation
+    const alias_key = req.query.alias_key || req.body.alias_key;
     if (!alias_key) {
       return res.status(400).json({
         status: "fail",
         message: "Alias key not exist",
       });
     }
+    const method = req.method;
+    let response_code: number = 200;
+    let response_msg = "Api call success";
+    let response_code_str = "SUCCESS";
+    let response_status = "success";
 
     try {
-      // Single optimized query: try to find and update in one go
       const aliasKey = await AliasKeyModel.findOneAndUpdate(
         {
           alias_key,
@@ -63,75 +66,68 @@ class ProxyController {
         { new: true },
       );
 
-      // Success case
+      // ✅ SUCCESS (LOG)
       if (aliasKey) {
         return this.handleResponse(
           res,
           aliasKey.user_id,
           aliasKey._id,
-          req.method,
+          method,
           startTime,
-          "success",
-          "Api call success",
-          200,
-          "SUCCESS",
+          response_status,
+          response_msg,
+          response_code,
+          response_code_str,
         );
       }
 
-      // Key not found or conditions not met - check why
-      const existingKey = await AliasKeyModel.findOne({ alias_key });
+      const existing = await AliasKeyModel.findOne({ alias_key });
 
-      // Key doesn't exist at all
-      if (!existingKey) {
+      // ❌ DO NOT LOG
+      if (!existing) {
         return res.status(400).json({
           status: "fail",
           message: "Invalid alias key",
         });
       }
 
-      // Key exists but has issues - determine which one
-      let response_code: number;
-      let response_code_str: string;
-      let response_msg: string;
+      // ✅ HANDLE FAILURE CASES (LOG)
 
-      if (existingKey.status !== "Active") {
+      if (existing.status !== "Active") {
+        response_status = "fail";
         response_code = 403;
         response_code_str = "KEY_NOT_ACTIVE";
         response_msg = "Alias key is not active";
-      } else if (existingKey.remaining_quota <= 0) {
+      } else if (existing.remaining_quota <= 0) {
         response_code = 429;
+        response_status = "fail";
         response_code_str = "LIMIT_EXCEED";
         response_msg = "Alias key limit exceed";
-      } else {
-        // Fallback for any other edge case
-        response_code = 400;
-        response_code_str = "INTERNAL_SEREVER";
-        response_msg = "Something went wrong";
       }
 
       return this.handleResponse(
         res,
-        existingKey.user_id,
-        existingKey._id,
-        req.method,
+        existing.user_id,
+        existing._id,
+        method,
         startTime,
-        "fail",
+        response_status,
         response_msg,
         response_code,
         response_code_str,
       );
     } catch (error) {
-      // Error case
+      // ✅ ERROR (LOG)
       return this.handleResponse(
         res,
         null,
         null,
-        req.method,
+        method,
         startTime,
         "fail",
         "Internal server error",
         500,
-        "INTERNAL_SERVER",
+        "INTERNAL_SEREVER",
       );
     }
   };

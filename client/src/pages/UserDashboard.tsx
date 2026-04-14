@@ -39,15 +39,12 @@ interface DashboardData {
   totalAliasRequestsCurrentMonth: number;
   lastRequestMinutesAgo: number | null;
   lastRequestAt: string | null;
-  statusCounts: {
-    Success: number;
-    Fail: number;
-    Limit_exceed: number;
-  };
-  statusPercentages: {
-    Success: number;
-    Fail: number;
-    Limit_exceed: number;
+  totalRequests: number;
+  apiStatusCounts: {
+    SUCCESS: number;
+    LIMIT_EXCEED: number;
+    INTERNAL_SERVER: number;
+    KEY_NOT_ACTIVE: number;
   };
   quota: {
     totalQuota: number;
@@ -258,7 +255,7 @@ function UserDashboard() {
                 color="warning"
               />
               <MetricCard
-                title="Monthly Requests"
+                title="Monthly Alias Key"
                 value={dashboard.totalAliasRequestsCurrentMonth.toLocaleString()}
                 description="Alias requests this month"
                 icon={Calendar}
@@ -410,55 +407,90 @@ function UserDashboard() {
                     </div>
                   </div>
                   <div className="p-6">
+                    <div className="mb-4">
+                      <p className="text-sm font-medium text-gray-700">
+                        Total responses tracked
+                      </p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {(
+                          dashboard.apiStatusCounts.SUCCESS +
+                          dashboard.apiStatusCounts.KEY_NOT_ACTIVE +
+                          dashboard.apiStatusCounts.LIMIT_EXCEED +
+                          dashboard.apiStatusCounts.INTERNAL_SERVER
+                        ).toLocaleString()}
+                      </p>
+                    </div>
                     <div className="space-y-4">
                       {[
                         {
                           label: "Success",
-                          value: dashboard.statusCounts.Success,
-                          percent: dashboard.statusPercentages.Success,
+                          value: dashboard.apiStatusCounts.SUCCESS,
+                          statusText: "SUCCESS",
                           color: "bg-emerald-500",
                           icon: CheckCircle,
                         },
                         {
-                          label: "Failed",
-                          value: dashboard.statusCounts.Fail,
-                          percent: dashboard.statusPercentages.Fail,
-                          color: "bg-rose-500",
-                          icon: AlertCircle,
+                          label: "Key not active",
+                          value: dashboard.apiStatusCounts.KEY_NOT_ACTIVE,
+                          statusText: "KEY_NOT_ACTIVE",
+                          color: "bg-slate-500",
+                          icon: Shield,
                         },
                         {
-                          label: "Rate Limited",
-                          value: dashboard.statusCounts.Limit_exceed,
-                          percent: dashboard.statusPercentages.Limit_exceed,
+                          label: "Limit exceeded",
+                          value: dashboard.apiStatusCounts.LIMIT_EXCEED,
+                          statusText: "LIMIT_EXCEED",
                           color: "bg-amber-500",
                           icon: Zap,
                         },
-                      ].map((item) => (
-                        <div key={item.label} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <item.icon className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm font-medium text-gray-700">
-                                {item.label}
-                              </span>
+                        {
+                          label: "Internal server error",
+                          value: dashboard.apiStatusCounts.INTERNAL_SERVER,
+                          statusText: "INTERNAL_SERVER",
+                          color: "bg-rose-500",
+                          icon: AlertCircle,
+                        },
+                      ].map((item) => {
+                        const totalRequests =
+                          dashboard.apiStatusCounts.SUCCESS +
+                          dashboard.apiStatusCounts.KEY_NOT_ACTIVE +
+                          dashboard.apiStatusCounts.LIMIT_EXCEED +
+                          dashboard.apiStatusCounts.INTERNAL_SERVER;
+                        const percentage = totalRequests
+                          ? (item.value / totalRequests) * 100
+                          : 0;
+                        return (
+                          <div key={item.label} className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <item.icon className="w-4 h-4 text-gray-400" />
+                                <div>
+                                  <p className="text-sm font-medium text-gray-700">
+                                    {item.label}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    Code {item.statusText}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm font-semibold text-gray-900">
+                                  {item.value.toLocaleString()}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {percentage.toFixed(1)}%
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <span className="text-sm font-semibold text-gray-900">
-                                {item.value.toLocaleString()}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                ({item.percent}%)
-                              </span>
+                            <div className="w-full h-2 overflow-hidden bg-gray-100 rounded-full">
+                              <div
+                                className={`${item.color} h-full transition-all duration-700 rounded-full`}
+                                style={{ width: `${percentage}%` }}
+                              />
                             </div>
                           </div>
-                          <div className="w-full h-2 overflow-hidden bg-gray-100 rounded-full">
-                            <div
-                              className={`${item.color} h-full transition-all duration-700 rounded-full`}
-                              style={{ width: `${item.percent}%` }}
-                            />
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>

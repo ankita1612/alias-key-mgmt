@@ -30,7 +30,7 @@ function AliasKeyRow({
   const getStatusConfig = (status: string) => {
     switch (status) {
       case "Active":
-      case "success":
+      case "Success":
         return {
           bg: "bg-green-50",
           text: "text-green-700",
@@ -62,7 +62,7 @@ function AliasKeyRow({
     }
   };
 
-  const statusConfig = getStatusConfig(apiData.response_status);
+  const statusConfig = getStatusConfig(apiData.status);
 
   // Desktop Table View
   return (
@@ -72,6 +72,18 @@ function AliasKeyRow({
       {/* Index */}
       <div className="font-medium text-gray-400">{index + 1}</div>
 
+      {/* Admin Fields */}
+      {userRole === "Admin" && (
+        <>
+          <div className="text-base font-medium text-gray-800">
+            {apiData?.user?.first_name || "-"}
+          </div>
+          <div className="text-base text-gray-600 truncate">
+            {apiData?.user?.email || "-"}
+          </div>
+        </>
+      )}
+
       {/* Alias Key */}
       <div className="font-mono text-base text-gray-800 truncate">
         {apiData.alias.alias_key}
@@ -79,12 +91,12 @@ function AliasKeyRow({
 
       {/* Domain */}
       <div className="text-base text-gray-600 truncate">
-        {apiData.method || "-"}
+        {apiData.request_info?.method?.replace(/"/g, "") || "-"}
       </div>
 
       {/* Total Quota */}
       <div className="text-base font-semibold text-gray-800">
-        {apiData.execution_time}ms
+        {apiData.execution_time}
       </div>
 
       {/* Used Quota */}
@@ -93,17 +105,12 @@ function AliasKeyRow({
           <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-base font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
           >
-            {apiData.response_status || "-"}
+            {apiData.status || "-"}
           </span>
         </div>
         {/* Mini progress bar */}
       </div>
-      <div className="text-base font-semibold text-gray-800">
-        {apiData.response_msg}
-      </div>
-      <div className="text-base font-semibold text-gray-800">
-        {apiData.response_code}
-      </div>
+
       {/* Created Date */}
       <div className="text-base text-gray-500">
         {apiData.createdAt

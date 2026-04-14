@@ -26,11 +26,14 @@ import {
   Globe,
   Database,
   FileText,
+  User,
 } from "lucide-react";
 import { MdClose } from "react-icons/md";
 
 function AliasKeyList() {
   const { user } = useAuth();
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [apiData, setApiData] = useState<IAliasKey[]>([]);
   const [loading, setLoading] = useState(false);
   const location = useLocation();
@@ -115,16 +118,27 @@ function AliasKeyList() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+  const handleDeleteClick = (id: string) => {
+    setDeleteId(id);
+    setShowDeleteModal(true);
+  };
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return;
 
-  const handleDelete = async (id: string) => {
     const previousData = apiData;
-    setApiData((prev) => prev.filter((p) => p._id !== id));
+    setApiData((prev) => prev.filter((p) => p._id !== deleteId));
+
     try {
-      const res = await apiClient.delete(`${BACKEND_URL}/api/alias-key/${id}`);
+      const res = await apiClient.delete(
+        `${BACKEND_URL}/api/alias-key/${deleteId}`,
+      );
       toast.success(res.data.message);
     } catch (error: any) {
       setApiData(previousData);
       toast.error(error.response?.data?.message || "Delete failed");
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteId(null);
     }
   };
 
@@ -149,15 +163,15 @@ function AliasKeyList() {
     { label: "#", field: "_id" },
     ...(isAdmin
       ? [
-          { label: "User", field: "user_id.first_name" },
-          { label: "Email", field: "user_id.email" },
+          { label: "User", field: "user.first_name" },
+          { label: "Email", field: "user.email" },
         ]
       : []),
     { label: "Key", field: "alias_key" },
     { label: "Domain", field: "domain" },
     { label: "Status", field: "status" },
     { label: "# Quota", field: "total_quota" },
-    { label: "# Avaiable", field: "remaining_quota" },
+    { label: "# Available", field: "remaining_quota" },
     { label: "Created", field: "createdAt" },
   ];
 
@@ -207,12 +221,12 @@ function AliasKeyList() {
               <input
                 ref={searchRef}
                 type="text"
-                placeholder="Search alias keys..."
+                placeholder="Search ..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2.5 text-base shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all duration-200"
               />
-              <FiSearch className="absolute w-4 h-4 text-gray-400 left-3 top-3" />
+              <FiSearch className="absolute w-4 h-4 text-gray-400 left-3 top-4" />
             </div>
             {/* Table - Responsive with Card View on Mobile */}
             <div className="overflow-x-auto border border-gray-200 shadow-sm rounded-xl">
@@ -241,7 +255,9 @@ function AliasKeyList() {
                 {/* Rows */}
                 {apiData.length === 0 ? (
                   <div className="py-10 text-center text-gray-500">
-                    <p className="text-base font-semibold">No data found</p>
+                    <p className="text-base font-semibold">
+                      No Alias key found
+                    </p>
                     <p className="mt-1 text-base text-gray-400">
                       Try adjusting your search or filters
                     </p>
@@ -252,7 +268,7 @@ function AliasKeyList() {
                       key={item._id}
                       index={index}
                       apiData={item}
-                      handleDelete={handleDelete}
+                      handleDelete={handleDeleteClick}
                       userRole={user?.role}
                       onActionClick={handleActionClick}
                       mobileView={false}
@@ -266,7 +282,7 @@ function AliasKeyList() {
             {total > limit && (
               <div className="flex flex-col items-center justify-between gap-4 mt-8 sm:flex-row">
                 {/* Page info */}
-                <div className="text-sm text-gray-600">
+                <div className="text-base text-gray-600">
                   Showing{" "}
                   <span className="font-semibold text-gray-900">
                     {Math.min((page - 1) * limit + 1, total)}
@@ -296,7 +312,7 @@ function AliasKeyList() {
                   <button
                     onClick={() => setPage(page - 1)}
                     disabled={page === 1}
-                    className="flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    className="flex items-center justify-center gap-1 px-3 py-2 text-base font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                   >
                     <FiChevronLeft className="w-4 h-4" />
                     <span className="hidden sm:inline">Previous</span>
@@ -324,7 +340,7 @@ function AliasKeyList() {
                           <button
                             key={pageNum}
                             onClick={() => setPage(pageNum)}
-                            className={`relative min-w-[36px] h-9 px-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                            className={`relative min-w-[36px] h-9 px-2 text-base font-medium rounded-lg transition-all duration-200 ${
                               page === pageNum
                                 ? "bg-gradient-to-r from-primary to-primaryHover text-white shadow-md scale-105"
                                 : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
@@ -341,7 +357,7 @@ function AliasKeyList() {
                   <button
                     onClick={() => setPage(page + 1)}
                     disabled={page === Math.ceil(total / limit)}
-                    className="flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    className="flex items-center justify-center gap-1 px-3 py-2 text-base font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                   >
                     <span className="hidden sm:inline">Next</span>
                     <FiChevronRight className="w-4 h-4" />
@@ -363,6 +379,76 @@ function AliasKeyList() {
         )}
       </div>
 
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
+          {/* Modal */}
+          <div className="relative w-full max-w-2xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95">
+            {/* Close Icon */}
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              className="absolute z-10 flex items-center justify-center w-10 h-10 text-gray-400 transition-all duration-200 bg-white rounded-full shadow-md top-4 right-4 hover:text-gray-600 hover:bg-gray-100 hover:shadow-lg group"
+            >
+              <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
+            </button>
+
+            {/* Header */}
+            <div className="px-6 pt-8 pb-4 text-left bg-gradient-to-b from-white to-gray-50">
+              <div className="flex items-center gap-3">
+                {/* Left Thick Line */}
+                <div className="w-1 h-6 rounded-full bg-primary"></div>
+
+                {/* Title */}
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Confirm Delete
+                </h3>
+              </div>
+
+              <p className="pl-4 mt-1 text-base text-gray-500">
+                This action cannot be undone
+              </p>
+            </div>
+
+            {/* Warning Content */}
+            <div className="px-6 mt-4">
+              {/* Warning Card */}
+              <div className="p-4  rounded-xl">
+                <div className="flex items-start gap-3">
+                  <div className="space-y-1">
+                    <p className="text-lg ">
+                      Are you sure you want to delete this alias key?
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Key Details (if available) */}
+
+              {/* Danger Info Box */}
+            </div>
+
+            {/* Divider */}
+            <div className="my-6 border-t border-gray-100"></div>
+
+            {/* Actions */}
+            <div className="flex flex-col-reverse gap-3 px-6 pb-8 sm:flex-row">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 px-4 py-2.5 text-base font-medium bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleConfirmDelete}
+                className="flex-1 px-4 py-2.5 text-base font-medium bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+              >
+                <AlertTriangle className="w-4 h-4" />
+                Delete Permanently
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Modal - Responsive */}
       {showModal && selectedRow && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
@@ -406,13 +492,13 @@ function AliasKeyList() {
                 {selectedRow?.user_id && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-gray-400" />
+                      <User className="w-4 h-4 text-gray-400" />
                       <span className="text-base text-gray-600">
                         Requested By
                       </span>
                     </div>
                     <span className="text-base font-medium text-gray-800">
-                      {selectedRow.user_id.first_name || "-"}
+                      {selectedRow.user.first_name || "-"}
                     </span>
                   </div>
                 )}

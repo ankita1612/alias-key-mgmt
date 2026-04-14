@@ -4,7 +4,6 @@ import redisClient from "../config/redis.config";
 import { apiLogQueue } from "../queues/apiLog.queue";
 
 class ProxyController {
-  
   handleResponse = async (
     req: Request,
     res: Response,
@@ -12,7 +11,7 @@ class ProxyController {
     alias_key_id: any,
     response: any,
     startTime: number,
-    statusCode: number
+    statusCode: number,
   ) => {
     const execTime = Date.now() - startTime;
 
@@ -62,7 +61,7 @@ class ProxyController {
           parsed.alias_key_id,
           parsed.response,
           startTime,
-          200
+          200,
         );
       }
 
@@ -74,9 +73,9 @@ class ProxyController {
           remaining_quota: { $gt: 0 },
         },
         { $inc: { remaining_quota: -1 } },
-        { new: true }
+        { new: true },
       );
-
+      res.json(aliasKey);
       if (aliasKey) {
         const response = {
           success: true,
@@ -92,7 +91,7 @@ class ProxyController {
             response,
           }),
           "EX",
-          30 // 30 sec cache (tune as needed)
+          30, // 30 sec cache (tune as needed)
         );
 
         return this.handleResponse(
@@ -102,7 +101,7 @@ class ProxyController {
           aliasKey._id,
           response,
           startTime,
-          200
+          200,
         );
       }
 
@@ -131,7 +130,7 @@ class ProxyController {
         existing._id,
         { success: false, message },
         startTime,
-        400
+        400,
       );
     } catch (error) {
       return this.handleResponse(
@@ -144,7 +143,7 @@ class ProxyController {
           message: "Internal server error",
         },
         startTime,
-        500
+        500,
       );
     }
   };

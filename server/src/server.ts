@@ -36,7 +36,7 @@ if (cluster.isPrimary) {
     cluster.fork();
   }
 
-  cluster.on('exit', (worker, code, signal) => {
+  cluster.on("exit", (worker, code, signal) => {
     console.log(`Worker ${worker.process.pid} died`);
     cluster.fork(); // Restart worker
   });
@@ -50,18 +50,20 @@ if (cluster.isPrimary) {
   //credentials: true => if you are passing cookie from frontend
   app.use(helmet({ crossOrigisnResourcePolicy: false }));
   // Rate limit for general routes, but allow higher for proxy
-  app.use('/api/get-proxy-response', rateLimit({ windowMs: 60 * 1000, max: 200000  })); // 200k per minute for proxy
-  app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 })); // 100 per 15 min for others
+  // app.use(
+  //   "/api/get-proxy-response",
+  //   rateLimit({ windowMs: 60 * 1000, max: 200000 }),
+  // ); // 200k per minute for proxy
+  //app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 })); // 100 per 15 min for others
   app.use(express.json({ limit: "500mb" }));
   app.use(express.urlencoded({ limit: "500mb", extended: true }));
-``
+  ``;
   app.use("/api/auth", adminAuthRouter);
   app.use("/api/user", adminUserRouter);
   app.use("/api/alias-key", aliasKeyRouter);
   app.use("/api/get-proxy-response", proxyRouter);
   app.use("/api/api-hisory", apiHisoryRouter);
   app.use("/api/dashboard", dashboardRouter);
-
 
   //page not found
   app.use((req: Request, res: Response, next: NextFunction) => {

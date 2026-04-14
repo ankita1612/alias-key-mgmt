@@ -8,7 +8,6 @@ interface AuthRequest extends Request {
 }
 
 class DashboardController {
-
   getDeshboardData = async (
     req: AuthRequest,
     res: Response,
@@ -52,12 +51,11 @@ class DashboardController {
             {
               $match: {
                 user_id: userId,
-                status: { $in: ["Success", "Fail", "Limit_exceed"] },
               },
             },
             {
               $group: {
-                _id: "$status",
+                _id: "$response_code_str",
                 count: { $sum: 1 },
               },
             },
@@ -87,9 +85,10 @@ class DashboardController {
         ]);
 
         const statusCounts = {
-          Success: 0,
-          Fail: 0,
-          Limit_exceed: 0,
+          SUCCESS: 0,
+          LIMIT_EXCEED: 0,
+          INTERNAL_SERVER: 0,
+          KEY_NOT_ACTIVE: 0,
         };
         statusAggregates.forEach((item: any) => {
           const key = item._id as keyof typeof statusCounts;
@@ -99,16 +98,24 @@ class DashboardController {
         });
 
         const totalStatusCount =
-          statusCounts.Success + statusCounts.Fail + statusCounts.Limit_exceed;
+          statusCounts.SUCCESS +
+          statusCounts.LIMIT_EXCEED +
+          statusCounts.INTERNAL_SERVER +
+          statusCounts.KEY_NOT_ACTIVE;
         const statusPercentages = {
-          Success: totalStatusCount
-            ? Math.round((statusCounts.Success / totalStatusCount) * 100)
+          SUCCESS: totalStatusCount
+            ? Math.round((statusCounts.SUCCESS / totalStatusCount) * 100)
             : 0,
-          Fail: totalStatusCount
-            ? Math.round((statusCounts.Fail / totalStatusCount) * 100)
+          LIMIT_EXCEED: totalStatusCount
+            ? Math.round((statusCounts.LIMIT_EXCEED / totalStatusCount) * 100)
             : 0,
-          Limit_exceed: totalStatusCount
-            ? Math.round((statusCounts.Limit_exceed / totalStatusCount) * 100)
+          INTERNAL_SERVER: totalStatusCount
+            ? Math.round(
+                (statusCounts.INTERNAL_SERVER / totalStatusCount) * 100,
+              )
+            : 0,
+          KEY_NOT_ACTIVE: totalStatusCount
+            ? Math.round((statusCounts.KEY_NOT_ACTIVE / totalStatusCount) * 100)
             : 0,
         };
 
@@ -153,15 +160,15 @@ class DashboardController {
             )
           : null;
 
-          return res.json({
+        return res.json({
           totalAliasKeys,
           activeAliasKeys,
           pendingAliasKeys,
           totalAliasRequestsCurrentMonth,
           lastRequestMinutesAgo,
           lastRequestAt: lastRequest?.createdAt || null,
-          statusCounts,
-          statusPercentages,
+          totalRequests: totalStatusCount,
+          apiStatusCounts: statusCounts,
           quota: {
             totalQuota,
             usedQuota,
@@ -177,7 +184,11 @@ class DashboardController {
       if (req.user.role === "Admin") {
         const now = new Date();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const previousMonthStart = new Date(
+          now.getFullYear(),
+          now.getMonth() - 1,
+          1,
+        );
         const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
         const sevenDaysAgo = new Date(now);
         sevenDaysAgo.setDate(now.getDate() - 6);
@@ -218,13 +229,8 @@ class DashboardController {
           ]),
           ApiHistoryModel.aggregate([
             {
-              $match: {
-                status: { $in: ["Success", "Fail", "Limit_exceed", "Alias_key_inactive"] },
-              },
-            },
-            {
               $group: {
-                _id: "$status",
+                _id: "$response_code_str",
                 count: { $sum: 1 },
               },
             },
@@ -263,10 +269,10 @@ class DashboardController {
         });
 
         const apiStatusCounts = {
-          Success: 0,
-          Fail: 0,
-          Limit_exceed: 0,
-          Alias_key_inactive: 0,
+          SUCCESS: 0,
+          LIMIT_EXCEED: 0,
+          INTERNAL_SERVER: 0,
+          KEY_NOT_ACTIVE: 0,
         };
         apiStatusAggregates.forEach((item: any) => {
           const key = item._id as keyof typeof apiStatusCounts;
@@ -275,18 +281,23 @@ class DashboardController {
           }
         });
 
-        const totalRequestForRate = apiStatusCounts.Success + apiStatusCounts.Fail + apiStatusCounts.Limit_exceed + apiStatusCounts.Alias_key_inactive;
+        const totalRequestForRate =
+          apiStatusCounts.SUCCESS +
+          apiStatusCounts.LIMIT_EXCEED +
+          apiStatusCounts.INTERNAL_SERVER +
+          apiStatusCounts.KEY_NOT_ACTIVE;
         const requestSuccessRate = totalRequestForRate
-          ? Math.round((apiStatusCounts.Success / totalRequestForRate) * 100)
+          ? Math.round((apiStatusCounts.SUCCESS / totalRequestForRate) * 100)
           : 0;
 
         const userGrowthPercent = previousMonthUsers
           ? Math.round(
-              ((currentMonthUsers - previousMonthUsers) / previousMonthUsers) * 100,
+              ((currentMonthUsers - previousMonthUsers) / previousMonthUsers) *
+                100,
             )
           : currentMonthUsers
-          ? 100
-          : 0;
+            ? 100
+            : 0;
 
         const aggregatedRequestMap = requestsLast7DaysAggregate.reduce(
           (acc: Record<string, number>, item: any) => {

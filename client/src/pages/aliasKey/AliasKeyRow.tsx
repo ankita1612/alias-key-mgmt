@@ -1,6 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import type { IAliasKey } from "../../../interface/aliasKey.interface";
-import { FiArrowDownRight, FiArrowRight, FiEdit2 } from "react-icons/fi"; // Feather icons
+import {
+  FiArrowDownRight,
+  FiArrowRight,
+  FiEdit2,
+  FiList,
+} from "react-icons/fi"; // Feather icons
 import { FiTrash2 } from "react-icons/fi";
 import { CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
 import apiClient from "../../services/apiClient";
@@ -32,10 +37,7 @@ function AliasKeyRow({
   };
 
   const confirmDelete = () => {
-    const confirm = window.confirm(
-      "Are you sure you want to delete this record?",
-    );
-    if (confirm) handleDelete(apiData._id);
+    handleDelete(apiData._id);
   };
 
   // Status badge configuration
@@ -97,10 +99,10 @@ function AliasKeyRow({
       {userRole === "Admin" && (
         <>
           <div className="text-base font-medium text-gray-800">
-            {apiData?.user_id?.first_name || "-"}
+            {apiData?.user?.first_name || "-"}
           </div>
           <div className="text-base text-gray-600 truncate">
-            {apiData?.user_id?.email || "-"}
+            {apiData?.user?.email || "-"}
           </div>
         </>
       )}
@@ -233,7 +235,7 @@ function AliasKeyRow({
             className="p-1.5 text-purple-600 hover:text-white hover:bg-purple-500 rounded-md transition-all duration-200 group relative"
             title="View Requests"
           >
-            <History className="w-4 h-4" />
+            <FiList className="w-4 h-4" />
             <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
               History
             </span>
