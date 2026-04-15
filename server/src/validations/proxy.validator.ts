@@ -5,7 +5,7 @@ import ApiError from "../utils/api.error";
 
 export const validateId = [param("id").isMongoId().withMessage("Invalid ID")];
 export const validateAdd = [
-  body("domine").notEmpty().withMessage("Domain is required").isString(),
+  body("domain").notEmpty().withMessage("Domain is required").isString(),
   body("project_name").notEmpty().withMessage("Project name is required"),
   body("proxy_name").notEmpty().withMessage("Proxy name is required"),
   body("proxy_token").notEmpty().withMessage("Proxy token is required"),
@@ -16,7 +16,7 @@ export const validateAdd = [
 export const validateEdit = [
   param("id").isMongoId().withMessage("Invalid ID"),
 
-  body("domine").optional().isString(),
+  body("domain").optional().isString(),
   body("project_name").optional().isString(),
   body("proxy_name").optional().isString(),
   body("proxy_token").optional().isString(),

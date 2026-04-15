@@ -12,7 +12,7 @@ import {
 
 import { Link, useLocation } from "react-router-dom";
 import type { IProxy } from "../../interface/proxy.interface";
-import proxyRow from "./proxyRow";
+import ProxyRow from "./proxyRow";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
@@ -219,31 +219,16 @@ function ProxyList() {
 
   const columns = [
     { label: "#", field: "_id", sortable: true },
-    ...(isAdmin
-      ? [
-          { label: "User", field: "user.first_name", sortable: true },
-          { label: "Email", field: "user.email", sortable: true },
-        ]
-      : []),
-    { label: "Key", field: "alias_key", sortable: true },
     { label: "Domain", field: "domain", sortable: true },
+    { label: "Project Name", field: "project_name", sortable: true },
+    { label: "Curl", field: "curl", sortable: true },
+    { label: "Credit", field: "credit", sortable: true },
     { label: "Status", field: "status", sortable: true },
-    { label: "# Quota", field: "total_quota", sortable: true },
-    { label: "# Available", field: "remaining_quota", sortable: true },
-    { label: "# Hits", field: "", sortable: false },
     { label: "Created", field: "createdAt", sortable: true },
   ];
-
-  // Responsive grid columns based on screen size and admin status
-  const getGridCols = () => {
-    if (mobileView) return "grid-cols-1"; // Card view on mobile
-    const baseCols = isAdmin ? 10 : 8;
-    return `grid-cols-${baseCols}`;
-  };
   const gridColsClass =
-    user?.role === "Admin"
-      ? "grid-cols-[40px_1.2fr_1.5fr_2fr_1.5fr_100px_80px_100px_80px_80px_40px]"
-      : "grid-cols-[40px_2fr_1.5fr_100px_100px_100px_100px_100px_80px]";
+    "grid-cols-[40px_1.2fr_1.2fr_2fr_100px_100px_100px_40px]";
+
   return (
     <div className="py-4">
       <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl sm:p-5">
@@ -327,7 +312,7 @@ function ProxyList() {
                   </div>
                 ) : (
                   apiData.map((item, index) => (
-                    <proxyRow
+                    <ProxyRow
                       key={item._id}
                       index={index}
                       apiData={item}

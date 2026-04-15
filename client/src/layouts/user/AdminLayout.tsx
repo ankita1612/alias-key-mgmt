@@ -15,8 +15,10 @@ import logo from "../../assets/actowizLogo.svg";
 import Header from "../../layouts/user/Header";
 import Footer from "../../layouts/user/Footer";
 import Breadcrumb from "../../components/Breadcrumb";
+import { useAuth } from "../../context/AuthContext";
 
 const AdminLayout = () => {
+  const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -182,27 +184,29 @@ const AdminLayout = () => {
           </NavLink>
 
           {/* Upload File Link */}
-          <NavLink
-            to="/proxy"
-            className={({ isActive }) =>
-              `flex items-center w-full ${
-                showExpanded ? "justify-start px-4" : "justify-center px-2"
-              } gap-3 py-2.5 rounded-md transition-all duration-200 relative
+          {user?.role == "Admin" && (
+            <NavLink
+              to="/proxy"
+              className={({ isActive }) =>
+                `flex items-center w-full ${
+                  showExpanded ? "justify-start px-4" : "justify-center px-2"
+                } gap-3 py-2.5 rounded-md transition-all duration-200 relative
               ${isActive ? "text-menuActive" : "text-gray-300 hover:text-menuActive"}`
-            }
-          >
-            <FaExchangeAlt size={22} className="flex-shrink-0" />
-            {/* Only show text when expanded */}
-            <span
-              className={`
+              }
+            >
+              <FaExchangeAlt size={22} className="flex-shrink-0" />
+              {/* Only show text when expanded */}
+              <span
+                className={`
                 text-xl font-normal whitespace-nowrap
                 transition-all duration-200
                 ${showExpanded ? "inline-block opacity-100" : "hidden"}
               `}
-            >
-              Proxy
-            </span>
-          </NavLink>
+              >
+                Proxy
+              </span>
+            </NavLink>
+          )}
           <NavLink
             to="/alias-key"
             className={({ isActive }) =>

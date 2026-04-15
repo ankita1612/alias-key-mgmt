@@ -6,6 +6,7 @@ export interface IProxy extends Document {
   proxy_name: string;
   proxy_token: string;
   curl: string;
+  status:string;
   credit: number;
 }
 
@@ -33,6 +34,11 @@ const ProxySchema: Schema = new Schema(
     },
     curl: {
       type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["Active","Inactive"],
       required: true,
     },
     credit: {

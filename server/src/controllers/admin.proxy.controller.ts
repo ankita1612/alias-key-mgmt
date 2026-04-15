@@ -13,7 +13,8 @@ class ProxyController {
         proxy_name:data.proxy_name?.trim(),
         proxy_token:data.proxy_token?.trim(),
         curl:data.curl?.trim(),
-        credit:data.credit?.trim(),
+        status:data.status?.trim(),
+        credit:data.credit,
       });
 
       res.status(201).json({
@@ -32,26 +33,31 @@ class ProxyController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       const search = ((req.query.search as string) || "").trim();
-
+const sortField = (req.query.sortField as string) || "createdAt";
+const sortOrder = (req.query.sortOrder as string) === "asc" ? 1 : -1;
       const skip = (page - 1) * limit;
 
       const match: any = {};
 
-      if (search) {
-        match.$or = [
-          { domine: { $regex: search, $options: "i" } },
-          { project_name: { $regex: search, $options: "i" } },
-          { proxy_name: { $regex: search, $options: "i" } },
-          { proxy_token: { $regex: search, $options: "i" } },
-          { curl: { $regex: search, $options: "i" } },
-        ];
-      }
+if (search) {
+  match.$or = [
+    { domine: { $regex: search, $options: "i" } },
+    { project_name: { $regex: search, $options: "i" } },
+    { proxy_name: { $regex: search, $options: "i" } },
+    { proxy_token: { $regex: search, $options: "i" } },
+    { status: { $regex: search, $options: "i" } },
+    { curl: { $regex: search, $options: "i" } },
+  ];
+}
 
-      const [data, total] = await Promise.all([
-        ProxyModel.find(match).sort({ createdAt: -1 }).skip(skip).limit(limit),
+const [data, total] = await Promise.all([
+  ProxyModel.find(match)
+    .sort({ [sortField]: sortOrder }) // ✅ FIXED
+    .skip(skip)
+    .limit(limit),
 
-        ProxyModel.countDocuments(match),
-      ]);
+  ProxyModel.countDocuments(match),
+]);
 
       res.status(200).json({
         success: true,
@@ -93,13 +99,7 @@ class ProxyController {
   // ✅ UPDATE
   updateData = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          success: false,
-          errors: errors.array(),
-        });
-      }
+      
 
       const { id } = req.params;
 

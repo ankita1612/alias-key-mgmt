@@ -12,8 +12,11 @@ import AliasKeyAdd from "../pages/aliasKey/AliasKeyAdd";
 import ProxyList from "../pages/proxy/ProxyList";
 import ProxyAdd from "../pages/proxy/ProxyAdd";
 import ApiHistory from "../pages/apiHistory/ApiHistory";
+import { useAuth } from "../context/AuthContext";
 
 const AppRoutes = () => {
+  const { user } = useAuth();
+  console.log(user?.role);
   return (
     <Routes>
       <Route
@@ -40,9 +43,30 @@ const AppRoutes = () => {
         <Route path="alias-key" element={<AliasKeyList />} />
         <Route path="alias-key/add" element={<AliasKeyAdd />} />
         <Route path="alias-key/add/:id?" element={<AliasKeyAdd />} />
-        <Route path="proxy" element={<ProxyList />} />
-        <Route path="proxy/add" element={<ProxyAdd />} />
-        <Route path="proxy/add/:id?" element={<ProxyAdd />} />
+        <Route
+          path="proxy"
+          element={
+            <ProtectedRoute roles={["Admin"]}>
+              <ProxyList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="proxy/add"
+          element={
+            <ProtectedRoute roles={["Admin"]}>
+              <ProxyAdd />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="proxy/add/:id?"
+          element={
+            <ProtectedRoute roles={["Admin"]}>
+              <ProxyAdd />
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="api-history/:aliasKeyId?" element={<ApiHistory />} />
 

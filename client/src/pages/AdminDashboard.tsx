@@ -292,16 +292,16 @@ function AdminDashboard() {
                 color="primary"
               />
               <StatCard
-                title="Total Alias Keys"
+                title="Total Keys"
                 value={dashboard.totalAliasKeys.toLocaleString()}
-                subtitle="Total alias keys"
+                subtitle="Total keys"
                 icon={Key}
                 color="primary"
               />
               <StatCard
                 title="Active Keys"
                 value={dashboard.approvedAliasKeys.toLocaleString()}
-                subtitle="Approved alias keys"
+                subtitle="Approved keys"
                 icon={CheckCircle}
                 color="success"
               />
@@ -338,7 +338,7 @@ function AdminDashboard() {
                         Aliad Key Status Distribution
                       </h3>
                       <p className="mt-1 text-base text-gray-500">
-                        Breakdown of all alias keys by status
+                        Breakdown of all keys by status
                       </p>
                     </div>
                     <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50">

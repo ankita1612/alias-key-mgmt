@@ -202,7 +202,7 @@ function UserDashboard() {
                     User Dashboard
                   </h1>
                   <p className="mt-1 text-gray-500">
-                    Monitor your alias keys and API usage
+                    Monitor your keys and API usage
                   </p>
                 </div>
               </div>
@@ -234,9 +234,9 @@ function UserDashboard() {
           <>
             <div className="grid gap-6 mb-10 sm:grid-cols-2 lg:grid-cols-4">
               <MetricCard
-                title="Total Alias Keys"
+                title="Total Keys"
                 value={dashboard.totalAliasKeys.toLocaleString()}
-                description="All alias keys created by you"
+                description="All keys created by you"
                 icon={Key}
                 color="primary"
               />
@@ -255,9 +255,9 @@ function UserDashboard() {
                 color="warning"
               />
               <MetricCard
-                title="Monthly Alias Key"
+                title="Monthly Key"
                 value={dashboard.totalAliasRequestsCurrentMonth.toLocaleString()}
-                description="Alias requests this month"
+                description="Key requests this month"
                 icon={Calendar}
                 color="info"
               />
@@ -282,7 +282,7 @@ function UserDashboard() {
                           Quota Usage
                         </h3>
                         <p className="mt-1 text-base text-gray-500">
-                          Active aliases quota consumption
+                          Active  quota consumption
                         </p>
                       </div>
                       <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50">

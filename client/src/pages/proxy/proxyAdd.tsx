@@ -12,7 +12,7 @@ import type { IProxy } from "../../interface/proxy.interface";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const schema = yup.object().shape({
-  domain: yup.string().required("Domain is required"),
+  domain: yup.string().required("Domain is required1"),
   project_name: yup.string().required("Project name is required"),
   proxy_name: yup.string().required("Proxy name is required"),
   proxy_token: yup.string().required("Proxy token is required"),
@@ -56,8 +56,8 @@ function ProxyAdd() {
       project_name: "",
       proxy_name: "",
       proxy_token: "",
+      status: "Active",
       curl: "",
-      credit: "",
     },
   });
 
@@ -70,6 +70,7 @@ function ProxyAdd() {
         project_name: "",
         proxy_name: "",
         proxy_token: "",
+        status: "Active",
         curl: "",
         credit: undefined,
       });
@@ -118,6 +119,7 @@ function ProxyAdd() {
         project_name: data.project_name,
         proxy_name: data.proxy_name,
         proxy_token: data.proxy_token,
+        status: data.status,
         curl: data.curl,
       };
       let res: any;
@@ -145,7 +147,7 @@ function ProxyAdd() {
       setLoading(false);
     }
   };
-  const totalQuotaValue = watch("total_quota");
+  const creditValue = watch("credit");
 
   return (
     <div className="py-4">
@@ -184,7 +186,7 @@ function ProxyAdd() {
               {/* Domain Field */}
               <div>
                 <label className="block mb-2 text-base font-semibold text-gray-700">
-                  Domain <span className="text-red-500">*</span>
+                  Domain Name<span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
@@ -201,56 +203,132 @@ function ProxyAdd() {
                   />
                 </div>
               </div>
-
-              {/* Total Quota Field */}
               <div>
                 <label className="block mb-2 text-base font-semibold text-gray-700">
-                  Total Quota <span className="text-red-500">*</span>
-                </label>
-                <div>
-                  {mode == "add" ? (
-                    <>
-                      <input
-                        type="text"
-                        placeholder="Enter total quota"
-                        {...register("total_quota", { valueAsNumber: true })}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/[^0-9]/g, ""); // keep only numbers
-                          setValue("total_quota", val); // ✅ correct usage
-                        }}
-                        className={`w-full pl-4 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 ${
-                          errors.total_quota
-                            ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                            : "border-gray-300 focus:ring-primary/20 focus:border-primary"
-                        }`}
-                      />
-                    </>
-                  ) : (
-                    <> {totalQuotaValue && `${totalQuotaValue}`}</>
-                  )}
-                </div>
-              </div>
-
-              {/* Description Field */}
-              <div>
-                <label className="block mb-2 text-base font-semibold text-gray-700">
-                  Purpose / Description
+                  Project Name <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute pointer-events-none top-3 left-3"></div>
-                  <textarea
-                    rows={4}
-                    placeholder="Describe the purpose of this proxy..."
-                    {...register("description")}
-                    className={`w-full pl-4 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 resize-y ${
-                      errors.description
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Please enter project name "
+                    {...register("project_name")}
+                    className={`w-full pl-4 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 ${
+                      errors.project_name
                         ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
                         : "border-gray-300 focus:ring-primary/20 focus:border-primary"
                     }`}
                   />
                 </div>
               </div>
+              <div>
+                <label className="block mb-2 text-base font-semibold text-gray-700">
+                  Proxy Name <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Please enter proxy name"
+                    {...register("proxy_name")}
+                    className={`w-full pl-4 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 ${
+                      errors.proxy_name
+                        ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+                        : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+                    }`}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block mb-2 text-base font-semibold text-gray-700">
+                  Proxy Token <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Please enter proxy token"
+                    {...register("proxy_token")}
+                    className={`w-full pl-4 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 ${
+                      errors.proxy_token
+                        ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+                        : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+                    }`}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block mb-2 text-base font-semibold text-gray-700">
+                  curl <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="please enter curl url"
+                    {...register("curl")}
+                    className={`w-full pl-4 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 ${
+                      errors.curl
+                        ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+                        : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+                    }`}
+                  />
+                </div>
+              </div>
+              {/* Total Quota Field */}
+              <div>
+                <label className="block mb-2 text-base font-semibold text-gray-700">
+                  Credit <span className="text-red-500">*</span>
+                </label>
+                <div>
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Enter total quota"
+                      {...register("credit", { valueAsNumber: true })}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, ""); // keep only numbers
+                        setValue("credit", val); // ✅ correct usage
+                      }}
+                      className={`w-full pl-4 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 ${
+                        errors.credit
+                          ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+                          : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+                      }`}
+                    />
+                  </>
+                </div>
+              </div>
+              <div>
+                <label className="block mb-2 text-base font-semibold text-gray-700">
+                  Status <span className="text-red-500">*</span>
+                </label>
 
+                <div className="relative">
+                  <select
+                    {...register("status", { required: "Status is required" })}
+                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 ${
+                      errors.status
+                        ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+                        : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+                    }`}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+
+                {/* Error message */}
+                {errors.status && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.status.message}
+                  </p>
+                )}
+              </div>
               {/* Action Buttons */}
               <div className="flex flex-col justify-center gap-3 pt-6 sm:flex-row">
                 <button
