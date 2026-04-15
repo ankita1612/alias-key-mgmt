@@ -44,7 +44,6 @@ export class AuthService {
 
   async changePassword(data: IChangePassword, user_id: any) {
     const { current_password, new_password } = data;
-    console.log(user_id);
 
     const user = await User.findById(user_id);
     if (!user) {
@@ -74,7 +73,6 @@ export class AuthService {
   }
   async updateProfile(data: IUpdateProfile, user_id: any) {
     const { first_name, last_name } = data;
-    console.log("=========>" + user_id);
     // ✅ Find user
     const user = await User.findById(user_id);
     if (!user) {

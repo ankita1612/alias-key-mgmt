@@ -8,7 +8,7 @@ export interface IApiHistory extends Document {
   execution_time: string; // in ms
   response_status: string;
   response_msg: string;
-  response_status_code: number;
+  response_code: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

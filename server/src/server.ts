@@ -17,6 +17,8 @@ import adminAuthRouter from "./routes/admin.auth.route";
 import adminUserRouter from "./routes/admin.user.route";
 import aliasKeyRouter from "./routes/admin.aliasKey.route";
 import proxyRouter from "./routes/admin.proxy.route";
+import proxyAPIRouter from "./routes/admin.proxyAPI.route";
+
 import apiHisoryRouter from "./routes/admin.apiHistory.route";
 import dashboardRouter from "./routes/admin.dashbaord.route";
 
@@ -61,10 +63,10 @@ if (cluster.isPrimary) {
   app.use("/api/auth", adminAuthRouter);
   app.use("/api/user", adminUserRouter);
   app.use("/api/alias-key", aliasKeyRouter);
-  app.use("/api/get-proxy-response", proxyRouter);
+  app.use("/api/get-proxy-response", proxyAPIRouter);
   app.use("/api/api-hisory", apiHisoryRouter);
   app.use("/api/dashboard", dashboardRouter);
-
+  app.use("/api/proxy", proxyRouter);
   //page not found
   app.use((req: Request, res: Response, next: NextFunction) => {
     next(new ApiError("Page not found", 404));

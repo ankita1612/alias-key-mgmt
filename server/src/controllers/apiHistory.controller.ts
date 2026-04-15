@@ -1,19 +1,25 @@
 import { Request, Response, NextFunction } from "express";
-import ApiError from "../utils/api.error";
 import { Types } from "mongoose";
 
 import ApiHistoryModel from "../models/apiHistory.model";
-import User from "../models/user.model";
 import AliasKeyModel from "../models/aliasKey.model";
+
+interface AuthRequest extends Request {
+  user?: any;
+}
 class ApiHistoryController {
-  getApiHistory = async (req: Request, res: Response, next: NextFunction) => {
+  getApiHistory = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction,
+  ) => {
     try {
       const user = req.user;
 
       // ✅ Query params
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
-      const search = (req.query.search as string) || "";
+      const search = ((req.query.search as string) || "").trim();
 
       // ✅ FIXED: match frontend params
       const sortFieldRaw = req.query.sortField as string;
@@ -42,8 +48,8 @@ class ApiHistoryController {
       }
 
       const sortOrder = sortOrderRaw === "asc" ? 1 : -1;
-
       const aliasKeyFilter = req.query.alias_key as string;
+      const userFilter = req.query.user as string;
       const skip = (page - 1) * limit;
 
       // 🔐 Base match
@@ -59,86 +65,131 @@ class ApiHistoryController {
         match.user_alias_key_id = new Types.ObjectId(aliasKeyFilter);
       }
 
-      // 🔍 Search condition
-      const searchMatch = search
-        ? {
-            $or: [
-              { origin_url: { $regex: search, $options: "i" } },
-              { method: { $regex: search, $options: "i" } },
-              { "alias.alias_key": { $regex: search, $options: "i" } },
-              { response_msg: { $regex: search, $options: "i" } },
-            ],
-          }
-        : {};
+      if (
+        user.role === "Admin" &&
+        userFilter &&
+        Types.ObjectId.isValid(userFilter)
+      ) {
+        match.user_id = new Types.ObjectId(userFilter);
+      }
 
-      // 🔥 MAIN PIPELINE
-      const pipeline: any[] = [
-        { $match: match },
+      const selectFields =
+        "user_alias_key_id method execution_time response_status response_msg response_code createdAt";
+      let data: any[] = [];
+      let total = 0;
 
-        // 🔑 Join alias key
-        {
-          $lookup: {
-            from: "alias_keys",
-            localField: "user_alias_key_id",
-            foreignField: "_id",
-            as: "alias",
+      const needsAliasAggregation = sortField === "alias_key" || !!search;
+
+      // Separate base conditions from search conditions
+      const baseQuery: any = { ...match };
+      let searchQuery: any = {};
+
+      if (search) {
+        const numericSearch =
+          !Number.isNaN(Number(search)) && search.trim() !== "";
+        const searchConditions: any[] = [
+          { method: { $regex: search, $options: "i" } },
+          { response_msg: { $regex: search, $options: "i" } },
+          { response_status: { $regex: search, $options: "i" } },
+          { execution_time: { $regex: search, $options: "i" } },
+        ];
+
+        // Only add response_code search if it's a numeric search
+        if (numericSearch) {
+          searchConditions.push({ response_code: Number(search) });
+        }
+
+        // Add alias key search only when we have the join (in aggregation)
+        if (needsAliasAggregation) {
+          searchConditions.push({
+            "alias.alias_key": { $regex: search, $options: "i" },
+          });
+        }
+
+        searchQuery = { $or: searchConditions };
+      }
+
+      // For non-aggregation case, combine base and search queries
+      const query: any = search ? { ...baseQuery, ...searchQuery } : baseQuery;
+      if (!needsAliasAggregation) {
+        const [rows, count] = await Promise.all([
+          ApiHistoryModel.find(query)
+            .sort({ [sortField]: sortOrder })
+            .skip(skip)
+            .limit(limit)
+            .select(selectFields)
+            .populate({ path: "user_alias_key_id", select: "alias_key" })
+            .lean(),
+          ApiHistoryModel.countDocuments(query),
+        ]);
+
+        data = rows.map((row: any) => ({
+          ...row,
+          alias: {
+            alias_key: row.user_alias_key_id?.alias_key || "",
           },
-        },
-        { $unwind: { path: "$alias", preserveNullAndEmptyArrays: true } },
+        }));
+        total = count;
+      } else {
+        const lookupPipeline = [
+          {
+            $lookup: {
+              from: "alias_keys",
+              localField: "user_alias_key_id",
+              foreignField: "_id",
+              as: "alias",
+            },
+          },
+          { $unwind: { path: "$alias", preserveNullAndEmptyArrays: true } },
+        ];
 
-        ...(search ? [{ $match: searchMatch }] : []),
-
-        // ✅ FIX: ensure numeric sorting
-        {
-          $addFields: {
-            execution_time: {
-              $convert: {
-                input: "$execution_time",
-                to: "double",
-                onError: 0,
-                onNull: 0,
+        const aggregationPipeline: any[] = [
+          { $match: baseQuery }, // Base conditions first
+          ...lookupPipeline, // Then join
+          ...(search ? [{ $match: searchQuery }] : []), // Then search (if any)
+          {
+            $addFields: {
+              alias_key: "$alias.alias_key",
+            },
+          },
+          {
+            $sort: {
+              [sortField]: sortOrder,
+            },
+          },
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $project: {
+              user_alias_key_id: 1,
+              method: 1,
+              execution_time: 1,
+              response_status: 1,
+              response_msg: 1,
+              response_code: 1,
+              createdAt: 1,
+              alias: {
+                alias_key: "$alias.alias_key",
               },
             },
-            alias_key: "$alias.alias_key", // ✅ required for sorting
           },
-        },
-        {
-          $sort: {
-            [sortField]: sortOrder,
-          },
-        },
+        ];
 
-        // 📄 Pagination
-        { $skip: skip },
-        { $limit: limit },
-      ];
+        const countPipeline: any[] = [
+          { $match: baseQuery }, // Base conditions first
+          ...lookupPipeline, // Then join
+          ...(search ? [{ $match: searchQuery }] : []), // Then search (if any)
+          { $count: "total" },
+        ];
 
-      // 🔥 COUNT PIPELINE
-      const countPipeline: any[] = [
-        { $match: match },
+        const [rows, countResult] = await Promise.all([
+          ApiHistoryModel.aggregate(aggregationPipeline),
+          ApiHistoryModel.aggregate(countPipeline),
+        ]);
 
-        {
-          $lookup: {
-            from: "alias_keys",
-            localField: "user_alias_key_id",
-            foreignField: "_id",
-            as: "alias",
-          },
-        },
-        { $unwind: { path: "$alias", preserveNullAndEmptyArrays: true } },
-
-        ...(search ? [{ $match: searchMatch }] : []),
-
-        { $count: "total" },
-      ];
-
-      // 🚀 Execute in parallel
-      const [data, countResult] = await Promise.all([
-        ApiHistoryModel.aggregate(pipeline),
-        ApiHistoryModel.aggregate(countPipeline),
-      ]);
-
-      const total = countResult[0]?.total || 0;
+        data = rows;
+        total = countResult[0]?.total || 0;
+      }
 
       // 🔽 Alias dropdown
       let aliasKeys = [];

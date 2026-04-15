@@ -45,6 +45,14 @@ const ApiHistorySchema = new Schema<IApiHistory>(
   },
 );
 
+ApiHistorySchema.index({ user_id: 1, createdAt: -1 });
+ApiHistorySchema.index({ user_alias_key_id: 1 });
+ApiHistorySchema.index({ response_code: 1 });
+ApiHistorySchema.index({ response_status: 1 });
+ApiHistorySchema.index({ execution_time: 1 });
+ApiHistorySchema.index({ method: 1 });
+ApiHistorySchema.index({ user_id: 1, user_alias_key_id: 1, createdAt: -1 });
+
 const ApiHistoryModel = mongoose.model<IApiHistory>(
   "api_call_history",
   ApiHistorySchema,

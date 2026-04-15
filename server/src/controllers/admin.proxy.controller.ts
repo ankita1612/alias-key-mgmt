@@ -1,139 +1,153 @@
 import { Request, Response, NextFunction } from "express";
-import { userService } from "../services/admin.user.service";
-import IUser, { GetUsersQuery } from "../interface/user.interface";
-import { Types } from "mongoose";
-import ApiError from "../utils/api.error";
-import AliasKeyModel from "../models/aliasKey.model";
-import ApiHistoryModel from "../models/apiHistory.model";
+import ProxyModel from "../models/proxy.model";
 
 class ProxyController {
-  handleResponse = async (
-    res: Response,
-    user_id: Types.ObjectId | null,
-    alias_key_id: Types.ObjectId | null,
-    method: string,
-    startTime: number,
-    response_status: string,
-    response_msg: string,
-    response_code: number,
-    response_code_str: string,
-  ) => {
-    const execTime = Date.now() - startTime;
+  // ✅ CREATE
+  addData = async (req: Request, res: Response, next: NextFunction) => {
+    try { 
 
-    ApiHistoryModel.create({
-      user_id: user_id,
-      user_alias_key_id: alias_key_id,
-      method: method,
-      execution_time: execTime,
-      response_status: response_status,
-      response_msg: response_msg,
-      response_code: response_code,
-      response_code_str: response_code_str,
-    }).catch((err) => {
-      console.error("❌ Logging failed:", err.message);
-    });
-
-    return res.status(response_code).json({
-      status: response_status,
-      message: response_msg,
-      execution_time: `${execTime}ms`,
-    });
-  };
-  getProxyResponse = async (req: Request, res: Response): Promise<any> => {
-    const startTime = Date.now();
-    const alias_key = req.query.alias_key || req.body.alias_key;
-
-    // Early validation
-    if (!alias_key) {
-      return res.status(400).json({
-        status: "fail",
-        message: "Alias key not exist",
+      const data = req.body;
+      const proxy = await ProxyModel.create({
+        domain:data.domain?.trim(),
+        project_name:data.project_name?.trim(),
+        proxy_name:data.proxy_name?.trim(),
+        proxy_token:data.proxy_token?.trim(),
+        curl:data.curl?.trim(),
+        credit:data.credit?.trim(),
       });
+
+      res.status(201).json({
+        success: true,
+        message: "Proxy created successfully",
+        data: proxy,
+      });
+    } catch (error) {
+      next(error);
     }
+  };
 
+  // ✅ GET ALL (with pagination + search)
+  getDatas = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Single optimized query: try to find and update in one go
-      const aliasKey = await AliasKeyModel.findOneAndUpdate(
-        {
-          alias_key,
-          status: "Active",
-          remaining_quota: { $gt: 0 },
-        },
-        { $inc: { remaining_quota: -1 } },
-        { new: true },
-      );
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = ((req.query.search as string) || "").trim();
 
-      // Success case
-      if (aliasKey) {
-        return this.handleResponse(
-          res,
-          aliasKey.user_id,
-          aliasKey._id,
-          req.method,
-          startTime,
-          "success",
-          "Api call success",
-          200,
-          "SUCCESS",
-        );
+      const skip = (page - 1) * limit;
+
+      const match: any = {};
+
+      if (search) {
+        match.$or = [
+          { domine: { $regex: search, $options: "i" } },
+          { project_name: { $regex: search, $options: "i" } },
+          { proxy_name: { $regex: search, $options: "i" } },
+          { proxy_token: { $regex: search, $options: "i" } },
+          { curl: { $regex: search, $options: "i" } },
+        ];
       }
 
-      // Key not found or conditions not met - check why
-      const existingKey = await AliasKeyModel.findOne({ alias_key });
+      const [data, total] = await Promise.all([
+        ProxyModel.find(match).sort({ createdAt: -1 }).skip(skip).limit(limit),
 
-      // Key doesn't exist at all
-      if (!existingKey) {
-        return res.status(400).json({
-          status: "fail",
-          message: "Invalid alias key",
+        ProxyModel.countDocuments(match),
+      ]);
+
+      res.status(200).json({
+        success: true,
+        data,
+        pagination: {
+          total,
+          page,
+          limit,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // ✅ GET SINGLE
+  getData = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+
+      const proxy = await ProxyModel.findById(id);
+
+      if (!proxy) {
+        return res.status(404).json({
+          success: false,
+          message: "Proxy not found",
         });
       }
 
-      // Key exists but has issues - determine which one
-      let response_code: number;
-      let response_code_str: string;
-      let response_msg: string;
+      res.status(200).json({
+        success: true,
+        data: proxy,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 
-      if (existingKey.status !== "Active") {
-        response_code = 403;
-        response_code_str = "KEY_NOT_ACTIVE";
-        response_msg = "Alias key is not active";
-      } else if (existingKey.remaining_quota <= 0) {
-        response_code = 429;
-        response_code_str = "LIMIT_EXCEED";
-        response_msg = "Alias key limit exceed";
-      } else {
-        // Fallback for any other edge case
-        response_code = 400;
-        response_code_str = "INTERNAL_SEREVER";
-        response_msg = "Something went wrong";
+  // ✅ UPDATE
+  updateData = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          errors: errors.array(),
+        });
       }
 
-      return this.handleResponse(
-        res,
-        existingKey.user_id,
-        existingKey._id,
-        req.method,
-        startTime,
-        "fail",
-        response_msg,
-        response_code,
-        response_code_str,
+      const { id } = req.params;
+
+      const updated = await ProxyModel.findByIdAndUpdate(
+        id,
+        { $set: req.body },
+        { new: true },
       );
+
+      if (!updated) {
+        return res.status(404).json({
+          success: false,
+          message: "Proxy not found",
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Proxy updated successfully",
+        data: updated,
+      });
     } catch (error) {
-      // Error case
-      return this.handleResponse(
-        res,
-        null,
-        null,
-        req.method,
-        startTime,
-        "fail",
-        "Internal server error",
-        500,
-        "INTERNAL_SERVER",
-      );
+      next(error);
+    }
+  };
+
+  // ✅ DELETE
+  deleteData = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+
+      const deleted = await ProxyModel.findByIdAndDelete(id);
+
+      if (!deleted) {
+        return res.status(404).json({
+          success: false,
+          message: "Proxy not found",
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Proxy deleted successfully",
+      });
+    } catch (error) {
+      next(error);
     }
   };
 }
+
 export const proxyController = new ProxyController();

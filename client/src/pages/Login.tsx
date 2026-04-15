@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
-import { useEffect } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { useEffect, useState } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
@@ -26,7 +27,7 @@ const schema = yup.object({
 const Login = () => {
   const { setUserData } = useAuth();
   const navigate = useNavigate();
-
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -116,43 +117,39 @@ const Login = () => {
           </div>
 
           {/* Password Field */}
-          <div>
+          <div className="relative">
             <div className="flex items-center justify-between mb-1.5">
               <label htmlFor="password" className={label_style}>
                 Password
               </label>
-              {/* <button
-                type="button"
-                className="text-base text-primary hover:text-primaryHover transition-colors duration-200"
-              >
-                Forgot password?
-              </button> */}
             </div>
+
             <input
               id="password"
-              type="password"
+              type={showPassword ? "text" : "password"} // 👈 toggle
               placeholder="••••••••"
               autoComplete="current-password"
-              className={`${textbox_style} ${
+              className={`${textbox_style} pr-10 ${
                 errors.password
                   ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
                   : ""
               }`}
               {...register("password")}
             />
-          </div>
 
-          {/* Remember Me */}
-          {/* <div className="flex items-center justify-between">
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary focus:ring-2"
-                {...register("rememberMe")}
-              />
-              <span className="text-base text-gray-700">Remember me</span>
-            </label>
-          </div> */}
+            {/* Eye Icon */}
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-[38px] text-gray-400 hover:text-gray-600"
+            >
+              {showPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
+            </button>
+          </div>
 
           {/* Submit Button */}
           <button

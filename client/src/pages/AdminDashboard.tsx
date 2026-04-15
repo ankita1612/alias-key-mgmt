@@ -12,7 +12,6 @@ import {
   Legend,
   BarChart,
   Bar,
-  PieChart,
   Pie,
   Cell,
   AreaChart,
@@ -29,6 +28,7 @@ import {
   Database,
   RefreshCw,
   Shield,
+  PieChart,
   Zap,
   ArrowUpRight,
   ArrowDownRight,
@@ -137,7 +137,7 @@ function AdminDashboard() {
         <div className="relative p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-sm font-medium tracking-wider text-gray-500 uppercase">
+              <p className="text-base font-medium tracking-wider text-gray-500 uppercase">
                 {title}
               </p>
               <div className="flex items-baseline mt-2 space-x-2">
@@ -146,14 +146,14 @@ function AdminDashboard() {
                   <div
                     className={`flex items-center ${trend >= 0 ? "text-emerald-600" : "text-rose-600"}`}
                   >
-                    {trend >= 0 ? (
+                    {/* {trend >= 0 ? (
                       <ArrowUpRight className="w-4 h-4" />
                     ) : (
                       <ArrowDownRight className="w-4 h-4" />
                     )}
-                    <span className="text-sm font-semibold">
+                    <span className="text-base font-semibold">
                       {Math.abs(trend)}%
-                    </span>
+                    </span> */}
                   </div>
                 )}
               </div>
@@ -165,7 +165,7 @@ function AdminDashboard() {
               <Icon className="w-6 h-6 text-white" />
             </div>
           </div>
-          {trend !== undefined && (
+          {/* {trend !== undefined && (
             <div className="mt-4">
               <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
                 <div
@@ -174,7 +174,7 @@ function AdminDashboard() {
                 />
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     );
@@ -184,8 +184,8 @@ function AdminDashboard() {
     if (active && payload && payload.length) {
       return (
         <div className="px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-lg">
-          <p className="text-sm font-semibold text-gray-900">{label}</p>
-          <p className="text-sm text-gray-600">
+          <p className="text-base font-semibold text-gray-900">{label}</p>
+          <p className="text-base text-gray-600">
             Value:{" "}
             <span className="font-medium">
               {payload[0].value.toLocaleString()}
@@ -207,13 +207,22 @@ function AdminDashboard() {
           <p className="mt-6 text-xl font-semibold text-gray-900">
             Loading Dashboard
           </p>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-base text-gray-500">
             Fetching latest analytics data...
           </p>
         </div>
       </div>
     );
   }
+
+  const aliasStatusData = dashboard
+    ? [
+        { name: "Active", value: dashboard.aliasStatusCounts.Active },
+        { name: "Pending", value: dashboard.aliasStatusCounts.Pending },
+        { name: "Inactive", value: dashboard.aliasStatusCounts.Inactive },
+        { name: "Rejected", value: dashboard.aliasStatusCounts.Rejected },
+      ].filter((item) => item.value > 0)
+    : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
@@ -251,12 +260,12 @@ function AdminDashboard() {
             <div className="flex items-center mt-4 space-x-4 lg:mt-0">
               <div className="flex items-center px-4 py-2 space-x-2 bg-white border border-gray-100 shadow-sm rounded-xl">
                 <Globe className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-600">Live</span>
+                <span className="text-base text-gray-600">Live</span>
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               </div>
               <div className="text-right">
                 <p className="text-xs text-gray-500">Last updated</p>
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-base font-medium text-gray-700">
                   {lastUpdated.toLocaleTimeString()}
                 </p>
               </div>
@@ -283,16 +292,23 @@ function AdminDashboard() {
                 color="primary"
               />
               <StatCard
+                title="Total Alias Keys"
+                value={dashboard.totalAliasKeys.toLocaleString()}
+                subtitle="Total alias keys"
+                icon={Key}
+                color="primary"
+              />
+              <StatCard
                 title="Active Keys"
                 value={dashboard.approvedAliasKeys.toLocaleString()}
                 subtitle="Approved alias keys"
-                icon={Key}
+                icon={CheckCircle}
                 color="success"
               />
               <StatCard
-                title="Pending Approvals"
+                title="Pending Keys"
                 value={dashboard.pendingApprovals.toLocaleString()}
-                subtitle="Awaiting review"
+                subtitle="Keys awaiting approval"
                 icon={Clock}
                 color="warning"
               />
@@ -303,33 +319,25 @@ function AdminDashboard() {
                 icon={Activity}
                 color="info"
               />
-              <StatCard
+              {/* <StatCard
                 title="Success Rate"
                 value={`${dashboard.requestSuccessRate}%`}
                 subtitle="Request success rate"
                 icon={CheckCircle}
                 color="success"
-              />
-              <StatCard
-                title="Total Keys"
-                value={dashboard.totalAliasKeys.toLocaleString()}
-                subtitle="Complete inventory"
-                icon={Database}
-                color="primary"
-              />
+              /> */}
             </div>
 
             {/* Charts Grid */}
             <div className="grid gap-8 mb-10 lg:grid-cols-2">
-              {/* Alias Status Distribution */}
-              <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
+              {/* <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
                 <div className="p-6 border-b border-gray-100">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">
-                        Key Status Distribution
+                        Aliad Key Status Distribution
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500">
+                      <p className="mt-1 text-base text-gray-500">
                         Breakdown of all alias keys by status
                       </p>
                     </div>
@@ -339,35 +347,24 @@ function AdminDashboard() {
                   </div>
                 </div>
                 <div className="p-6">
-                  <div className="h-80">
+                  <div className="w-full h-[320px] min-h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart
                         margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
                       >
                         <Pie
-                          data={[
-                            {
-                              name: "Active",
-                              value: dashboard.aliasStatusCounts.Active,
-                            },
-                            {
-                              name: "Pending",
-                              value: dashboard.aliasStatusCounts.Pending,
-                            },
-                            {
-                              name: "Inactive",
-                              value: dashboard.aliasStatusCounts.Inactive,
-                            },
-                            {
-                              name: "Rejected",
-                              value: dashboard.aliasStatusCounts.Rejected,
-                            },
-                          ]}
+                          data={
+                            aliasStatusData.length
+                              ? aliasStatusData
+                              : [{ name: "No Data", value: 1 }]
+                          }
                           cx="50%"
                           cy="50%"
                           labelLine={false}
                           label={({ name, percent }) =>
-                            `${name} ${(percent * 100).toFixed(0)}%`
+                            percent > 0
+                              ? `${name} ${(percent * 100).toFixed(0)}%`
+                              : null
                           }
                           outerRadius={90}
                           fill="#8884d8"
@@ -388,18 +385,136 @@ function AdminDashboard() {
                     </ResponsiveContainer>
                   </div>
                 </div>
-              </div>
+              </div> */}
+              <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
+                <div className="p-6 border-b border-gray-100">
+                  <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Distribution of API response types
+                        </h3>
+                        <p className="mt-1 text-base text-gray-500">
+                          API response distribution
+                        </p>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50">
+                        <PieChart className="w-5 h-5 text-blue-600" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="mb-4">
+                      <p className="text-base font-medium text-gray-700">
+                        Total responses tracked
+                      </p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {(
+                          dashboard.apiStatusCounts.SUCCESS +
+                          dashboard.apiStatusCounts.KEY_NOT_ACTIVE +
+                          dashboard.apiStatusCounts.LIMIT_EXCEED +
+                          dashboard.apiStatusCounts.INTERNAL_SERVER
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="space-y-5">
+                      {[
+                        {
+                          label: "Success",
+                          value: dashboard?.apiStatusCounts?.SUCCESS,
+                          color: COLORS.success,
+                          icon: CheckCircle,
+                        },
+                        {
+                          label: "Key Not Active",
+                          value: dashboard?.apiStatusCounts?.KEY_NOT_ACTIVE,
+                          color: COLORS.neutral,
+                          icon: Key,
+                        },
+                        {
+                          label: "Limit Exceeded",
+                          value: dashboard?.apiStatusCounts?.LIMIT_EXCEED,
+                          color: COLORS.warning,
+                          icon: Zap,
+                        },
+                        {
+                          label: "Internal Server Error",
+                          value: dashboard?.apiStatusCounts?.INTERNAL_SERVER,
+                          color: COLORS.error,
+                          icon: AlertCircle,
+                        },
+                      ].map((status) => {
+                        const total = dashboard?.totalRequests || 0;
+                        const value = status?.value || 0;
 
+                        // ✅ Safe percentage
+                        const percentage =
+                          total > 0 ? (value / total) * 100 : 0;
+                        console.log(percentage);
+
+                        // ✅ Better display with appropriate precision
+                        const formattedPercentage =
+                          percentage === 0
+                            ? "0%"
+                            : percentage < 0.01
+                              ? "< 0.01%"
+                              : percentage < 1
+                                ? `${percentage.toFixed(2)}%`
+                                : `${percentage.toFixed(1)}%`;
+                        console.log(formattedPercentage);
+                        // ✅ Ensure bar is visible
+                        const progressWidth =
+                          percentage > 0 && percentage < 1 ? 1 : percentage;
+
+                        return (
+                          <div key={status.label} className="space-y-2">
+                            {/* Top Row */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <status.icon className="w-4 h-4 text-gray-400" />
+                                <span className="text-base font-medium text-gray-700">
+                                  {status.label}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center space-x-2">
+                                <span className="text-base font-semibold text-gray-900">
+                                  {(value || 0).toLocaleString()}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {formattedPercentage}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Progress Bar */}
+                            <div className="w-full h-2 overflow-hidden bg-gray-100 rounded-full">
+                              <div
+                                className="h-full transition-all duration-700 rounded-full"
+                                style={{
+                                  width: `${progressWidth}%`,
+                                  minWidth: percentage > 0 ? "4px" : "0px", // 👈 ensures visibility
+                                  backgroundColor: status.color,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
               {/* API Requests Trend */}
               <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
                 <div className="p-6 border-b border-gray-100">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">
-                        API Request Trends
+                        Request Activity
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Daily request volume over the last 7 days
+                      <p className="mt-1 text-base text-gray-500">
+                        API requests over the last 7 days
                       </p>
                     </div>
                     <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50">
@@ -456,14 +571,14 @@ function AdminDashboard() {
             {/* Additional Metrics */}
             <div className="grid gap-8 md:grid-cols-2">
               {/* API Status Breakdown */}
-              <div className="transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
+              {/* <div className="transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
                 <div className="p-6 border-b border-gray-100">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">
                         API Response Status
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500">
+                      <p className="mt-1 text-base text-gray-500">
                         Distribution of API response types
                       </p>
                     </div>
@@ -477,56 +592,71 @@ function AdminDashboard() {
                     {[
                       {
                         label: "Success",
-                        value: dashboard.apiStatusCounts.SUCCESS,
+                        value: dashboard?.apiStatusCounts?.SUCCESS,
                         color: COLORS.success,
                         icon: CheckCircle,
                       },
                       {
                         label: "Key Not Active",
-                        value: dashboard.apiStatusCounts.KEY_NOT_ACTIVE,
+                        value: dashboard?.apiStatusCounts?.KEY_NOT_ACTIVE,
                         color: COLORS.neutral,
                         icon: Key,
                       },
                       {
                         label: "Limit Exceeded",
-                        value: dashboard.apiStatusCounts.LIMIT_EXCEED,
+                        value: dashboard?.apiStatusCounts?.LIMIT_EXCEED,
                         color: COLORS.warning,
                         icon: Clock,
                       },
                       {
                         label: "Internal Server Error",
-                        value: dashboard.apiStatusCounts.INTERNAL_SERVER,
+                        value: dashboard?.apiStatusCounts?.INTERNAL_SERVER,
                         color: COLORS.error,
                         icon: AlertCircle,
                       },
                     ].map((status) => {
-                      const percentage =
-                        (status.value / dashboard.totalRequests) * 100;
+                      const total = dashboard?.totalRequests || 0;
+                      const value = status?.value || 0;
+
+                      // ✅ Safe percentage
+                      const percentage = total > 0 ? (value / total) * 100 : 0;
+
+                      // ✅ Better display
+                      const formattedPercentage =
+                        percentage > 0 && percentage < 0.01
+                          ? "< 0.01%"
+                          : `${percentage.toFixed(1)}%`;
+
+                      // ✅ Ensure bar is visible
+                      const progressWidth =
+                        percentage > 0 && percentage < 1 ? 1 : percentage;
+
                       return (
                         <div key={status.label} className="space-y-2">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                               <status.icon className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm font-medium text-gray-700">
+                              <span className="text-base font-medium text-gray-700">
                                 {status.label}
                               </span>
                             </div>
+
                             <div className="flex items-center space-x-2">
-                              <span className="text-sm font-semibold text-gray-900">
-                                {status.value.toLocaleString()}
+                              <span className="text-base font-semibold text-gray-900">
+                                {(value || 0).toLocaleString()}
                               </span>
                               <span className="text-xs text-gray-500">
-                                {Number.isNaN(percentage) || percentage === 0
-                                  ? "0%"
-                                  : `${percentage.toFixed(1)}%`}
+                                {formattedPercentage}
                               </span>
                             </div>
                           </div>
+
                           <div className="w-full h-2 overflow-hidden bg-gray-100 rounded-full">
                             <div
                               className="h-full transition-all duration-700 rounded-full"
                               style={{
-                                width: `${percentage}%`,
+                                width: `${progressWidth}%`,
+                                minWidth: percentage > 0 ? "4px" : "0px", // 👈 ensures visibility
                                 backgroundColor: status.color,
                               }}
                             />
@@ -536,7 +666,7 @@ function AdminDashboard() {
                     })}
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Key Metrics Overview */}
               {/* <div className="overflow-hidden shadow-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl">
@@ -546,7 +676,7 @@ function AdminDashboard() {
                       <h3 className="text-xl font-semibold text-white">
                         Platform Health
                       </h3>
-                      <p className="mt-1 text-sm text-indigo-200">
+                      <p className="mt-1 text-base text-indigo-200">
                         Key performance indicators
                       </p>
                     </div>
@@ -557,8 +687,8 @@ function AdminDashboard() {
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm text-indigo-200">System Uptime</p>
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-base text-indigo-200">System Uptime</p>
+                        <p className="text-base font-semibold text-white">
                           99.95%
                         </p>
                       </div>
@@ -573,7 +703,7 @@ function AdminDashboard() {
                       <div>
                         <div className="flex items-center space-x-2">
                           <Cpu className="w-4 h-4 text-indigo-200" />
-                          <p className="text-sm text-indigo-200">
+                          <p className="text-base text-indigo-200">
                             Avg Response Time
                           </p>
                         </div>
@@ -584,7 +714,7 @@ function AdminDashboard() {
                       <div>
                         <div className="flex items-center space-x-2">
                           <AlertCircle className="w-4 h-4 text-indigo-200" />
-                          <p className="text-sm text-indigo-200">Error Rate</p>
+                          <p className="text-base text-indigo-200">Error Rate</p>
                         </div>
                         <p className="mt-2 text-2xl font-bold text-white">
                           {(
@@ -600,7 +730,7 @@ function AdminDashboard() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                           <Activity className="w-4 h-4 text-indigo-200" />
-                          <p className="text-sm text-indigo-200">
+                          <p className="text-base text-indigo-200">
                             Active Monitoring
                           </p>
                         </div>

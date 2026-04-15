@@ -22,9 +22,17 @@ class DashboardController {
       if (req.user.role === "User") {
         const now = new Date();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        const sevenDaysAgo = new Date(now);
-        sevenDaysAgo.setDate(now.getDate() - 6);
-        sevenDaysAgo.setHours(0, 0, 0, 0);
+        const sevenDaysAgo = new Date(
+          Date.UTC(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate() - 6,
+            0,
+            0,
+            0,
+            0,
+          ),
+        );
 
         const [
           totalAliasKeys,
@@ -73,7 +81,11 @@ class DashboardController {
             {
               $group: {
                 _id: {
-                  $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+                  $dateToString: {
+                    format: "%Y-%m-%d",
+                    date: "$createdAt",
+                    timezone: "UTC",
+                  },
                 },
                 count: { $sum: 1 },
               },
@@ -140,8 +152,17 @@ class DashboardController {
 
         const requestsLast7Days = [] as Array<{ date: string; count: number }>;
         for (let i = 0; i < 7; i++) {
-          const day = new Date(sevenDaysAgo);
-          day.setDate(sevenDaysAgo.getDate() + i);
+          const day = new Date(
+            Date.UTC(
+              sevenDaysAgo.getUTCFullYear(),
+              sevenDaysAgo.getUTCMonth(),
+              sevenDaysAgo.getUTCDate() + i,
+              0,
+              0,
+              0,
+              0,
+            ),
+          );
           const iso = day.toISOString().slice(0, 10);
           requestsLast7Days.push({
             date: day.toLocaleDateString("en-US", {
@@ -190,9 +211,17 @@ class DashboardController {
           1,
         );
         const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-        const sevenDaysAgo = new Date(now);
-        sevenDaysAgo.setDate(now.getDate() - 6);
-        sevenDaysAgo.setHours(0, 0, 0, 0);
+        const sevenDaysAgo = new Date(
+          Date.UTC(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate() - 6,
+            0,
+            0,
+            0,
+            0,
+          ),
+        );
 
         const [
           totalUsers,
@@ -244,7 +273,11 @@ class DashboardController {
             {
               $group: {
                 _id: {
-                  $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+                  $dateToString: {
+                    format: "%Y-%m-%d",
+                    date: "$createdAt",
+                    timezone: "UTC",
+                  },
                 },
                 count: { $sum: 1 },
               },
@@ -311,8 +344,17 @@ class DashboardController {
 
         const requestsLast7Days = [] as Array<{ date: string; count: number }>;
         for (let i = 0; i < 7; i++) {
-          const day = new Date(sevenDaysAgo);
-          day.setDate(sevenDaysAgo.getDate() + i);
+          const day = new Date(
+            Date.UTC(
+              sevenDaysAgo.getUTCFullYear(),
+              sevenDaysAgo.getUTCMonth(),
+              sevenDaysAgo.getUTCDate() + i,
+              0,
+              0,
+              0,
+              0,
+            ),
+          );
           const iso = day.toISOString().slice(0, 10);
           requestsLast7Days.push({
             date: day.toLocaleDateString("en-US", {

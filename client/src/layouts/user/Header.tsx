@@ -105,7 +105,7 @@ export default function Header() {
             </button> */}
 
             {/* Change Password */}
-            <button
+            {/* <button
               onClick={() => {
                 setOpen(!open);
                 navigate("/change_password");
@@ -117,10 +117,10 @@ export default function Header() {
             >
               <FiSettings />
               Change Password
-            </button>
+            </button> */}
 
             {/* Divider */}
-            <div className="my-1 border-t" />
+            {/* <div className="my-1 border-t" /> */}
 
             {/* Logout */}
             <button

@@ -18,7 +18,7 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import { useParams } from "react-router-dom";
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import type { IAliasKey } from "../../interface/aliasKey.interface";
 import ApiHistoryRow from "./ApiHistoryRow";
@@ -31,17 +31,18 @@ import { CheckCircle, Clock } from "lucide-react";
 import { MdClose } from "react-icons/md";
 const capitalize = (text?: string) =>
   text ? text.charAt(0).toUpperCase() + text.slice(1) : "-";
-function AliasKeyList() {
+function ApiHistory() {
   const { aliasKeyId } = useParams();
   const { user } = useAuth();
   const [apiData, setApiData] = useState<IAliasKey[]>([]);
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const limit = 10;
   const [total, setTotal] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [sortField, setSortField] = useState("_id");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [selectedRow, setSelectedRow] = useState<IAliasKey | null>(null);
@@ -49,11 +50,18 @@ function AliasKeyList() {
   const [mobileView, setMobileView] = useState(false);
   const [users, setUsers] = useState([]);
   const [aliasKeys, setAliasKeys] = useState([]);
+  const aliasKeysLoaded = useRef(false);
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedAliasKey, setSelectedAliasKey] = useState(aliasKeyId || "");
 
   // Check screen size for mobile view
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500); // ✅ better UX
 
+    return () => clearTimeout(timer);
+  }, [search]);
   const handleActionClick = async (row: IAliasKey) => {
     try {
       setLoading(true);
@@ -80,64 +88,77 @@ function AliasKeyList() {
   };
   useEffect(() => {
     setPage(1);
-  }, [selectedAliasKey, selectedUser, search]);
+  }, [selectedAliasKey, selectedUser, debouncedSearch]);
   useEffect(() => {
     if (!aliasKeyId) {
       setSelectedAliasKey("");
     }
   }, [location.pathname]);
-  const fetchData = useCallback(async () => {
-    // 🚫 Prevent first empty call
-    //if (aliasKeyId && !selectedAliasKey) return;
-
+  useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
+    let isMounted = true;
 
-    try {
-      const { data } = await apiClient.get(BACKEND_URL + "/api/api-hisory", {
-        signal: controller.signal,
-        params: {
-          page,
-          limit,
-          search,
-          sortField,
-          sortOrder,
-          user: selectedUser,
-          alias_key: selectedAliasKey,
-        },
-      });
+    const loadHistory = async () => {
+      setLoading(true);
 
-      setApiData(data.data);
-      setTotal(data.pagination.total);
-      setUsers(data.usersList || []);
-      setAliasKeys(data.aliasKeysList || []);
-    } catch (error: any) {
-      if (error.name !== "CanceledError") {
-        toast.error(
-          error?.response?.data?.message ||
-            error?.message ||
-            "Failed to load data",
-        );
+      try {
+        const { data } = await apiClient.get(BACKEND_URL + "/api/api-hisory", {
+          signal: controller.signal,
+          params: {
+            page,
+            limit,
+            search: debouncedSearch,
+            sortField,
+            sortOrder,
+            user: selectedUser,
+            alias_key: selectedAliasKey,
+          },
+        });
+
+        if (!isMounted) return;
+
+        setApiData(data.data);
+        setTotal(data.pagination.total);
+
+        if (!aliasKeysLoaded.current && data.aliasKeysList) {
+          setAliasKeys(data.aliasKeysList);
+          aliasKeysLoaded.current = true;
+        }
+
+        if (!users.length && data.usersList) {
+          setUsers(data.usersList);
+        }
+      } catch (error: any) {
+        if (error.name !== "CanceledError") {
+          toast.error(
+            error?.response?.data?.message ||
+              error?.message ||
+              "Failed to load data",
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-    } finally {
-      setLoading(false);
-    }
+    };
 
-    return () => controller.abort();
+    loadHistory();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [
     page,
     limit,
-    search,
+    debouncedSearch,
     sortField,
     sortOrder,
     selectedUser,
     selectedAliasKey,
-    aliasKeyId, // ✅ important
+    aliasKeyId,
   ]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   const handleDelete = async (id: string) => {
     const previousData = apiData;
@@ -503,7 +524,7 @@ function AliasKeyList() {
                     </span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">
-                    {selectedRow?.execution_time || "-"}ms
+                    {selectedRow?.execution_time || "0"}ms
                   </p>
                 </div>
 
@@ -514,11 +535,12 @@ function AliasKeyList() {
                       Status
                     </span>
                   </div>
+
                   <span
                     className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-base font-medium ${
                       selectedRow?.response_status === "success"
                         ? "bg-green-100 text-green-700"
-                        : selectedRow?.status === "failed"
+                        : selectedRow?.response_status === "fail"
                           ? "bg-red-100 text-red-700"
                           : "bg-yellow-100 text-yellow-700"
                     }`}
@@ -527,7 +549,7 @@ function AliasKeyList() {
                       className={`w-1.5 h-1.5 rounded-full ${
                         selectedRow?.response_status === "success"
                           ? "bg-green-500"
-                          : selectedRow?.response_status === "failed"
+                          : selectedRow?.response_status === "fail"
                             ? "bg-red-500"
                             : "bg-yellow-500"
                       }`}
@@ -566,11 +588,6 @@ function AliasKeyList() {
                   </h4>
                 </div>
                 <div className="overflow-hidden bg-gray-900 border border-gray-800 shadow-lg rounded-xl">
-                  <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
-                    <span className="font-mono text-base text-gray-400">
-                      JSON
-                    </span>
-                  </div>
                   <pre className="p-4 overflow-auto font-mono text-base text-gray-300 max-h-48 scrollbar-thin">
                     Method: {selectedRow?.method}
                     <br></br>
@@ -588,16 +605,8 @@ function AliasKeyList() {
                   <h4 className="text-base font-semibold text-gray-900">
                     Response Data
                   </h4>
-                  <span className="px-2 py-0.5 text-base font-medium bg-gray-100 text-gray-600 rounded-full">
-                    API Response
-                  </span>
                 </div>
                 <div className="overflow-hidden bg-gray-900 border border-gray-800 shadow-lg rounded-xl">
-                  <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
-                    <span className="font-mono text-base text-gray-400">
-                      JSON
-                    </span>
-                  </div>
                   <pre className="p-4 overflow-auto font-mono text-base text-gray-300 max-h-48 scrollbar-thin">
                     Status: {capitalize(selectedRow?.response_status)} <br></br>
                     Response Message: {selectedRow?.response_msg}
@@ -626,4 +635,4 @@ function AliasKeyList() {
   );
 }
 
-export default AliasKeyList;
+export default ApiHistory;

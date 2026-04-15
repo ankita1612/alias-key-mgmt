@@ -10,10 +10,9 @@ import { FiTrash2 } from "react-icons/fi";
 import { CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
 import apiClient from "../../services/apiClient";
 import { History } from "lucide-react";
-import TotalHitsModal from "./TotalHitsModal";
 import { useState } from "react";
 
-interface AliasKeyRowProps {
+interface ProxyRowProps {
   apiData: IAliasKey;
   handleDelete: (id: string) => void;
   userRole: string;
@@ -24,7 +23,7 @@ interface AliasKeyRowProps {
   gridColsClass: string;
 }
 
-function AliasKeyRow({
+function ProxyRow({
   apiData,
   handleDelete,
   userRole,
@@ -33,7 +32,7 @@ function AliasKeyRow({
   index,
   mobileView = false,
   gridColsClass,
-}: AliasKeyRowProps) {
+}: ProxyRowProps) {
   const navigate = useNavigate();
   const [showStats, setShowStats] = useState(false);
   const handleEdit = () => {
@@ -210,7 +209,7 @@ function AliasKeyRow({
         {["Active", "Inactive"].includes(apiData.status) ? (
           <button
             onClick={() => setShowStats(true)}
-            className="px-2 py-1 text-base font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-md"
+            className="px-2 py-1 text-base font-medium text-indigo-600 rounded-md bg-indigo-50 hover:bg-indigo-100"
           >
             {apiData.total_history_records}
           </button>
@@ -286,11 +285,8 @@ function AliasKeyRow({
           </button>
         )}
       </div>
-      {showStats && (
-        <TotalHitsModal data={apiData} onClose={() => setShowStats(false)} />
-      )}
     </div>
   );
 }
 
-export default AliasKeyRow;
+export default ProxyRow;

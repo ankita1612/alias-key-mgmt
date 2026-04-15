@@ -11,8 +11,8 @@ import {
 } from "react-icons/fi";
 
 import { Link, useLocation } from "react-router-dom";
-import type { IAliasKey } from "../../interface/aliasKey.interface";
-import AliasKeyRow from "./AliasKeyRow";
+import type { IProxy } from "../../interface/proxy.interface";
+import proxyRow from "./proxyRow";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
@@ -32,11 +32,11 @@ import {
 } from "lucide-react";
 import { MdClose } from "react-icons/md";
 
-function AliasKeyList() {
+function ProxyList() {
   const { user } = useAuth();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [apiData, setApiData] = useState<IAliasKey[]>([]);
+  const [apiData, setApiData] = useState<IProxy[]>([]);
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const [page, setPage] = useState(1);
@@ -46,7 +46,7 @@ function AliasKeyList() {
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState("_id");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [selectedRow, setSelectedRow] = useState<IAliasKey | null>(null);
+  const [selectedRow, setSelectedRow] = useState<IProxy | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showActiveInactiveModal, setShowActiveInactiveModal] = useState(false);
   const [newStatus, setNewStatus] = useState(false);
@@ -90,11 +90,11 @@ function AliasKeyList() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showDeleteModal, showModal]);
-  const handleActionClick = (row: IAliasKey) => {
+  const handleActionClick = (row: IProxy) => {
     setSelectedRow(row);
     setShowModal(true);
   };
-  const handleActiveInactiveClick = (row: IAliasKey, newStatus: string) => {
+  const handleActiveInactiveClick = (row: IProxy, newStatus: string) => {
     setSelectedRow(row);
 
     setNewStatus(newStatus);
@@ -108,7 +108,7 @@ function AliasKeyList() {
         action: action,
       };
       const response = await apiClient.post(
-        "/api/alias-key/perform-action",
+        "/api/proxy/perform-action",
         userData,
       );
       toast.success(response?.data?.message);
@@ -129,7 +129,7 @@ function AliasKeyList() {
         action: action,
       };
       const response = await apiClient.post(
-        "/api/alias-key/make-active-inactive",
+        "/api/proxy/make-active-inactive",
         userData,
       );
       toast.success(response?.data?.message);
@@ -147,7 +147,7 @@ function AliasKeyList() {
     const controller = new AbortController();
     setLoading(true);
     try {
-      const { data } = await apiClient.get(BACKEND_URL + "/api/alias-key", {
+      const { data } = await apiClient.get(BACKEND_URL + "/api/proxy", {
         signal: controller.signal,
         params: {
           page,
@@ -188,7 +188,7 @@ function AliasKeyList() {
 
     try {
       const res = await apiClient.delete(
-        `${BACKEND_URL}/api/alias-key/${deleteId}`,
+        `${BACKEND_URL}/api/proxy/${deleteId}`,
       );
       toast.success(res.data.message);
     } catch (error: any) {
@@ -251,21 +251,20 @@ function AliasKeyList() {
         <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold tracking-tight text-gray-800 sm:text-2xl">
-              Alias Keys
+              Proxy
             </h2>
             <p className="mt-1 text-base text-gray-500 sm:text-base">
-              Manage and monitor alias key usage
+              Manage proxy
             </p>
           </div>
-          {user?.role === "User" && (
-            <Link
-              to="/alias-key/add"
-              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-base font-medium shadow-sm transition-all duration-200"
-            >
-              <FiPlus className="w-4 h-4" />
-              Create Alias Key Request
-            </Link>
-          )}
+
+          <Link
+            to="/proxy/add"
+            className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-base font-medium shadow-sm transition-all duration-200"
+          >
+            <FiPlus className="w-4 h-4" />
+            Create Proxy
+          </Link>
         </div>
 
         {/* Loading */}
@@ -321,16 +320,14 @@ function AliasKeyList() {
                 {/* Rows */}
                 {apiData.length === 0 ? (
                   <div className="py-10 text-center text-gray-500">
-                    <p className="text-base font-semibold">
-                      No Alias key found
-                    </p>
+                    <p className="text-base font-semibold">No proxy found</p>
                     <p className="mt-1 text-base text-gray-400">
                       Try adjusting your search or filters
                     </p>
                   </div>
                 ) : (
                   apiData.map((item, index) => (
-                    <AliasKeyRow
+                    <proxyRow
                       key={item._id}
                       index={index}
                       apiData={item}
@@ -485,7 +482,7 @@ function AliasKeyList() {
                 <div className="flex items-start gap-3">
                   <div className="space-y-1">
                     <p className="text-lg ">
-                      Are you sure you want to delete this alias key?
+                      Are you sure you want to delete this proxy?
                     </p>
                   </div>
                 </div>
@@ -545,7 +542,7 @@ function AliasKeyList() {
 
                 {/* Title */}
                 <h3 className="text-2xl font-bold text-gray-900">
-                  Review Alias Key Request
+                  Review Proxy Key Request
                 </h3>
               </div>
 
@@ -749,4 +746,4 @@ function AliasKeyList() {
   );
 }
 
-export default AliasKeyList;
+export default ProxyList;

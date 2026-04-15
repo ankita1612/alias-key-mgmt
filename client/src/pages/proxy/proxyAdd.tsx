@@ -7,13 +7,17 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate, useParams } from "react-router";
-import type { IAliasKey } from "../../interface/aliasKey.interface";
+import type { IProxy } from "../../interface/proxy.interface";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const schema = yup.object().shape({
   domain: yup.string().required("Domain is required"),
-  total_quota: yup
+  project_name: yup.string().required("Project name is required"),
+  proxy_name: yup.string().required("Proxy name is required"),
+  proxy_token: yup.string().required("Proxy token is required"),
+  curl: yup.string().required("Curl is required"),
+  credit: yup
     .number()
     .transform((value, originalValue) => {
       // ✅ handle empty, null, NaN
@@ -26,14 +30,12 @@ const schema = yup.object().shape({
       }
       return value;
     })
-    .required("Total quota is required") // ✅ FIRST
     .typeError("Total quota must be a number") // ✅ SECOND
     .positive("Total quota must be greater than 0")
     .integer("Total quota must be an integer"),
-  description: yup.string().optional(),
 });
 
-function AliasKeyAdd() {
+function ProxyAdd() {
   const { id } = useParams();
   const topRef = useRef<HTMLHeadingElement>(null);
   const [mode, setMode] = useState("add");
@@ -47,12 +49,15 @@ function AliasKeyAdd() {
     watch,
     reset,
     formState: { errors },
-  } = useForm<IAliasKey>({
+  } = useForm<IProxy>({
     resolver: yupResolver(schema),
     defaultValues: {
       domain: "",
-
-      description: "",
+      project_name: "",
+      proxy_name: "",
+      proxy_token: "",
+      curl: "",
+      credit: "",
     },
   });
 
@@ -62,19 +67,20 @@ function AliasKeyAdd() {
       setMode("add");
       reset({
         domain: "",
-        total_quota: undefined,
-        description: "",
+        project_name: "",
+        proxy_name: "",
+        proxy_token: "",
+        curl: "",
+        credit: undefined,
       });
       return; // 🚀 IMPORTANT (stop execution)
     }
     const fetchData = async () => {
       setLoading(true);
       try {
-        const { data } = await apiClient.get(
-          BACKEND_URL + `/api/alias-key/${id}`,
-        );
+        const { data } = await apiClient.get(BACKEND_URL + `/api/proxy/${id}`);
         Object.entries(data.data).forEach(([k, v]) =>
-          setValue(k as keyof IAliasKey, v),
+          setValue(k as keyof IProxy, v),
         );
       } catch (error: any) {
         toast.error(
@@ -103,26 +109,26 @@ function AliasKeyAdd() {
     }
   }, [errors]);
 
-  const onSubmit = async (data: IAliasKey) => {
+  const onSubmit = async (data: IProxy) => {
     setLoading(true);
     try {
       const send_data = {
         domain: data.domain,
-        total_quota: Number(data.total_quota),
-        description: data.description,
+        credit: Number(data.credit),
+        project_name: data.project_name,
+        proxy_name: data.proxy_name,
+        proxy_token: data.proxy_token,
+        curl: data.curl,
       };
       let res: any;
 
       if (mode === "add") {
-        res = await apiClient.post("/api/alias-key", send_data);
+        res = await apiClient.post("/api/proxy", send_data);
       } else {
-        res = await apiClient.put(
-          BACKEND_URL + "/api/alias-key/" + id,
-          send_data,
-        );
+        res = await apiClient.put(BACKEND_URL + "/api/proxy/" + id, send_data);
       }
       toast.success(res.data.message);
-      navigate("/alias-key");
+      navigate("/proxy");
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
@@ -157,12 +163,12 @@ function AliasKeyAdd() {
                   ref={topRef}
                   className="text-xl font-semibold tracking-tight text-gray-800 sm:text-2xl"
                 >
-                  {mode === "add" ? "Add Alias Key" : "Edit Alias Key"}
+                  {mode === "add" ? "Add Proxy" : "Edit Proxy"}
                 </h2>
                 <p className="mt-1 text-base">
                   {mode === "add"
-                    ? "Add a new alias key to your collection"
-                    : "Update your alias key information"}
+                    ? "Add a new proxy to your collection"
+                    : "Update proxy information"}
                 </p>
               </div>
             </div>
@@ -234,7 +240,7 @@ function AliasKeyAdd() {
                   <div className="absolute pointer-events-none top-3 left-3"></div>
                   <textarea
                     rows={4}
-                    placeholder="Describe the purpose of this alias key..."
+                    placeholder="Describe the purpose of this proxy..."
                     {...register("description")}
                     className={`w-full pl-4 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 resize-y ${
                       errors.description
@@ -282,7 +288,7 @@ function AliasKeyAdd() {
 
                 <button
                   type="button"
-                  onClick={() => navigate("/alias-key")}
+                  onClick={() => navigate("/proxy")}
                   className="inline-flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2.5 rounded-lg font-medium transition-all duration-200"
                 >
                   Cancel
@@ -304,4 +310,4 @@ function AliasKeyAdd() {
   );
 }
 
-export default AliasKeyAdd;
+export default ProxyAdd;

@@ -33,7 +33,7 @@ export const authentication = async (
     }
 
     req.user = user;
-console.log(req.user)
+
     next();
   } catch {
     return res.status(401).json({ message: "Unauthorized" });

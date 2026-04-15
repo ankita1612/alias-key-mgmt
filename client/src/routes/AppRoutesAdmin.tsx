@@ -9,6 +9,8 @@ import PageNotFound from "../pages/PageNotFound";
 import ChangePassword from "../pages/ChangePassword";
 import AliasKeyList from "../pages/aliasKey/AliasKeyList";
 import AliasKeyAdd from "../pages/aliasKey/AliasKeyAdd";
+import ProxyList from "../pages/proxy/ProxyList";
+import ProxyAdd from "../pages/proxy/ProxyAdd";
 import ApiHistory from "../pages/apiHistory/ApiHistory";
 
 const AppRoutes = () => {
@@ -38,6 +40,9 @@ const AppRoutes = () => {
         <Route path="alias-key" element={<AliasKeyList />} />
         <Route path="alias-key/add" element={<AliasKeyAdd />} />
         <Route path="alias-key/add/:id?" element={<AliasKeyAdd />} />
+        <Route path="proxy" element={<ProxyList />} />
+        <Route path="proxy/add" element={<ProxyAdd />} />
+        <Route path="proxy/add/:id?" element={<ProxyAdd />} />
 
         <Route path="api-history/:aliasKeyId?" element={<ApiHistory />} />
 

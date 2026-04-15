@@ -15,6 +15,12 @@ aliasKeyRouter.post(
   aliasKeyController.changeRequest,
 );
 aliasKeyRouter.post(
+  "/make-active-inactive",
+  authentication,
+  validateId,
+  aliasKeyController.makeActiveInactive,
+);
+aliasKeyRouter.post(
   "/",
   authentication,
   validateAdd,

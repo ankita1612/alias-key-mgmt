@@ -7,6 +7,7 @@ import {
   FiMenu,
   FiMaximize2, // Add this for expand icon
 } from "react-icons/fi";
+import { FaExchangeAlt } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { MdClose } from "react-icons/md";
 
@@ -182,6 +183,27 @@ const AdminLayout = () => {
 
           {/* Upload File Link */}
           <NavLink
+            to="/proxy"
+            className={({ isActive }) =>
+              `flex items-center w-full ${
+                showExpanded ? "justify-start px-4" : "justify-center px-2"
+              } gap-3 py-2.5 rounded-md transition-all duration-200 relative
+              ${isActive ? "text-menuActive" : "text-gray-300 hover:text-menuActive"}`
+            }
+          >
+            <FaExchangeAlt size={22} className="flex-shrink-0" />
+            {/* Only show text when expanded */}
+            <span
+              className={`
+                text-xl font-normal whitespace-nowrap
+                transition-all duration-200
+                ${showExpanded ? "inline-block opacity-100" : "hidden"}
+              `}
+            >
+              Proxy
+            </span>
+          </NavLink>
+          <NavLink
             to="/alias-key"
             className={({ isActive }) =>
               `flex items-center w-full ${
@@ -199,9 +221,10 @@ const AdminLayout = () => {
                 ${showExpanded ? "inline-block opacity-100" : "hidden"}
               `}
             >
-              Alias Key
+              Key
             </span>
           </NavLink>
+
           <NavLink
             to="/api-history"
             className={({ isActive }) =>
