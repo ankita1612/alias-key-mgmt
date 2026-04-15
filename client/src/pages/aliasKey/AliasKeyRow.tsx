@@ -4,6 +4,7 @@ import {
   FiArrowDownRight,
   FiArrowRight,
   FiEdit2,
+  FiEye,
   FiList,
 } from "react-icons/fi"; // Feather icons
 import { FiTrash2 } from "react-icons/fi";
@@ -22,6 +23,7 @@ interface AliasKeyRowProps {
   index: number;
   mobileView?: boolean;
   gridColsClass: string;
+  showKeyDetail: (data: IAliasKey) => void;
 }
 
 function AliasKeyRow({
@@ -33,6 +35,7 @@ function AliasKeyRow({
   index,
   mobileView = false,
   gridColsClass,
+  showKeyDetail,
 }: AliasKeyRowProps) {
   const navigate = useNavigate();
   const [showStats, setShowStats] = useState(false);
@@ -122,14 +125,13 @@ function AliasKeyRow({
         </>
       )}
 
-      {/* Alias Key */}
       <div className="font-mono text-base text-gray-800 truncate">
         {apiData.alias_key || "-"}
       </div>
 
       {/* Domain */}
       <div className="text-base text-gray-600 truncate">
-        {apiData.domain || "-"}
+        {apiData.domain_name || "-"}
       </div>
 
       {/* Status Badge */}
@@ -257,19 +259,32 @@ function AliasKeyRow({
               </button>
             )}
 
-            {/* {apiData.status === "Active" && (
-              <button
-                type="button"
-                onClick={handleGetProxyResponse}
-                className="p-1.5 text-green-600 hover:text-white hover:bg-green-500 rounded-md transition-all duration-200 group relative"
-                title="Test Proxy"
-              >
-                <FiArrowRight className="w-4 h-4" />
-                <span className="absolute px-2 py-1 text-base text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
-                  Test Proxy
-                </span>
-              </button>
-            )} */}
+            {apiData.status === "Active" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => showKeyDetail(apiData)}
+                  className="p-1.5 text-green-600 hover:text-white hover:bg-green-500 rounded-md transition-all duration-200 group relative"
+                  title="Test Proxy"
+                >
+                  <FiEye className="w-4 h-4" />
+                  <span className="absolute px-2 py-1 text-base text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+                    Test Proxy
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGetProxyResponse}
+                  className="p-1.5 text-green-600 hover:text-white hover:bg-green-500 rounded-md transition-all duration-200 group relative"
+                  title="Test Proxy"
+                >
+                  <FiArrowRight className="w-4 h-4" />
+                  <span className="absolute px-2 py-1 text-base text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+                    Test Proxy
+                  </span>
+                </button>
+              </>
+            )}
           </>
         ) : null}
 

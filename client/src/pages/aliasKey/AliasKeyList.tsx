@@ -48,12 +48,15 @@ function AliasKeyList() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [selectedRow, setSelectedRow] = useState<IAliasKey | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+
   const [showActiveInactiveModal, setShowActiveInactiveModal] = useState(false);
   const [newStatus, setNewStatus] = useState(false);
 
   const [mobileView, setMobileView] = useState(false);
   const deleteModalRef = useRef<HTMLDivElement>(null);
   const actionModalRef = useRef<HTMLDivElement>(null);
+  const actionDetailRef = useRef<HTMLDivElement>(null);
   // Check screen size for mobile view
   useEffect(() => {
     const checkMobile = () => {
@@ -93,6 +96,10 @@ function AliasKeyList() {
   const handleActionClick = (row: IAliasKey) => {
     setSelectedRow(row);
     setShowModal(true);
+  };
+  const handleshowKeyDetail = (row: IAliasKey) => {
+    setSelectedRow(row);
+    setShowDetailModal(true);
   };
   const handleActiveInactiveClick = (row: IAliasKey, newStatus: string) => {
     setSelectedRow(row);
@@ -226,7 +233,7 @@ function AliasKeyList() {
         ]
       : []),
     { label: "Key", field: "alias_key", sortable: true },
-    { label: "Domain", field: "domain", sortable: true },
+    { label: "Domain Name", field: "domain_name", sortable: true },
     { label: "Status", field: "status", sortable: true },
     { label: "# Quota", field: "total_quota", sortable: true },
     { label: "# Available", field: "remaining_quota", sortable: true },
@@ -251,10 +258,10 @@ function AliasKeyList() {
         <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold tracking-tight text-gray-800 sm:text-2xl">
-              Alias Keys
+              Keys
             </h2>
             <p className="mt-1 text-base text-gray-500 sm:text-base">
-              Manage and monitor alias key usage
+              Manage and monitor key usage
             </p>
           </div>
           {user?.role === "User" && (
@@ -321,9 +328,7 @@ function AliasKeyList() {
                 {/* Rows */}
                 {apiData.length === 0 ? (
                   <div className="py-10 text-center text-gray-500">
-                    <p className="text-base font-semibold">
-                      No Alias key found
-                    </p>
+                    <p className="text-base font-semibold">No key found</p>
                     <p className="mt-1 text-base text-gray-400">
                       Try adjusting your search or filters
                     </p>
@@ -340,6 +345,7 @@ function AliasKeyList() {
                       makeActiveInactiveClick={handleActiveInactiveClick}
                       mobileView={false}
                       gridColsClass={gridColsClass}
+                      showKeyDetail={handleshowKeyDetail}
                     />
                   ))
                 )}
@@ -485,7 +491,7 @@ function AliasKeyList() {
                 <div className="flex items-start gap-3">
                   <div className="space-y-1">
                     <p className="text-lg ">
-                      Are you sure you want to delete this alias key?
+                      Are you sure you want to delete key?
                     </p>
                   </div>
                 </div>
@@ -520,6 +526,252 @@ function AliasKeyList() {
         </div>
       )}
       {/* Modal - Responsive */}
+      {showDetailModal && selectedRow && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md"
+          onClick={(e) => {
+            if (
+              actionDetailRef.current &&
+              !actionDetailRef.current.contains(e.target)
+            ) {
+              setShowDetailModal(false);
+            }
+          }}
+        >
+          {/* Modal */}
+          <div
+            ref={actionDetailRef}
+            className="relative w-full max-w-6xl overflow-y-auto max-h-[90vh] transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+          >
+            <button
+              onClick={() => setShowDetailModal(false)}
+              className="absolute z-10 flex items-center justify-center w-10 h-10 text-gray-400 transition-all duration-200 bg-white rounded-full shadow-md top-4 right-4 hover:text-gray-600 hover:bg-gray-100 hover:shadow-lg group"
+            >
+              <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
+            </button>
+
+            {/* Header - Kept as requested */}
+            <div className="px-6 pt-8 pb-4 text-left bg-gradient-to-b from-white to-gray-50">
+              <div className="flex items-center gap-3">
+                {/* Left Thick Line */}
+                <div className="w-1 h-6 rounded-full bg-primary"></div>
+
+                {/* Title */}
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Key Details
+                </h3>
+              </div>
+
+              <p className="pl-4 mt-1 text-sm text-gray-500">
+                Detaild information about key
+              </p>
+            </div>
+
+            <div className="px-6 pb-0">
+              {/* Request Details Section */}
+              <div className="mb-6 overflow-hidden border rounded-xl border-gray-200">
+                <div className="px-5 py-3 bg-gray-50 border-b border-gray-200">
+                  <h4 className="text-base font-semibold text-gray-700 uppercase tracking-wider">
+                    Key Information
+                  </h4>
+                </div>
+                <div className="p-5 space-y-4">
+                  {/* Requested By */}
+
+                  {/* Alias Key */}
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <div className="text-base font-medium text-gray-500">
+                      Alias Key
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-base font-mono font-semibold text-gray-900 break-all">
+                        {selectedRow?.alias_key || "-"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Domain Name */}
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <div className="text-base font-medium text-gray-500">
+                      Domain Name
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-base font-semibold text-gray-900">
+                        {selectedRow?.domain_name || "-"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Project Name */}
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <div className="text-base font-medium text-gray-500">
+                      Project Name
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-base font-semibold text-gray-900">
+                        {selectedRow?.project_name || "-"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Quota Information */}
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div className="p-3 rounded-lg bg-blue-50">
+                      <p className="text-base text-blue-600 uppercase tracking-wider">
+                        Total Quota
+                      </p>
+                      <p className="mt-1 text-xl font-bold text-blue-700">
+                        {selectedRow?.total_quota || "-"}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-green-50">
+                      <p className="text-base text-green-600 uppercase tracking-wider">
+                        Remaining Quota
+                      </p>
+                      <p className="mt-1 text-xl font-bold text-green-700">
+                        {selectedRow?.remaining_quota || "-"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Cost Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <div className="text-base font-medium text-gray-500">
+                        Cost Calculation
+                      </div>
+                      <div className="sm:col-span-2">
+                        <p className="text-base font-semibold text-gray-900">
+                          {selectedRow?.cost_calculation || "-"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <div className="text-base font-medium text-gray-500">
+                        Total Estimated Cost
+                      </div>
+                      <div className="sm:col-span-2">
+                        <p className="text-base font-semibold text-gray-900">
+                          {selectedRow?.total_estimated_cost || "-"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Purpose/Description */}
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <div className="text-base font-medium text-gray-500">
+                      Purpose
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-base text-gray-700">
+                        {selectedRow?.description || "-"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <div className="text-base font-medium text-gray-500">
+                      Current Status
+                    </div>
+                    <div className="sm:col-span-2">
+                      <span
+                        className={`inline-flex px-2 py-1 text-base font-semibold rounded-full ${
+                          selectedRow?.status === "Active"
+                            ? "bg-green-100 text-green-800"
+                            : selectedRow?.status === "Pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {selectedRow?.status || "-"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Proxy Details Section */}
+              {selectedRow?.proxy && (
+                <div className="mb-6 overflow-hidden border rounded-xl border-gray-200">
+                  <div className="px-5 py-3 bg-gray-50 border-b border-gray-200">
+                    <h4 className="text-base font-semibold text-gray-700 uppercase tracking-wider">
+                      Proxy Configuration
+                    </h4>
+                  </div>
+                  <div className="p-5 space-y-4">
+                    {/* Proxy Name */}
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <div className="text-base font-medium text-gray-500">
+                        Proxy Name
+                      </div>
+                      <div className="sm:col-span-2">
+                        <p className="text-base font-semibold text-gray-900">
+                          {selectedRow.proxy?.proxy_name || "-"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Credit */}
+
+                    {/* Curl Command */}
+                    {selectedRow.proxy?.curl && (
+                      <div className="mt-2">
+                        <div className="mb-2 text-base font-medium text-gray-500">
+                          Curl Command
+                        </div>
+                        <div className="overflow-hidden rounded-lg bg-gray-900">
+                          <pre className="p-4 overflow-x-auto text-base text-gray-200 font-mono whitespace-pre-wrap">
+                            {selectedRow.proxy?.curl}
+                          </pre>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Query Parameters */}
+                    {selectedRow.proxy?.query_params &&
+                      Object.keys(selectedRow.proxy.query_params).length >
+                        0 && (
+                        <div className="mt-2">
+                          <div className="mb-2 text-base font-medium text-gray-500">
+                            Query Parameters
+                          </div>
+                          <div className="p-3 rounded-lg bg-gray-50">
+                            <code className="text-base font-mono text-gray-800 break-all">
+                              ?
+                              {Object.entries(selectedRow.proxy.query_params)
+                                .map(
+                                  ([key, value]) =>
+                                    `${key}=${encodeURIComponent(String(value))}`,
+                                )
+                                .join("&")}
+                            </code>
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                </div>
+              )}
+
+              {/* Info Box */}
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-gray-100"></div>
+
+            {/* Actions */}
+            <div className="flex flex-col-reverse gap-3 px-6 py-6 sm:flex-row">
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="flex-1 px-4 py-2.5 text-base font-medium bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showModal && selectedRow && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
           {/* Modal */}
@@ -545,7 +797,7 @@ function AliasKeyList() {
 
                 {/* Title */}
                 <h3 className="text-2xl font-bold text-gray-900">
-                  Review Alias Key Request
+                  Review Key Request
                 </h3>
               </div>
 
@@ -578,10 +830,10 @@ function AliasKeyList() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Globe className="w-4 h-4 text-gray-400" />
-                    <span className="text-base text-gray-600">Domain</span>
+                    <span className="text-base text-gray-600">Domain Name</span>
                   </div>
                   <span className="text-base font-medium text-gray-800">
-                    {selectedRow?.domain || "-"}
+                    {selectedRow?.domain_name || "-"}
                   </span>
                 </div>
 

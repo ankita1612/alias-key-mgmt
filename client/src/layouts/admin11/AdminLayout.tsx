@@ -111,7 +111,7 @@ const AdminLayout = () => {
                   Actowiz
                 </span>
                 <span className="text-lg text-white font-medium text-left">
-                  Alias Key Management
+                  Key Management
                 </span>
               </div>
 
@@ -199,7 +199,7 @@ const AdminLayout = () => {
                 ${showExpanded ? "inline-block opacity-100" : "hidden"}
               `}
             >
-              Alias Key Request
+              Key Request
             </span>
           </NavLink>
         </nav>

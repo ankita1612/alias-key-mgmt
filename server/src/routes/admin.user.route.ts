@@ -9,6 +9,10 @@ import {
 const userRouter = express.Router();
 import authentication from "../middleware/auth.middleware";
 userRouter.post("/", validateAdd, isRequestValidated, userController.addUser);
+userRouter.get(
+  "/get-user-by-alias_id/:alias_id",
+  userController.getUserByAliasId,
+);
 userRouter.get("/", userController.getUsers);
 userRouter.put(
   "/:id",

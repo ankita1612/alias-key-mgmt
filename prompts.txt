@@ -1,0 +1,75 @@
+in       res.json(queryParamsArray);
+
+I got like this.[
+    {
+        "key": "token",
+        "value": "YOUR_TOKEN"
+    },
+    {
+        "key": "url",
+        "value": "https://httpbin.co/anything"
+    },
+    {
+        "key": "super",
+        "value": "true"
+    }
+]
+in db  query_params: queryParamsArray it store like this.
+++++++++++++++
+Now I want to use like this. 
+when user tun url like http://172.28.148.155:5000/api/get-proxy-response?token=AAA&url=BBB&super=CCC
+I want to match query_params with user's url and dynemically append query_params's token with AAA , url=BBB, super=CCC to my existing curl so what are best way to store query_params: queryParamsArray
+
+my request url is like this: http://172.28.148.155:5001/api/get-proxy-response?alias_key=3cz4FfueeGBdZO2QKBkKKNcP&?&url=https://www.google.com&super=12345
+
+proxy.curl will be like this  curl --location --request GET 'https://api.scrape.do/?token=YOUR_TOKEN&url=https://httpbin.co/anything&super=true'
+Query Parameters will be like this ?token=YOUR_TOKEN&url=https%3A%2F%2Fhttpbin.co%2Fanything&super=true
+
+1) check Alias key exist. if no exist generate error
+2)check  AliasKeyModel has key exist and it is Active and  remaining_quota < $gt . anyof these false will generate error.
+3)AliasKeyModel has proxy_id so check in ProxyModel if record is exist. if no exist then generate error. if exist then 
+
+fetch curl ,proxy_token,query_params.
+
+compare query_params with request url in that exclude token from query_params. if all match then replace curl request query params with dynemic data
+++++++++++++++++++++++++++++++
+
+++++++++++++++++++
+GET + POST (any method)
+Params from:
+req.query
+req.body
+Dynamic CURL parsing:
+method
+URL
+headers
+body (--data)
+Replace:
+token → proxy_token
+other params → request params
+Validate query params (exclude token)
+Handle 10,000 concurrent users
+++++++++++++++++
+
+
+
+
+You’re building a dynamic proxy API system where:
+
+
+1)this is my code. in request get and post method can all API
+2)at a time 10000 concunnrent request come for this API
+3)if error come then specific error message with code i want to store
+4)I will call api like this request url: http://172.28.148.155:5001/api/get-proxy-response?alias_key=VUcETOYkbtBo1JQnr3ABtHjI&args1=XXXXX&args2=YYYYY . it can get or post . here alias_key is use to fetch proxydata from proxyModel
+5)it first check API alias_key is not empty, alias_key  exist in db, alias_key remaining_quota>0
+6)then check for proxy. AliasKeyModel has proxy_id which belong to ProxyModel. here i want to check if soft deleted or not. if soft deleted then give error message
+7)if above is ok then read  arguement of http://172.28.148.155:5001/api/get-proxy-response?alias_key=VUcETOYkbtBo1JQnr3ABtHjI&args1=XXXXX&args2=YYYYY
+and proxyModel's curl. curl can be get or post
+
+like example 1: curl --location --request POST -H "Content-Type: application/json" --data '{"token":"123456789","args1":"test","args2":"demo"}' 'http://localhost:5002/get_response'
+example 2: curl --location --request GET 'http://localhost:5002/get_response?token=1&args1=test&args2=demo'
+
+now from curl extract argument  and check all arguement with my request URL argumenet.from curl url it replace token with proxtModel.proxy_token url and rest of arguement must match with with request url . if any not match then generate error.
+if everything fine then call curl url. and generate response. if error then save error. if success then response counter will add to proxyModel.counter. 
+
+I ahve done code. please optimize for 10000 users

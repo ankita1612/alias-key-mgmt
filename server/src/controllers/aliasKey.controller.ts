@@ -29,11 +29,22 @@ class AliasKeyController {
       const data = req.body;
       const userId = req?.user?._id; // 👈 from auth middleware
 
+      const existingProject = await AliasKeyModel.findOne({
+        project_name: data.project_name,
+      });
+
+      // ✅ Decide value
+      const proxyPermission = existingProject ? "Old" : "New";
       const result = await AliasKeyModel.create({
         user_id: userId,
-        domain: data.domain,
+        domain_name: data.domain_name,
+        project_name: data.project_name,
+        proxy_id: data.proxy_id,
+        proxy_permission_required: proxyPermission,
         status: "Pending",
         total_quota: data.total_quota,
+        total_estimated_cost: data.total_estimated_cost,
+        cost_calculation: data.cost_calculation,
         description: data.description,
       });
 
@@ -86,14 +97,6 @@ class AliasKeyController {
   // ✅ GET LIST (pagination + search)
   getDatas = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // const {
-      //   search = "",
-      //   page = "1",
-      //   limit = "10",
-      //   sortBy,
-      //   sortField,
-      //   sortOrder = "desc",
-      // } = req.query;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       const search = ((req.query.search as string) || "").trim();
@@ -124,7 +127,7 @@ class AliasKeyController {
         ? {
             $or: [
               { alias_key: { $regex: search, $options: "i" } },
-              { domain: { $regex: search, $options: "i" } },
+              { domain_name: { $regex: search, $options: "i" } },
               { status: { $regex: search, $options: "i" } },
               { "user.first_name": { $regex: search, $options: "i" } },
               { "user.email": { $regex: search, $options: "i" } },
@@ -156,12 +159,22 @@ class AliasKeyController {
         },
 
         { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: "proxies",
+            localField: "proxy_id",
+            foreignField: "_id",
+            as: "proxy",
+          },
+        },
+        { $unwind: { path: "$proxy", preserveNullAndEmptyArrays: true } },
 
         // ✅ ADD THIS
         {
           $addFields: {
             user_first_name: { $ifNull: ["$user.first_name", ""] },
             user_email: { $ifNull: ["$user.email", ""] },
+            query_params: { $ifNull: ["$proxy.query_params", ""] },
           },
         },
 
@@ -331,7 +344,7 @@ class AliasKeyController {
       const data = await AliasKeyModel.findByIdAndUpdate(
         id,
         {
-          domain: req.body.domain,
+          domain_name: req.body.domain_name,
           description: req.body.description,
         },
         {

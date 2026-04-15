@@ -4,7 +4,7 @@ import { FiChevronRight } from "react-icons/fi";
 const routeNameMap: Record<string, string> = {
   admin: "Admin",
   dashboard: "Dashboard",
-  "alias-key": "Alias Key",
+  "alias-key": "Key",
   "api-history": "API History",
   add: "Add",
   update_profile: "Update Profile",
@@ -34,10 +34,9 @@ export default function Breadcrumb() {
             <FiChevronRight size={14} />
           </li>
 
-          {/* Alias Key (clickable) */}
           <li className="flex items-center gap-1">
             <Link to="/alias-key" className="font-medium hover:text-gray-800">
-              Alias Key
+              Key
             </Link>
             <FiChevronRight size={14} />
           </li>

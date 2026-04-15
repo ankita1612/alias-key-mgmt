@@ -15,6 +15,9 @@ import {
 } from "recharts";
 import {
   Key,
+  XCircle,
+  AlertTriangle,
+  ServerCrash,
   CheckCircle,
   Clock,
   Calendar,
@@ -31,7 +34,19 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
-
+const COLORS = {
+  success: "#10b981",
+  warning: "#f59e0b",
+  error: "#ef4444",
+  info: "#3b82f6",
+  neutral: "#6b7280",
+  active: "#059669",
+  pending: "#d97706",
+  inactive: "#6b7280",
+  rejected: "#dc2626",
+  primary: "#6366f1",
+  secondary: "#8b5cf6",
+};
 interface DashboardData {
   totalAliasKeys: number;
   activeAliasKeys: number;
@@ -45,6 +60,9 @@ interface DashboardData {
     LIMIT_EXCEED: number;
     INTERNAL_SERVER: number;
     KEY_NOT_ACTIVE: number;
+    EXTERNAL_ERROR: number;
+    INVALID_PROXY: number;
+    PARAM_MISSING: number;
   };
   quota: {
     totalQuota: number;
@@ -361,6 +379,9 @@ function UserDashboard() {
                           dashboard.apiStatusCounts.SUCCESS +
                           dashboard.apiStatusCounts.KEY_NOT_ACTIVE +
                           dashboard.apiStatusCounts.LIMIT_EXCEED +
+                          dashboard.apiStatusCounts.EXTERNAL_ERROR +
+                          dashboard.apiStatusCounts.INVALID_PROXY +
+                          dashboard.apiStatusCounts.PARAM_MISSING +
                           dashboard.apiStatusCounts.INTERNAL_SERVER
                         ).toLocaleString()}
                       </p>
@@ -371,28 +392,46 @@ function UserDashboard() {
                           label: "Success",
                           value: dashboard.apiStatusCounts.SUCCESS,
                           statusText: "SUCCESS",
-                          color: "bg-emerald-500",
+                          color: COLORS.success,
                           icon: CheckCircle,
                         },
                         {
                           label: "Key Not Active",
                           value: dashboard.apiStatusCounts.KEY_NOT_ACTIVE,
                           statusText: "KEY_NOT_ACTIVE",
-                          color: "bg-slate-500",
+                          color: COLORS.neutral,
                           icon: Key,
                         },
                         {
                           label: "Limit Exceeded",
                           value: dashboard.apiStatusCounts.LIMIT_EXCEED,
                           statusText: "LIMIT_EXCEED",
-                          color: "bg-amber-500",
+                          color: COLORS.warning,
                           icon: Zap,
+                        },
+                        {
+                          label: "Proxy key deleted ",
+                          value: dashboard?.apiStatusCounts?.INVALID_PROXY,
+                          color: COLORS.pending,
+                          icon: XCircle,
+                        },
+                        {
+                          label: "Request params missing",
+                          value: dashboard?.apiStatusCounts?.PARAM_MISSING,
+                          color: COLORS.secondary,
+                          icon: AlertTriangle,
+                        },
+                        {
+                          label: "API call error",
+                          value: dashboard?.apiStatusCounts?.EXTERNAL_ERROR,
+                          color: COLORS.error,
+                          icon: ServerCrash,
                         },
                         {
                           label: "Internal server error",
                           value: dashboard.apiStatusCounts.INTERNAL_SERVER,
                           statusText: "INTERNAL_SERVER",
-                          color: "bg-rose-500",
+                          color: COLORS.error,
                           icon: AlertCircle,
                         },
                       ].map((item) => {
@@ -400,6 +439,9 @@ function UserDashboard() {
                           dashboard.apiStatusCounts.SUCCESS +
                           dashboard.apiStatusCounts.KEY_NOT_ACTIVE +
                           dashboard.apiStatusCounts.LIMIT_EXCEED +
+                          dashboard.apiStatusCounts.PARAM_MISSING +
+                          dashboard.apiStatusCounts.EXTERNAL_ERROR +
+                          dashboard.apiStatusCounts.INVALID_PROXY +
                           dashboard.apiStatusCounts.INTERNAL_SERVER;
                         const percentage = totalRequests
                           ? (item.value / totalRequests) * 100
@@ -427,7 +469,10 @@ function UserDashboard() {
                             <div className="w-full h-2 overflow-hidden bg-gray-100 rounded-full">
                               <div
                                 className={`${item.color} h-full transition-all duration-700 rounded-full`}
-                                style={{ width: `${percentage}%` }}
+                                style={{
+                                  width: `${percentage}%`,
+                                  backgroundColor: item.color,
+                                }}
                               />
                             </div>
                           </div>

@@ -32,10 +32,11 @@ proxyRouter.delete(
   proxyController.deleteData,
 );
 proxyRouter.get(
-  "/:id",
+  "/get-list",
   authentication,
   validateId,
-  proxyController.getData,
+  proxyController.getList,
 );
+proxyRouter.get("/:id", authentication, validateId, proxyController.getData);
 
 export default proxyRouter;

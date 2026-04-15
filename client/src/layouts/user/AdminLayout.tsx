@@ -114,7 +114,7 @@ const AdminLayout = () => {
                   Actowiz
                 </span>
                 <span className="text-lg font-medium text-left text-white">
-                  Alias Key Management
+                  Key Management
                 </span>
               </div>
 

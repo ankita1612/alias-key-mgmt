@@ -1,26 +1,22 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, model, Document, Types } from "mongoose";
 
 export interface IProxy extends Document {
-  domain: string;
+  domain_name: string;
   project_name: string;
   proxy_name: string;
   proxy_token: string;
   curl: string;
-  status:string;
   credit: number;
+  counter: number;
 }
 
 const ProxySchema: Schema = new Schema(
   {
-    domain: {
+    domain_name: {
       type: String,
-      required: true,
-      trim: true,
     },
     project_name: {
       type: String,
-      required: true,
-      trim: true,
     },
     proxy_name: {
       type: String,
@@ -35,15 +31,29 @@ const ProxySchema: Schema = new Schema(
     curl: {
       type: String,
       required: true,
+      trim: true,
     },
-    status: {
-      type: String,
-      enum: ["Active","Inactive"],
-      required: true,
+    query_params: {
+      type: Map,
+      of: String,
+      default: {},
     },
     credit: {
       type: Number,
       default: 0,
+    },
+    counter: {
+      type: Number,
+      default: 0,
+    },
+    is_deleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deleted_at: {
+      type: Date,
+      default: null,
     },
   },
   {
@@ -51,4 +61,5 @@ const ProxySchema: Schema = new Schema(
   },
 );
 
-export default mongoose.model<IProxy>("Proxy", ProxySchema);
+const ProxyModel = model<IProxy>("proxy", ProxySchema);
+export default ProxyModel;

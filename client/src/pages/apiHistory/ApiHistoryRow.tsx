@@ -70,7 +70,6 @@ function AliasKeyRow({
       {/* Index */}
       <div className="font-medium text-gray-400">{index + 1}</div>
 
-      {/* Alias Key */}
       <div className="font-mono text-base text-gray-800 truncate">
         {apiData.alias.alias_key}
       </div>

@@ -23,7 +23,7 @@ interface ResultRow {
 
 // ---- Config ----
 const URL =
-  "http://172.28.148.155:5000/api/get-proxy-response?alias_key=CEpYNPnpSqynnd3N9mjsGLG1";
+  "http://172.28.148.155:5001/api/get-proxy-response?alias_key=VUcETOYkbtBo1JQnr3ABtHjI&args1=XXXXX&args2=YYYYY";
 
 const NUM_REQUESTS = 10000;
 const MAX_WORKERS = 50;

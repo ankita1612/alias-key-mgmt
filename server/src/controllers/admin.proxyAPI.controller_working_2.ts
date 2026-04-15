@@ -1,18 +1,19 @@
 const mongoose = require("mongoose");
 
 import { Request, Response } from "express";
-import { Types } from "mongoose";
 import AliasKeyModel from "../models/aliasKey.model";
 import ProxyModel from "../models/proxy.model";
-//import redisClient from "../config/redis.config";
+//import { axiosInstance } from "../utils/axiosInstance";
+//import { parseCurl } from "../utils/parseCurl";
+import axios from "axios";
 import http from "http";
 import https from "https";
 import ApiHistoryModel from "../models/apiHistory.model";
-import axios from "axios";
+
 export const axiosInstance = axios.create({
   timeout: 15000,
-  httpAgent: new http.Agent({ keepAlive: true, maxSockets: 10000 }),
-  httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 10000 }),
+  httpAgent: new http.Agent({ keepAlive: true, maxSockets: 1000 }),
+  httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 1000 }),
 });
 type ParsedCurl = {
   method: string;
@@ -33,17 +34,8 @@ export const parseCurl = (curl: string): ParsedCurl => {
   if (methodMatch) result.method = methodMatch[1].toUpperCase();
 
   // URL
-  const strictUrlMatch = curl.match(/https?:\/\/[^\s'"]+/);
-
-  if (strictUrlMatch) {
-    result.url = strictUrlMatch[0];
-  } else {
-    // fallback (last quoted string)
-    const matches = [...curl.matchAll(/'(.*?)'/g)];
-    if (matches.length) {
-      result.url = matches[matches.length - 1][1];
-    }
-  }
+  const urlMatch = curl.match(/'(.*?)'/);
+  if (urlMatch) result.url = urlMatch[1];
 
   // HEADERS
   const headerMatches = [...curl.matchAll(/-H\s+"(.*?)"/g)];
@@ -78,21 +70,18 @@ class ProxyController {
   ) => {
     const execTime = Date.now() - startTime;
 
-    // Log asynchronously
-    if (user_id && alias_key_id) {
-      ApiHistoryModel.create({
-        user_id: user_id,
-        user_alias_key_id: alias_key_id,
-        method: method,
-        execution_time: execTime,
-        response_status: response_status,
-        response_msg: response_msg,
-        response_code: response_code,
-        response_code_str: response_code_str,
-      }).catch((err) => {
-        console.error("❌ Logging failed:", err.message);
-      });
-    }
+    ApiHistoryModel.create({
+      user_id: user_id,
+      user_alias_key_id: alias_key_id,
+      method: method,
+      execution_time: execTime,
+      response_status: response_status,
+      response_msg: response_msg,
+      response_code: response_code,
+      response_code_str: response_code_str,
+    }).catch((err) => {
+      console.error("❌ Logging failed:", err.message);
+    });
 
     return res.status(response_code).json({
       status: response_status,
@@ -156,7 +145,7 @@ class ProxyController {
         );
       }
 
-      // ✅ Fetch proxy
+      // ✅ Fetch proxy (use lean for performance)
       const proxy = await ProxyModel.findOne({
         _id: existingKey.proxy_id,
         is_deleted: false,
@@ -197,95 +186,47 @@ class ProxyController {
         }
       }
 
-      // ✅ Parse curl
+      // ✅ Parse curl (IMPORTANT)
       const parsed = parseCurl(curl);
 
-      // ALWAYS use curl method (NOT req.method)
-      const method = parsed.method.toUpperCase();
-
-      let finalUrl = parsed.url;
-      let finalData = parsed.data;
-      let finalHeaders = { ...parsed.headers };
-
-      // Split URL
       let [baseUrl, existingQuery] = parsed.url.split("?");
+
       const urlParams = new URLSearchParams(existingQuery || "");
 
-      // ✅ GET
-      if (method === "GET") {
-        for (const key of Object.keys(query_params)) {
-          if (key === "token") {
-            urlParams.set(key, proxy_token);
-          } else {
-            urlParams.set(key, String(requestParams[key]));
-          }
+      // ✅ Replace params
+      for (const key of Object.keys(query_params)) {
+        if (key === "token") {
+          urlParams.set(key, proxy_token);
+        } else {
+          urlParams.set(key, String(requestParams[key]));
         }
-
-        finalUrl = `${baseUrl}?${urlParams.toString()}`;
       }
 
-      // ✅ POST / PUT / PATCH
-      else if (method === "POST") {
-        let body: any = {};
-
-        if (parsed.data) {
-          body =
-            typeof parsed.data === "string"
-              ? JSON.parse(parsed.data)
-              : { ...parsed.data };
-        }
-
-        for (const key of Object.keys(query_params)) {
-          if (key === "token") {
-            body[key] = proxy_token;
-          } else {
-            body[key] = requestParams[key];
-          }
-        }
-
-        finalData = body;
-        finalUrl = baseUrl;
-      }
+      const finalUrl = `${baseUrl}?${urlParams.toString()}`;
 
       let apiResponse;
-      // res.json({
-      //   method: method,
-      //   url: finalUrl,
-      //   headers: finalHeaders,
-      //   data: finalData,
-      // });
+      res.json({
+        method: parsed.method as any,
+        url: finalUrl,
+        headers: parsed.headers,
+        data: parsed.data,
+      });
       try {
         apiResponse = await axiosInstance.request({
-          method,
+          method: parsed.method as any,
           url: finalUrl,
-          headers: finalHeaders,
-          data: ["POST", "PUT", "PATCH"].includes(method)
-            ? finalData
-            : undefined,
+          headers: parsed.headers,
+          data: parsed.data,
         });
-        const creditToAdd = Number(apiResponse?.data?.credit || 0);
-
-        if (creditToAdd > 0) {
-          await ProxyModel.updateOne(
-            { _id: existingKey.proxy_id },
-            { $inc: { credit: creditToAdd } },
-          );
-        }
         const aliasKey = await AliasKeyModel.findOneAndUpdate(
           {
             alias_key,
+            status: "Active",
             remaining_quota: { $gt: 0 },
           },
           { $inc: { remaining_quota: -1 } },
           { new: true },
         ).lean();
-
-        // Increment counter
-        await ProxyModel.updateOne(
-          { _id: existingKey.proxy_id },
-          { $inc: { counter: 1 } },
-        );
-
         return this.handleResponse(
           res,
           existingKey.user_id,
@@ -293,7 +234,7 @@ class ProxyController {
           req.method,
           startTime,
           "success",
-          "Api call success",
+          "API success",
           200,
           "SUCCESS",
         );

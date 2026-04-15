@@ -5,7 +5,7 @@ import { param } from "express-validator";
 
 export const validateId = [param("id").isMongoId().withMessage("Invalid ID")];
 export const validateAdd = [
-  body("domain").notEmpty().withMessage("Domain is required"),
+  body("domain_name").notEmpty().withMessage("Domain name is required"),
 
   // body("parent_key")
   //   .notEmpty()
@@ -22,10 +22,22 @@ export const validateAdd = [
 ];
 export const validateEdit = [
   param("id").isMongoId().withMessage("Invalid ID"),
-  body("domain").optional().notEmpty().withMessage("Domain is required"),
-  body("total_quota").optional().isNumeric().withMessage("Total quota must be a number"),
-  body("remaining_quota").optional().isNumeric().withMessage("Remaining quota must be a number"),
-  body("status").optional().isIn(["Active", "Inactive", "Pending", "Rejected"]).withMessage("Invalid status"),
+  body("domain_name")
+    .optional()
+    .notEmpty()
+    .withMessage("Domain name is required"),
+  body("total_quota")
+    .optional()
+    .isNumeric()
+    .withMessage("Total quota must be a number"),
+  body("remaining_quota")
+    .optional()
+    .isNumeric()
+    .withMessage("Remaining quota must be a number"),
+  body("status")
+    .optional()
+    .isIn(["Active", "Inactive", "Pending", "Rejected"])
+    .withMessage("Invalid status"),
 ];
 export const isRequestValidated = (
   req: Request,

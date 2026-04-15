@@ -1,6 +1,5 @@
-import mongoose, { Schema,model, Document, Types } from "mongoose";
+import mongoose, { Schema, model, Document, Types } from "mongoose";
 import { IAliasKey } from "../interface/IAliasKey.interface";
-
 
 export interface IAliasKeyDocument extends IAliasKey, Document {
   user_id: Types.ObjectId;
@@ -11,23 +10,32 @@ const AliasKeySchema: Schema = new Schema(
   {
     user_id: {
       type: Schema.Types.ObjectId,
-      ref: "User", // ✅ FIX
+      ref: "User",
     },
-
-    parent_key: {
-      type: Schema.Types.ObjectId,
-      ref: "ParentKey", // ✅ FIX
-    },
-    alias_key: {
+    project_name: {
       type: String,
-      //  required: true,
-      //  unique: true,
-      trim: true,
     },
-    domain: {
+    domain_name: {
       type: String,
       required: true,
       // trim: true,
+    },
+    proxy_id: {
+      type: Schema.Types.ObjectId,
+      ref: "ProxyModel",
+    },
+    proxy_permission_required: {
+      type: String,
+    },
+    cost_calculation: {
+      type: String,
+    },
+    total_estimated_cost: {
+      type: Number,
+    },
+
+    alias_key: {
+      type: String,
     },
     status: {
       type: String,
@@ -57,4 +65,4 @@ AliasKeySchema.index({ user_id: 1, parent_key: 1 });
 AliasKeySchema.index({ alias_key: 1, status: 1, remaining_quota: 1 });
 
 const AliasKeyModel = model<IAliasKeyDocument>("alias_keys", AliasKeySchema);
-export default  AliasKeyModel;
+export default AliasKeyModel;

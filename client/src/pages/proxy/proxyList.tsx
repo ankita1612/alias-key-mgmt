@@ -9,6 +9,7 @@ import {
   FiArrowUp,
   FiArrowDown,
 } from "react-icons/fi";
+import { Copy } from "lucide-react";
 
 import { Link, useLocation } from "react-router-dom";
 import type { IProxy } from "../../interface/proxy.interface";
@@ -219,15 +220,13 @@ function ProxyList() {
 
   const columns = [
     { label: "#", field: "_id", sortable: true },
-    { label: "Domain", field: "domain", sortable: true },
-    { label: "Project Name", field: "project_name", sortable: true },
+    { label: "Proxy Name", field: "proxy_name", sortable: true },
+    { label: "Proxy Token", field: "proxy_token", sortable: true },
     { label: "Curl", field: "curl", sortable: true },
     { label: "Credit", field: "credit", sortable: true },
-    { label: "Status", field: "status", sortable: true },
     { label: "Created", field: "createdAt", sortable: true },
   ];
-  const gridColsClass =
-    "grid-cols-[40px_1.2fr_1.2fr_2fr_100px_100px_100px_40px]";
+  const gridColsClass = "grid-cols-[40px_1.2fr_1.2fr_2fr_80px_100px_80px]";
 
   return (
     <div className="py-4">
@@ -507,11 +506,9 @@ function ProxyList() {
           {/* Modal */}
           <div
             ref={actionModalRef}
-            className="relative w-full max-w-4xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+            className="relative w-full max-w-3xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
           >
-            {/* Decorative top bar */}
-
-            {/* Close Icon - Improved */}
+            {/* Close Icon */}
             <button
               onClick={() => setShowModal(false)}
               className="absolute z-10 flex items-center justify-center w-10 h-10 text-gray-400 transition-all duration-200 bg-white rounded-full shadow-md top-4 right-4 hover:text-gray-600 hover:bg-gray-100 hover:shadow-lg group"
@@ -519,7 +516,7 @@ function ProxyList() {
               <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>
 
-            {/* Header */}
+            {/* Header - Kept as requested */}
             <div className="px-6 pt-8 pb-4 text-left bg-gradient-to-b from-white to-gray-50">
               <div className="flex items-center gap-3">
                 {/* Left Thick Line */}
@@ -527,76 +524,84 @@ function ProxyList() {
 
                 {/* Title */}
                 <h3 className="text-2xl font-bold text-gray-900">
-                  Review Proxy Key Request
+                  Proxy Details
                 </h3>
               </div>
 
               <p className="pl-4 mt-1 text-base text-gray-500">
-                Please review the details before approving or rejecting this
-                request
+                View complete proxy configuration information
               </p>
             </div>
 
-            {/* Key Details Card */}
-            <div className="p-4 mx-6 mt-6 border border-gray-100 bg-gray-50 rounded-xl">
-              <h4 className="mb-3 text-base font-semibold tracking-wider text-gray-500 uppercase">
-                Request Details
-              </h4>
-
-              <div className="space-y-3">
-                {selectedRow?.user_id && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-gray-400" />
-                      <span className="text-base text-gray-600">
-                        Requested By
-                      </span>
-                    </div>
-                    <span className="text-base font-medium text-gray-800">
-                      {selectedRow.user.first_name || "-"}
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-gray-400" />
-                    <span className="text-base text-gray-600">Domain</span>
-                  </div>
-                  <span className="text-base font-medium text-gray-800">
-                    {selectedRow?.domain || "-"}
-                  </span>
+            {/* Proxy Details Grid */}
+            <div className="px-6 pt-6 pb-2">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {/* Proxy Name */}
+                <div className="p-4 transition-all duration-200 border border-gray-100 rounded-lg bg-gray-50 hover:shadow-md hover:border-gray-200">
+                  <label className="block text-base font-medium tracking-wider text-gray-500 uppercase">
+                    Proxy Name
+                  </label>
+                  <p className="mt-2 text-base font-semibold text-gray-900 break-all">
+                    {selectedRow?.proxy_name || "-"}
+                  </p>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Database className="w-4 h-4 text-gray-400" />
-                    <span className="text-base text-gray-600">Total Quota</span>
-                  </div>
-                  <span className="text-base font-medium text-gray-800">
-                    {selectedRow?.total_quota || "-"}
-                  </span>
+                {/* Proxy Token */}
+                <div className="p-4 transition-all duration-200 border border-gray-100 rounded-lg bg-gray-50 hover:shadow-md hover:border-gray-200">
+                  <label className="block text-base font-medium tracking-wider text-gray-500 uppercase">
+                    Proxy Token
+                  </label>
+                  <p className="mt-2 font-mono text-base font-semibold text-gray-900 break-all">
+                    {selectedRow?.proxy_token || "-"}
+                  </p>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-gray-400" />
-                    <span className="text-base text-gray-600">Purpose</span>
-                  </div>
-                  <span className="text-base font-medium text-gray-800">
-                    {selectedRow.description || "-"}
-                  </span>
+                {/* Domain Name */}
+                <div className="p-4 transition-all duration-200 border border-gray-100 rounded-lg bg-gray-50 hover:shadow-md hover:border-gray-200">
+                  <label className="block text-base font-medium tracking-wider text-gray-500 uppercase">
+                    Domain Name
+                  </label>
+                  <p className="mt-2 text-base font-semibold text-gray-900 break-all">
+                    {selectedRow?.domain_name || "-"}
+                  </p>
+                </div>
+
+                {/* Project Name */}
+                <div className="p-4 transition-all duration-200 border border-gray-100 rounded-lg bg-gray-50 hover:shadow-md hover:border-gray-200">
+                  <label className="block text-base font-medium tracking-wider text-gray-500 uppercase">
+                    Project Name
+                  </label>
+                  <p className="mt-2 text-base font-semibold text-gray-900">
+                    {selectedRow?.project_name || "-"}
+                  </p>
+                </div>
+
+                {/* Credit */}
+                <div className="p-4 transition-all duration-200 border border-gray-100 rounded-lg bg-gray-50 hover:shadow-md hover:border-gray-200">
+                  <label className="block text-base font-medium tracking-wider text-gray-500 uppercase">
+                    Credit
+                  </label>
+                  <p className="mt-2 text-2xl font-bold text-blue-600">
+                    {selectedRow?.credit || "0"}
+                  </p>
                 </div>
               </div>
-            </div>
 
-            {/* Info Box */}
-            <div className="p-3 mx-6 mt-4 border border-blue-100 rounded-lg bg-blue-50">
-              <div className="flex items-start gap-2">
-                <Clock className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                <p className="text-base text-blue-700">
-                  This action can't be changed.
-                </p>
-              </div>
+              {/* Curl Section - Full Width */}
+              {selectedRow?.curl && selectedRow.curl !== "-" && (
+                <div className="mt-4 overflow-hidden border border-gray-100 rounded-lg bg-gray-50">
+                  <div className="px-4 py-3 bg-gray-100 border-b border-gray-100">
+                    <label className="text-base font-medium tracking-wider text-gray-600 uppercase">
+                      CURL Command
+                    </label>
+                  </div>
+                  <div className="p-4">
+                    <pre className="p-3 overflow-x-auto font-mono text-base text-gray-700 break-all whitespace-pre-wrap bg-gray-100 rounded-lg">
+                      {selectedRow?.curl}
+                    </pre>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Divider */}
@@ -606,35 +611,9 @@ function ProxyList() {
             <div className="flex flex-col-reverse gap-3 px-6 pb-8 sm:flex-row">
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2.5 text-base font-medium bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200"
+                className="flex-1 px-4 py-2.5 text-base font-medium transition-all duration-200 bg-gray-100 rounded-xl text-gray-700 hover:bg-gray-200 hover:shadow-md active:scale-95"
               >
-                Cancel
-              </button>
-
-              <button
-                onClick={() => handleApprove("Rejected")}
-                className="flex-1 px-4 py-2.5 text-base font-medium bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-              >
-                <XCircle className="w-4 h-4" />
-                Reject
-              </button>
-
-              <button
-                onClick={() => handleApprove("Active")}
-                disabled={loading}
-                className="flex-1 px-4 py-2.5 text-base font-medium bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    Approve
-                  </>
-                )}
+                Close
               </button>
             </div>
           </div>

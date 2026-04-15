@@ -101,6 +101,9 @@ class DashboardController {
           LIMIT_EXCEED: 0,
           INTERNAL_SERVER: 0,
           KEY_NOT_ACTIVE: 0,
+           EXTERNAL_ERROR:0,
+           INVALID_PROXY:0,
+            PARAM_MISSING:0
         };
         statusAggregates.forEach((item: any) => {
           const key = item._id as keyof typeof statusCounts;
@@ -306,6 +309,9 @@ class DashboardController {
           LIMIT_EXCEED: 0,
           INTERNAL_SERVER: 0,
           KEY_NOT_ACTIVE: 0,
+          EXTERNAL_ERROR:0,
+           INVALID_PROXY:0,
+            PARAM_MISSING:0
         };
         apiStatusAggregates.forEach((item: any) => {
           const key = item._id as keyof typeof apiStatusCounts;

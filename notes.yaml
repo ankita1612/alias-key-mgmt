@@ -1,0 +1,27 @@
+1)proxy
+    Domine : abc
+    Project name: xyz
+    Proxy name: text_proxy_name
+    proxy token :PROXY_TOKEN [it will automatic generate? should i store in encryption? ]
+    curl : curl --location --request GET 'https://api.scrape.do/?token=YOUR_TOKEN&url=https://httpbin.co/anything&super=true'
+    curl1 : curl --location --request POST -H "Content-Type: application/json" --data '{"foo":"bar"}' 'http://api.scrape.do/?url=https%3A%2F%2Fhttpbin.co%2Fanything&token=YOUR_TOKEN'
+    credit :100
+
+2)alias key : ALIAS_KEY_TOKEN 
+3)
+http://172.28.148.155:5000/api/get-proxy-response?alias_key=ALIAS_KEY_TOKEN&url=XXX&super=YYY
+        it call https://api.scrape.do/?token=PROXY_TOKEN&url=XXX&super=YYY
+  url, supermandatory. when user add .
+  call curl with new value given by user url,super
+
+
+  
+  in api i call with axios : 'https://api.scrape.do/?token=asesdujsshus&url=https://httpbin.co/anything&super=true
+
+
+  with axios : proxy.curl pass  whole https://api.scrape.do/?token=YOUR_TOKEN&url=https://httpbin.co/anything&super=true
+
+
+
+1)curl --location --request POST -H "Content-Type: application/json" --data '{"token":"123456789","args1":"test","args2":"demo"}' 'http://localhost:5002/get_response'
+2)curl --location --request GET 'http://localhost:5002/get_response?token=1&args1=test&args2=demo'

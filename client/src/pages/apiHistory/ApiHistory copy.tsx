@@ -465,7 +465,7 @@ function AliasKeyList() {
                           navigator.clipboard.writeText(
                             selectedRow?.user_alias_key_id?.alias_key || "",
                           );
-                          toast.success("Alias key copied");
+                          toast.success("key copied");
                         }}
                         className="p-1.5 text-gray-400 transition-all duration-200 bg-white border border-gray-200 rounded-lg shrink-0 hover:text-blue-600 hover:border-blue-300 hover:shadow-sm"
                         title="Copy to clipboard"

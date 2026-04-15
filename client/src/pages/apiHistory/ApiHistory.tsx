@@ -63,11 +63,12 @@ function ApiHistory() {
     return () => clearTimeout(timer);
   }, [search]);
   const handleActionClick = async (row: IAliasKey) => {
+    console.log(row);
     try {
       setLoading(true);
 
       const { data } = await apiClient.get(
-        `${BACKEND_URL}/api/user/${row.user_id}`,
+        `${BACKEND_URL}/api/user/get-user-by-alias_id/${row.user_alias_key_id._id}`,
       );
 
       // merge API response into row
@@ -229,7 +230,6 @@ function ApiHistory() {
         ) : (
           <>
             <div className="flex flex-col gap-2 mb-5 sm:flex-row sm:items-center sm:gap-3">
-              {/* Alias Key Dropdown */}
               <select
                 value={selectedAliasKey}
                 onChange={(e) => setSelectedAliasKey(e.target.value)}
@@ -450,7 +450,7 @@ function ApiHistory() {
 
             {/* Content */}
             <div className="px-6 py-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
-              {/* Two Column Grid for Requester and Alias Key */}
+              {/* Two Column Grid for Requester and  Key */}
               <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2">
                 {/* Requester Information Card */}
                 <div className="overflow-hidden transition-all duration-300 bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md">
@@ -482,13 +482,12 @@ function ApiHistory() {
                   </div>
                 </div>
 
-                {/* Alias Key Card */}
                 <div className="overflow-hidden transition-all duration-300 bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md">
                   <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50">
                     <div className="flex items-center gap-2">
                       <Key className="w-4 h-4 text-purple-600" />
                       <span className="text-base font-semibold tracking-wide text-gray-700 uppercase">
-                        Alias Key
+                        Key
                       </span>
                     </div>
                   </div>
@@ -502,7 +501,7 @@ function ApiHistory() {
                           navigator.clipboard.writeText(
                             selectedRow?.alias_key || "",
                           );
-                          toast.success("Alias key copied");
+                          toast.success("key copied");
                         }}
                         className="p-1.5 text-gray-400 transition-all duration-200 bg-white border border-gray-200 rounded-lg shrink-0 hover:text-blue-600 hover:border-blue-300 hover:shadow-sm"
                         title="Copy to clipboard"
@@ -591,7 +590,7 @@ function ApiHistory() {
                   <pre className="p-4 overflow-auto font-mono text-base text-gray-300 max-h-48 scrollbar-thin">
                     Method: {selectedRow?.method}
                     <br></br>
-                    Alias Key: {selectedRow?.alias_key}
+                    Key: {selectedRow?.alias_key}
                   </pre>
                 </div>
               </div>

@@ -36,7 +36,15 @@ const ApiHistorySchema = new Schema<IApiHistory>(
     },
     response_code_str: {
       type: String,
-      enum: ["LIMIT_EXCEED", "SUCCESS", "INTERNAL_SEREVER", "KEY_NOT_ACTIVE"],
+      enum: [
+        "LIMIT_EXCEED",
+        "SUCCESS",
+        "INTERNAL_SEREVER",
+        "KEY_NOT_ACTIVE",
+        "EXTERNAL_ERROR",
+        "INVALID_PROXY",
+        "PARAM_MISSING",
+      ],
       default: "SUCCESS",
     },
   },

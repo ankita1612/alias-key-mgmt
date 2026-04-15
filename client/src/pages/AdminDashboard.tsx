@@ -35,6 +35,9 @@ import {
   Server,
   Globe,
   Cpu,
+  XCircle,
+  AlertTriangle,
+  ServerCrash,
   BarChart3,
 } from "lucide-react";
 
@@ -57,6 +60,9 @@ interface AdminDashboardData {
     LIMIT_EXCEED: number;
     INTERNAL_SERVER: number;
     KEY_NOT_ACTIVE: number;
+    EXTERNAL_ERROR: number;
+    INVALID_PROXY: number;
+    PARAM_MISSING: number;
   };
   requestsLast7Days: Array<{ date: string; count: number }>;
 }
@@ -413,6 +419,9 @@ function AdminDashboard() {
                           dashboard.apiStatusCounts.SUCCESS +
                           dashboard.apiStatusCounts.KEY_NOT_ACTIVE +
                           dashboard.apiStatusCounts.LIMIT_EXCEED +
+                          dashboard.apiStatusCounts.PARAM_MISSING +
+                          dashboard.apiStatusCounts.EXTERNAL_ERROR +
+                          dashboard.apiStatusCounts.INVALID_PROXY +
                           dashboard.apiStatusCounts.INTERNAL_SERVER
                         ).toLocaleString()}
                       </p>
@@ -436,6 +445,24 @@ function AdminDashboard() {
                           value: dashboard?.apiStatusCounts?.LIMIT_EXCEED,
                           color: COLORS.warning,
                           icon: Zap,
+                        },
+                        {
+                          label: "Proxy key deleted ",
+                          value: dashboard?.apiStatusCounts?.INVALID_PROXY,
+                          color: COLORS.pending,
+                          icon: XCircle,
+                        },
+                        {
+                          label: "Request params missing",
+                          value: dashboard?.apiStatusCounts?.PARAM_MISSING,
+                          color: COLORS.secondary,
+                          icon: AlertTriangle,
+                        },
+                        {
+                          label: "API call error",
+                          value: dashboard?.apiStatusCounts?.EXTERNAL_ERROR,
+                          color: COLORS.error,
+                          icon: ServerCrash,
                         },
                         {
                           label: "Internal Server Error",
