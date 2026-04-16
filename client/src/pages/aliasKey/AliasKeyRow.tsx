@@ -298,7 +298,11 @@ function AliasKeyRow({
         </button>
         {["Active", "Inactive"].includes(apiData.status) && (
           <button
-            onClick={() => navigate(`/api-history/${apiData._id}`)}
+            onClick={() =>
+              navigate(`/api-history/${apiData._id}`, {
+                state: { aliasName: apiData.alias_key },
+              })
+            }
             className="p-1.5 text-purple-600 hover:text-white hover:bg-purple-500 rounded-md transition-all duration-200 group relative"
             title="View Requests"
           >
