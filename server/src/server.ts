@@ -67,6 +67,25 @@ if (cluster.isPrimary) {
   app.use("/api/api-hisory", apiHisoryRouter);
   app.use("/api/dashboard", dashboardRouter);
   app.use("/api/proxy", proxyRouter);
+  app.post("/api/get-response", (req, res) => {
+  const { token, args1, args2 } = req.body;
+
+  // 🔍 basic validation
+  if (!token || !args1 || !args2) {
+    return res.status(400).json({
+      success: false,
+      message: "Missing required parameters",
+    });
+  }
+
+  // ✅ your logic here
+  console.log("Received:", { token, args1, args2 });
+
+  return res.status(200).json({
+    success: true,
+    message: "API call success",
+  });
+});
   //page not found
   app.use((req: Request, res: Response, next: NextFunction) => {
     next(new ApiError("Page not found", 404));

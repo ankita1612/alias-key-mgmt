@@ -1,18 +1,19 @@
 const mongoose = require("mongoose");
 
 import { Request, Response } from "express";
-import { Types } from "mongoose";
 import AliasKeyModel from "../models/aliasKey.model";
 import ProxyModel from "../models/proxy.model";
-//import redisClient from "../config/redis.config";
+//import { axiosInstance } from "../utils/axiosInstance";
+//import { parseCurl } from "../utils/parseCurl";
+import axios from "axios";
 import http from "http";
 import https from "https";
 import ApiHistoryModel from "../models/apiHistory.model";
-import axios from "axios";
+
 export const axiosInstance = axios.create({
   timeout: 15000,
-  httpAgent: new http.Agent({ keepAlive: true, maxSockets: 10000 }),
-  httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 10000 }),
+  httpAgent: new http.Agent({ keepAlive: true, maxSockets: 1000 }),
+  httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 1000 }),
 });
 type ParsedCurl = {
   method: string;
@@ -75,24 +76,23 @@ class ProxyController {
     response_msg: string,
     response_code: number,
     response_code_str: string,
+    requestParams: any
   ) => {
     const execTime = Date.now() - startTime;
 
-    // Log asynchronously
-    if (user_id && alias_key_id) {
-      ApiHistoryModel.create({
-        user_id: user_id,
-        user_alias_key_id: alias_key_id,
-        method: method,
-        execution_time: execTime,
-        response_status: response_status,
-        response_msg: response_msg,
-        response_code: response_code,
-        response_code_str: response_code_str,
-      }).catch((err) => {
-        console.error("❌ Logging failed:", err.message);
-      });
-    }
+    ApiHistoryModel.create({
+      user_id: user_id,
+      user_alias_key_id: alias_key_id,
+      method: method,
+      execution_time: execTime,
+      response_status: response_status,
+      response_msg: response_msg,
+      response_code: response_code,
+      response_code_str: response_code_str,
+      request_params:requestParams
+    }).catch((err) => {
+      console.error("❌ Logging failed:", err.message);
+    });
 
     return res.status(response_code).json({
       status: response_status,
@@ -115,6 +115,7 @@ class ProxyController {
         ...req.query,
         ...req.body,
       };
+      const allRequestParams=JSON.parse(JSON.stringify(requestParams));
 
       delete requestParams.alias_key;
       const existingKey = await AliasKeyModel.findOne({ alias_key }).lean();
@@ -138,6 +139,7 @@ class ProxyController {
           "Alias key is inactive",
           403,
           "KEY_NOT_ACTIVE",
+          allRequestParams
         );
       }
 
@@ -153,10 +155,11 @@ class ProxyController {
           "Quota exceeded",
           429,
           "LIMIT_EXCEED",
+          allRequestParams
         );
       }
 
-      // ✅ Fetch proxy
+      // ✅ Fetch proxy (use lean for performance)
       const proxy = await ProxyModel.findOne({
         _id: existingKey.proxy_id,
         is_deleted: false,
@@ -173,6 +176,7 @@ class ProxyController {
           "Proxy not found",
           404,
           "INVALID_PROXY",
+          allRequestParams
         );
       }
 
@@ -193,11 +197,12 @@ class ProxyController {
             `Missing param: ${key}`,
             400,
             "PARAM_MISSING",
+            allRequestParams
           );
         }
       }
 
-      // ✅ Parse curl
+      // ✅ Parse curl (IMPORTANT)
       const parsed = parseCurl(curl);
 
       // ALWAYS use curl method (NOT req.method)
@@ -279,13 +284,10 @@ class ProxyController {
           { $inc: { remaining_quota: -1 } },
           { new: true },
         ).lean();
-
-        // Increment counter
         await ProxyModel.updateOne(
           { _id: existingKey.proxy_id },
           { $inc: { counter: 1 } },
         );
-
         return this.handleResponse(
           res,
           existingKey.user_id,
@@ -296,6 +298,7 @@ class ProxyController {
           "Api call success",
           200,
           "SUCCESS",
+          allRequestParams
         );
       } catch (error: any) {
         // ✅ Axios error handling
@@ -311,6 +314,7 @@ class ProxyController {
             "External API error - " + error.response?.data?.message,
             error.response?.status || 500,
             "EXTERNAL_ERROR",
+            allRequestParams
           );
         }
 
@@ -327,6 +331,7 @@ class ProxyController {
             "External API error -No response from external API11",
             504,
             "EXTERNAL_ERROR",
+            allRequestParams
           );
         }
 
@@ -341,6 +346,7 @@ class ProxyController {
           "External API error - Internal server error",
           500,
           "INTERNAL_ERROR",
+          allRequestParams
         );
       }
 

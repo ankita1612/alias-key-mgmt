@@ -494,20 +494,8 @@ function ApiHistory() {
                   <div className="px-4 py-3">
                     <div className="flex items-center justify-between gap-2">
                       <p className="flex-1 font-mono text-base font-medium text-gray-900 break-all">
-                        {selectedRow?.alias_key}
+                        {selectedRow?.alias.alias_key}
                       </p>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(
-                            selectedRow?.alias_key || "",
-                          );
-                          toast.success("key copied");
-                        }}
-                        className="p-1.5 text-gray-400 transition-all duration-200 bg-white border border-gray-200 rounded-lg shrink-0 hover:text-blue-600 hover:border-blue-300 hover:shadow-sm"
-                        title="Copy to clipboard"
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -590,7 +578,19 @@ function ApiHistory() {
                   <pre className="p-4 overflow-auto font-mono text-base text-gray-300 max-h-48 scrollbar-thin">
                     Method: {selectedRow?.method}
                     <br></br>
-                    Key: {selectedRow?.alias_key}
+                    Query Parameters:
+                    {selectedRow.request_params &&
+                      Object.keys(selectedRow.request_params).length > 0 && (
+                        <div className="mt-0">
+                          <pre className="p-4 overflow-auto text-sm text-gray-300rounded-lg">
+                            {JSON.stringify(
+                              selectedRow.request_params || {},
+                              null,
+                              2,
+                            )}
+                          </pre>
+                        </div>
+                      )}
                   </pre>
                 </div>
               </div>

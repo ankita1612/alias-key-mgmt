@@ -47,6 +47,11 @@ const ApiHistorySchema = new Schema<IApiHistory>(
       ],
       default: "SUCCESS",
     },
+     request_params: {
+      type: Map,
+      of: String,
+      default: {},
+    },
   },
   {
     timestamps: true, // adds createdAt & updatedAt

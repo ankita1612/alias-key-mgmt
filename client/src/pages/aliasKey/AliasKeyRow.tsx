@@ -105,10 +105,15 @@ function AliasKeyRow({
     apiData.total_quota > 0
       ? ((apiData.remaining_quota / apiData.total_quota) * 100).toFixed(2)
       : "0.00";
+  const isDeleted = apiData.proxy?.is_deleted === true;
+
   // Desktop Table View
   return (
     <div
-      className={`grid ${gridColsClass}  text-base font-semibold text-gray-600  px-4 py-3 border-b border-gray-200`}
+      className={`
+      grid ${gridColsClass} text-base font-semibold text-gray-600 px-4 py-3 border-b 
+      ${isDeleted ? "bg-red-50 opacity-75 " : "border-gray-200"}
+    `}
     >
       {/* Index */}
       <div className="font-medium text-gray-400">{index + 1}</div>
@@ -140,6 +145,7 @@ function AliasKeyRow({
           <>
             {apiData.status === "Pending" ? (
               <button
+                disabled={isDeleted}
                 onClick={() => onActionClick(apiData)}
                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-base font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
                 title="Click here to change status"
@@ -149,6 +155,7 @@ function AliasKeyRow({
               </button>
             ) : apiData.status === "Active" ? (
               <button
+                disabled={isDeleted}
                 onClick={() => makeActiveInactiveClick(apiData, "Inactive")}
                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-base font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
                 title="Click here to change status"
@@ -158,6 +165,7 @@ function AliasKeyRow({
               </button>
             ) : apiData.status === "Inactive" ? (
               <button
+                disabled={isDeleted}
                 onClick={() => makeActiveInactiveClick(apiData, "Active")}
                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-base font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
                 title="Click here to change status"
@@ -212,7 +220,7 @@ function AliasKeyRow({
         {["Active", "Inactive"].includes(apiData.status) ? (
           <button
             onClick={() => setShowStats(true)}
-            className="px-2 py-1 text-base font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-md"
+            className="px-2 py-1 text-base font-medium text-indigo-600 rounded-md bg-indigo-50 hover:bg-indigo-100"
           >
             {apiData.total_history_records}
           </button>
@@ -236,6 +244,7 @@ function AliasKeyRow({
         {userRole === "User" ? (
           <>
             <button
+              disabled={isDeleted}
               onClick={handleEdit}
               className="p-1.5 text-blue-600 hover:text-white hover:bg-blue-500 rounded-md transition-all duration-200 group relative"
               title="Edit"
@@ -263,17 +272,6 @@ function AliasKeyRow({
               <>
                 <button
                   type="button"
-                  onClick={() => showKeyDetail(apiData)}
-                  className="p-1.5 text-green-600 hover:text-white hover:bg-green-500 rounded-md transition-all duration-200 group relative"
-                  title="Test Proxy"
-                >
-                  <FiEye className="w-4 h-4" />
-                  <span className="absolute px-2 py-1 text-base text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
-                    Test Proxy
-                  </span>
-                </button>
-                <button
-                  type="button"
                   onClick={handleGetProxyResponse}
                   className="p-1.5 text-green-600 hover:text-white hover:bg-green-500 rounded-md transition-all duration-200 group relative"
                   title="Test Proxy"
@@ -287,7 +285,17 @@ function AliasKeyRow({
             )}
           </>
         ) : null}
-
+        <button
+          type="button"
+          onClick={() => showKeyDetail(apiData)}
+          className="p-1.5  rounded-md transition-all duration-200 group relative"
+          title="View Details"
+        >
+          <FiEye className="w-4 h-4" />
+          <span className="absolute px-2 py-1 text-base text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+            View Details
+          </span>
+        </button>
         {["Active", "Inactive"].includes(apiData.status) && (
           <button
             onClick={() => navigate(`/api-history/${apiData._id}`)}

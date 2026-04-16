@@ -8,6 +8,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate, useParams } from "react-router";
 import type { IProxy } from "../../interface/proxy.interface";
+import { FaExchangeAlt } from "react-icons/fa";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -136,7 +137,7 @@ function ProxyAdd() {
           <div className="px-2 py-3 border border-gray-200 bg-gray-50 sm:px-8 ">
             <div className="flex items-center gap-3 ">
               <div className="flex items-center justify-center w-10 h-10 ">
-                <Key className="w-5 h-5" />
+                <FaExchangeAlt className="w-5 h-5" />
               </div>
               <div>
                 <h2

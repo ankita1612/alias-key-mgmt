@@ -105,7 +105,7 @@ function ProxyRow({
         >
           <FiEye className="w-4 h-4"></FiEye>
           <span className="absolute px-2 py-1 text-base text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
-            Show
+            View Details
           </span>
         </button>
       </div>

@@ -74,7 +74,7 @@ class ApiHistoryController {
       }
 
       const selectFields =
-        "user_alias_key_id method execution_time response_status response_msg response_code createdAt";
+        "user_alias_key_id method execution_time response_status response_msg response_code request_params createdAt";
       let data: any[] = [];
       let total = 0;
 

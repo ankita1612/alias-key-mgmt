@@ -8,6 +8,7 @@ import {
   FiPlus,
   FiArrowUp,
   FiArrowDown,
+  FiAlertCircle,
 } from "react-icons/fi";
 
 import { Link, useLocation } from "react-router-dom";
@@ -270,7 +271,7 @@ function AliasKeyList() {
               className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-base font-medium shadow-sm transition-all duration-200"
             >
               <FiPlus className="w-4 h-4" />
-              Create Alias Key Request
+              Create Key Request
             </Link>
           )}
         </div>
@@ -569,9 +570,9 @@ function AliasKeyList() {
 
             <div className="px-6 pb-0">
               {/* Request Details Section */}
-              <div className="mb-6 overflow-hidden border rounded-xl border-gray-200">
-                <div className="px-5 py-3 bg-gray-50 border-b border-gray-200">
-                  <h4 className="text-base font-semibold text-gray-700 uppercase tracking-wider">
+              <div className="mb-6 overflow-hidden border border-gray-200 rounded-xl">
+                <div className="px-5 py-3 border-b border-gray-200 bg-gray-50">
+                  <h4 className="text-base font-semibold tracking-wider text-gray-700 uppercase">
                     Key Information
                   </h4>
                 </div>
@@ -581,10 +582,10 @@ function AliasKeyList() {
                   {/* Alias Key */}
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                     <div className="text-base font-medium text-gray-500">
-                      Alias Key
+                      Key
                     </div>
                     <div className="sm:col-span-2">
-                      <p className="text-base font-mono font-semibold text-gray-900 break-all">
+                      <p className="font-mono text-base font-semibold text-gray-900 break-all">
                         {selectedRow?.alias_key || "-"}
                       </p>
                     </div>
@@ -615,46 +616,38 @@ function AliasKeyList() {
                   </div>
 
                   {/* Quota Information */}
-                  <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="grid grid-cols-4 gap-4 pt-2">
                     <div className="p-3 rounded-lg bg-blue-50">
-                      <p className="text-base text-blue-600 uppercase tracking-wider">
-                        Total Quota
+                      <p className="text-base tracking-wider text-blue-600 uppercase">
+                        Total Quota1
                       </p>
                       <p className="mt-1 text-xl font-bold text-blue-700">
                         {selectedRow?.total_quota || "-"}
                       </p>
                     </div>
                     <div className="p-3 rounded-lg bg-green-50">
-                      <p className="text-base text-green-600 uppercase tracking-wider">
+                      <p className="text-base tracking-wider text-green-600 uppercase">
                         Remaining Quota
                       </p>
                       <p className="mt-1 text-xl font-bold text-green-700">
                         {selectedRow?.remaining_quota || "-"}
                       </p>
                     </div>
-                  </div>
-
-                  {/* Cost Information */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                      <div className="text-base font-medium text-gray-500">
+                    <div className="p-3 border rounded-lg bg-gray-50">
+                      <p className="text-base tracking-wider uppercase">
                         Cost Calculation
-                      </div>
-                      <div className="sm:col-span-2">
-                        <p className="text-base font-semibold text-gray-900">
-                          {selectedRow?.cost_calculation || "-"}
-                        </p>
-                      </div>
+                      </p>
+                      <p className="mt-1 text-xl font-bold ">
+                        {selectedRow?.cost_calculation || "-"}
+                      </p>
                     </div>
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                      <div className="text-base font-medium text-gray-500">
+                    <div className="p-3 rounded-lg bg-yellow-50">
+                      <p className="text-base tracking-wider uppercase">
                         Total Estimated Cost
-                      </div>
-                      <div className="sm:col-span-2">
-                        <p className="text-base font-semibold text-gray-900">
-                          {selectedRow?.total_estimated_cost || "-"}
-                        </p>
-                      </div>
+                      </p>
+                      <p className="mt-1 text-xl font-bold ">
+                        {selectedRow?.total_estimated_cost || "-"}
+                      </p>
                     </div>
                   </div>
 
@@ -694,9 +687,9 @@ function AliasKeyList() {
 
               {/* Proxy Details Section */}
               {selectedRow?.proxy && (
-                <div className="mb-6 overflow-hidden border rounded-xl border-gray-200">
-                  <div className="px-5 py-3 bg-gray-50 border-b border-gray-200">
-                    <h4 className="text-base font-semibold text-gray-700 uppercase tracking-wider">
+                <div className="mb-6 overflow-hidden border border-gray-200 rounded-xl">
+                  <div className="px-5 py-3 border-b border-gray-200 bg-gray-50">
+                    <h4 className="text-base font-semibold tracking-wider text-gray-700 uppercase">
                       Proxy Configuration
                     </h4>
                   </div>
@@ -721,8 +714,8 @@ function AliasKeyList() {
                         <div className="mb-2 text-base font-medium text-gray-500">
                           Curl Command
                         </div>
-                        <div className="overflow-hidden rounded-lg bg-gray-900">
-                          <pre className="p-4 overflow-x-auto text-base text-gray-200 font-mono whitespace-pre-wrap">
+                        <div className="overflow-hidden bg-gray-900 rounded-lg">
+                          <pre className="p-4 overflow-x-auto font-mono text-base text-gray-200 whitespace-pre-wrap">
                             {selectedRow.proxy?.curl}
                           </pre>
                         </div>
@@ -737,23 +730,36 @@ function AliasKeyList() {
                           <div className="mb-2 text-base font-medium text-gray-500">
                             Query Parameters
                           </div>
-                          <div className="p-3 rounded-lg bg-gray-50">
-                            <code className="text-base font-mono text-gray-800 break-all">
-                              ?
-                              {Object.entries(selectedRow.proxy.query_params)
-                                .map(
-                                  ([key, value]) =>
-                                    `${key}=${encodeURIComponent(String(value))}`,
-                                )
-                                .join("&")}
-                            </code>
-                          </div>
+                          <pre className="p-4 overflow-auto text-sm text-gray-300rounded-lg">
+                            {JSON.stringify(
+                              selectedRow.proxy.query_params || {},
+                              null,
+                              2,
+                            )}
+                          </pre>
                         </div>
                       )}
                   </div>
                 </div>
               )}
 
+              {selectedRow.proxy.is_deleted === true && (
+                <div className="p-3 mb-4 border-l-4 border-red-500 rounded-md bg-red-50">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <FiAlertCircle className="w-5 h-5 text-red-500" />
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-red-800">
+                        Proxy Deleted
+                      </h3>
+                      <div className="mt-1 text-sm text-red-700">
+                        This proxy has been marked as deleted
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               {/* Info Box */}
             </div>
 
