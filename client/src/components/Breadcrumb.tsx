@@ -7,7 +7,7 @@ const routeNameMap: Record<string, string> = {
   "alias-key": "Key",
   "api-history": "API History",
   add: "Add",
-  update_profile: "Update Profile",
+  proxy: "Proxy",
   change_password: "Change Password",
 };
 
@@ -69,7 +69,9 @@ export default function Breadcrumb() {
             pathnames[index + 1]
           ) {
             label = "Edit";
-            to = "/alias-key";
+
+            // 🔥 dynamic parent route (proxy / alias-key)
+            to = `/${pathnames[0]}`;
           }
 
           if (isMongoId(value) && pathnames[0] !== "api-history") {
@@ -78,7 +80,7 @@ export default function Breadcrumb() {
 
           return (
             <li key={to} className="flex items-center gap-1">
-              {index === 0 || isLast ? (
+              {isLast ? (
                 <span className="font-medium text-gray-700">{label}</span>
               ) : (
                 <Link to={to} className="font-medium hover:text-gray-800">

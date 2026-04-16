@@ -67,8 +67,8 @@ if (cluster.isPrimary) {
   app.use("/api/api-hisory", apiHisoryRouter);
   app.use("/api/dashboard", dashboardRouter);
   app.use("/api/proxy", proxyRouter);
-  app.post("/api/get-response", (req, res) => {
-  const { token, args1, args2 } = req.body;
+ app.get("/api/get-response", (req, res) => {
+  const { token, args1, args2 } = req.query;
 
   // 🔍 basic validation
   if (!token || !args1 || !args2) {
@@ -78,7 +78,6 @@ if (cluster.isPrimary) {
     });
   }
 
-  // ✅ your logic here
   console.log("Received:", { token, args1, args2 });
 
   return res.status(200).json({
