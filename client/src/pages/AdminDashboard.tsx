@@ -299,18 +299,6 @@ function AdminDashboard() {
   };
   return (
     <div className="min-h-screen ">
-      {/* Background Pattern */}
-      {/* <div className="fixed inset-0 pointer-events-none opacity-5">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 2px 2px, rgba(0,0,0,0.1) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
-          }}
-        />
-      </div> */}
-
       <div className="">
         {/* Header */}
         <div className="mb-6">
@@ -372,6 +360,27 @@ function AdminDashboard() {
                 icon={Clock}
                 color="warning"
               />
+              <StatCard
+                title="total Quota"
+                value={dashboard.pendingApprovals.toLocaleString()}
+                subtitle="Waiting approval"
+                icon={Clock}
+                color="warning"
+              />
+              <StatCard
+                title="Used Quota"
+                value={dashboard.pendingApprovals.toLocaleString()}
+                subtitle="Waiting approval"
+                icon={Clock}
+                color="warning"
+              />
+              <StatCard
+                title="Remaining Quota"
+                value={dashboard.pendingApprovals.toLocaleString()}
+                subtitle="Waiting approval"
+                icon={Clock}
+                color="warning"
+              />
             </div>
             {/* Charts Grid */}
             <div className="grid gap-5 mb-6 lg:grid-cols-2">
@@ -414,7 +423,7 @@ function AdminDashboard() {
                           icon: CheckCircle,
                         },
                         {
-                          label: "Key Not Active",
+                          label: "Inctive Keys",
                           value: dashboard?.apiStatusCounts?.KEY_NOT_ACTIVE,
                           color: COLORS.neutral,
                           icon: Key,
@@ -426,29 +435,31 @@ function AdminDashboard() {
                           icon: Zap,
                         },
                         {
-                          label: "Proxy key deleted ",
+                          label: "Proxy Key Deleted ",
                           value: dashboard?.apiStatusCounts?.INVALID_PROXY,
                           color: COLORS.pending,
                           icon: XCircle,
                         },
                         {
-                          label: "Request params missing",
+                          label: "Missing Request Params ",
                           value: dashboard?.apiStatusCounts?.PARAM_MISSING,
                           color: COLORS.secondary,
                           icon: AlertTriangle,
                         },
                         {
                           label: "API call error",
-                          value: dashboard?.apiStatusCounts?.EXTERNAL_ERROR,
+                          value:
+                            dashboard?.apiStatusCounts?.EXTERNAL_ERROR +
+                            dashboard?.apiStatusCounts?.INTERNAL_SERVER,
                           color: COLORS.error,
                           icon: ServerCrash,
                         },
-                        {
-                          label: "Internal Server Error",
-                          value: dashboard?.apiStatusCounts?.INTERNAL_SERVER,
-                          color: COLORS.error,
-                          icon: AlertCircle,
-                        },
+                        // {
+                        //   label: "Internal Server Error",
+                        //   value: dashboard?.apiStatusCounts?.INTERNAL_SERVER,
+                        //   color: COLORS.error,
+                        //   icon: AlertCircle,
+                        // },
                       ].map((status) => {
                         const total =
                           (dashboard?.responseOverviewTotal ??

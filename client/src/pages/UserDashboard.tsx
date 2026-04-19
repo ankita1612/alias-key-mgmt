@@ -38,8 +38,7 @@ import {
   ArrowDownRight,
   Download,
   Filter,
-  MoreVertical,
-  Eye,
+  ChevronDown,
   ThumbsUp,
   ThumbsDown,
   MinusCircle,
@@ -67,6 +66,7 @@ interface DashboardData {
   lastRequestMinutesAgo: number | null;
   lastRequestAt: string | null;
   totalRequests: number;
+  responseOverviewTotal: number;
   apiStatusCounts: {
     SUCCESS: number;
     LIMIT_EXCEED: number;
@@ -90,11 +90,21 @@ function UserDashboard() {
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [selectedTimeRange, setSelectedTimeRange] = useState("7d");
+  const [timeFilter, setTimeFilter] = useState<string>("today");
+
+  const filterLabels: Record<string, string> = {
+    today: "Today",
+    week: "This Week",
+    month: "This Month",
+    all: "All Time",
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await apiClient.get<DashboardData>("/api/dashboard");
+      const response = await apiClient.get<DashboardData>(
+        `/api/dashboard?timeFilter=${timeFilter}`,
+      );
       setDashboard(response.data);
       setLastUpdated(new Date());
     } catch (caughtError) {
@@ -113,63 +123,90 @@ function UserDashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [timeFilter]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const MetricCard = ({ title, value, description, icon: Icon, trend, color = "primary" }: any) => {
-    const colorConfig = {
-      primary: { bg: "from-blue-500 to-blue-600", light: "bg-blue-50", text: "text-blue-600" },
-      success: { bg: "from-emerald-500 to-emerald-600", light: "bg-emerald-50", text: "text-emerald-600" },
-      warning: { bg: "from-amber-500 to-amber-600", light: "bg-amber-50", text: "text-amber-600" },
-      info: { bg: "from-cyan-500 to-cyan-600", light: "bg-cyan-50", text: "text-cyan-600" },
-      purple: { bg: "from-purple-500 to-purple-600", light: "bg-purple-50", text: "text-purple-600" },
+  const StatCard = ({
+    title,
+    value,
+    icon: Icon,
+    color = "primary",
+    valueColor = "text-gray-900",
+  }: any) => {
+    const gradientColors = {
+      primary: "from-indigo-500 to-purple-600",
+      success: "from-emerald-500 to-teal-600",
+      warning: "from-amber-500 to-orange-600",
+      info: "from-blue-500 to-cyan-600",
     };
 
     return (
-      <div className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
-        <div className="absolute inset-0  opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-        <div className="relative flex items-start justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-500">{title}</p>
-            <div className="mt-2 flex items-baseline space-x-2">
-              <p className="text-3xl font-bold text-gray-900">{value}</p>
-              {trend && (
-                <div className={`flex items-center ${trend >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                  {trend >= 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
-                  <span className="text-sm font-semibold">{Math.abs(trend)}%</span>
-                </div>
-              )}
-            </div>
-            <p className="mt-1 text-xs text-gray-500">{description}</p>
+      <div className="flex items-center gap-3 px-4 py-4 transition bg-white border-t rounded-lg shadow-sm hover:shadow-md">
+        {/* Icon */}
+        {Icon && (
+          <div
+            className={`flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br ${
+              gradientColors[color]
+            }`}
+          >
+            <Icon className="w-4 h-4 text-white" />
           </div>
-          <div className={`rounded-xl ${colorConfig[color].light} p-3 shadow-sm`}>
-            <Icon className={`h-5 w-5 ${colorConfig[color].text}`} />
-          </div>
+        )}
+
+        {/* Content */}
+        <div className="flex flex-col justify-center flex-1">
+          {/* VALUE (center focus) */}
+          <p className={`text-xl font-bold text-center ${valueColor}`}>
+            {value}
+          </p>
+
+          {/* TITLE (below) */}
+          <p className="mt-1 text-xs text-center text-gray-600 ">{title}</p>
         </div>
       </div>
     );
   };
 
   const StatusCard = ({ label, value, color, icon: Icon, percentage }: any) => (
-    <div className="group flex items-center justify-between rounded-lg p-3 transition-all duration-200 hover:bg-gray-50">
+    <div className="flex items-center justify-between p-3 transition-all duration-200 rounded-lg group hover:bg-gray-50">
       <div className="flex items-center space-x-3">
-        <div className={`rounded-lg p-2 ${color === COLORS.success ? 'bg-emerald-100' : 
-          color === COLORS.warning ? 'bg-amber-100' : 
-          color === COLORS.error ? 'bg-red-100' : 'bg-gray-100'}`}>
-          <Icon className={`h-4 w-4 ${color === COLORS.success ? 'text-emerald-600' : 
-            color === COLORS.warning ? 'text-amber-600' : 
-            color === COLORS.error ? 'text-red-600' : 'text-gray-600'}`} />
+        <div
+          className={`rounded-lg p-2 ${
+            color === COLORS.success
+              ? "bg-emerald-100"
+              : color === COLORS.warning
+                ? "bg-amber-100"
+                : color === COLORS.error
+                  ? "bg-red-100"
+                  : "bg-gray-100"
+          }`}
+        >
+          <Icon
+            className={`h-4 w-4 ${
+              color === COLORS.success
+                ? "text-emerald-600"
+                : color === COLORS.warning
+                  ? "text-amber-600"
+                  : color === COLORS.error
+                    ? "text-red-600"
+                    : "text-gray-600"
+            }`}
+          />
         </div>
         <div>
           <p className="text-sm font-medium text-gray-700">{label}</p>
-          <p className="text-xs text-gray-500">{percentage.toFixed(1)}% of total</p>
+          <p className="text-xs text-gray-500">
+            {percentage.toFixed(1)}% of total
+          </p>
         </div>
       </div>
       <div className="text-right">
-        <p className="text-lg font-semibold text-gray-900">{value.toLocaleString()}</p>
+        <p className="text-lg font-semibold text-gray-900">
+          {value.toLocaleString()}
+        </p>
       </div>
     </div>
   );
@@ -177,10 +214,13 @@ function UserDashboard() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-lg">
+        <div className="px-4 py-3 bg-white border border-gray-200 rounded-lg shadow-lg">
           <p className="text-sm font-semibold text-gray-900">{label}</p>
           <p className="text-sm text-gray-600">
-            Requests: <span className="font-semibold text-blue-600">{payload[0].value}</span>
+            Requests:{" "}
+            <span className="font-semibold text-blue-600">
+              {payload[0].value}
+            </span>
           </p>
         </div>
       );
@@ -188,13 +228,82 @@ function UserDashboard() {
     return null;
   };
 
+  const TimeFilterDropdown = () => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const options = [
+      { value: "today", label: "Today" },
+      { value: "week", label: "This Week" },
+      { value: "month", label: "This Month" },
+      { value: "all", label: "All Time" },
+    ];
+
+    const selectedOption = options.find(
+      (option) => option.value === timeFilter,
+    );
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          isOpen &&
+          !(event.target as Element).closest(".time-filter-dropdown")
+        ) {
+          setIsOpen(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }, [isOpen]);
+
+    return (
+      <div className="relative time-filter-dropdown">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        >
+          <Filter className="w-4 h-4" />
+          {selectedOption?.label}
+          <ChevronDown className="w-4 h-4" />
+        </button>
+
+        {isOpen && (
+          <div className="absolute right-0 z-10 w-40 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => {
+                  setTimeFilter(option.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 focus:outline-none ${
+                  timeFilter === option.value
+                    ? "bg-indigo-50 text-indigo-700 font-medium"
+                    : "text-gray-700"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="text-center">
-          <div className="mx-auto h-16 w-16 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
-          <p className="mt-6 text-lg font-semibold text-gray-900">Loading Dashboard</p>
-          <p className="mt-2 text-sm text-gray-500">Fetching your latest analytics...</p>
+          <div className="w-16 h-16 mx-auto border-4 border-gray-200 rounded-full animate-spin border-t-blue-600" />
+          <p className="mt-6 text-lg font-semibold text-gray-900">
+            Loading Dashboard
+          </p>
+          <p className="mt-2 text-sm text-gray-500">
+            Fetching your latest analytics...
+          </p>
         </div>
       </div>
     );
@@ -202,51 +311,49 @@ function UserDashboard() {
 
   const getPieChartData = () => {
     if (!dashboard) return [];
-    const total = Object.values(dashboard.apiStatusCounts).reduce((a, b) => a + b, 0);
+    const total = Object.values(dashboard.apiStatusCounts).reduce(
+      (a, b) => a + b,
+      0,
+    );
     return [
-      { name: "Success", value: dashboard.apiStatusCounts.SUCCESS, color: COLORS.success },
-      { name: "Key Not Active", value: dashboard.apiStatusCounts.KEY_NOT_ACTIVE, color: COLORS.neutral },
-      { name: "Limit Exceeded", value: dashboard.apiStatusCounts.LIMIT_EXCEED, color: COLORS.warning },
-      { name: "Errors", value: dashboard.apiStatusCounts.EXTERNAL_ERROR + dashboard.apiStatusCounts.INTERNAL_SERVER, color: COLORS.error },
-    ].filter(item => item.value > 0);
+      {
+        name: "Success",
+        value: dashboard.apiStatusCounts.SUCCESS,
+        color: COLORS.success,
+      },
+      {
+        name: "Key Not Active",
+        value: dashboard.apiStatusCounts.KEY_NOT_ACTIVE,
+        color: COLORS.neutral,
+      },
+      {
+        name: "Limit Exceeded",
+        value: dashboard.apiStatusCounts.LIMIT_EXCEED,
+        color: COLORS.warning,
+      },
+      {
+        name: "Errors",
+        value:
+          dashboard.apiStatusCounts.EXTERNAL_ERROR +
+          dashboard.apiStatusCounts.INTERNAL_SERVER,
+        color: COLORS.error,
+      },
+    ].filter((item) => item.value > 0);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen ">
+      <div className="">
         {/* Header */}
-        <div className="mb-8 rounded-2xl bg-white shadow-sm">
-          <div className="px-6 py-8">
-            <div className="flex flex-col items-start justify-between space-y-4 lg:flex-row lg:items-center lg:space-y-0">
-              <div>
-                <div className="flex items-center space-x-3">
-                  <div className="rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-2.5 shadow-lg">
-                    <Shield className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900 lg:text-3xl">
-                      Dashboard Overview
-                    </h1>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Monitor your API keys and usage analytics
-                    </p>
-                  </div>
-                </div>
-              </div>
+        <div className="mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
               <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
-                  <RefreshCw className="h-4 w-4 text-gray-400" />
-                  <span className="text-xs text-gray-500">
-                    Last updated: {lastUpdated.toLocaleTimeString()}
-                  </span>
+                <div>
+                  <h5 className="font-bold sm:text-xl">
+                    Key management Overview
+                  </h5>
                 </div>
-                <button
-                  onClick={() => fetchData()}
-                  className="inline-flex items-center space-x-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-blue-700 hover:shadow-md"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                  <span>Refresh</span>
-                </button>
               </div>
             </div>
           </div>
@@ -255,261 +362,267 @@ function UserDashboard() {
         {dashboard && (
           <>
             {/* Key Metrics Grid */}
-            <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-              <MetricCard
+            <div className="grid gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <StatCard
                 title="Total Keys"
                 value={dashboard.totalAliasKeys.toLocaleString()}
                 description="All keys created"
-                icon={Key}
+                icon=""
                 color="primary"
               />
-              <MetricCard
+              <StatCard
                 title="Active Keys"
                 value={dashboard.activeAliasKeys.toLocaleString()}
                 description="Currently active"
-                icon={CheckCircle}
+                icon=""
                 color="success"
               />
-              <MetricCard
+              <StatCard
                 title="Pending Keys"
                 value={dashboard.pendingAliasKeys.toLocaleString()}
                 description="Awaiting approval"
-                icon={Clock}
+                icon=""
                 color="warning"
               />
-              <MetricCard
+              <StatCard
                 title="Total Requests"
                 value={dashboard.totalRequests.toLocaleString()}
                 description="All-time API calls"
-                icon={Activity}
+                icon=""
                 color="info"
               />
-              <MetricCard
-                title="Monthly Requests"
-                value={dashboard.totalAliasRequestsCurrentMonth.toLocaleString()}
-                description="This month"
-                icon={Calendar}
-                color="purple"
+              <StatCard
+                title="Total Quota"
+                value={dashboard.quota.totalQuota.toLocaleString()}
+                subtitle="Waiting approval"
+                icon=""
+                color="warning"
+              />
+              <StatCard
+                title="Used Quota"
+                value={dashboard.quota.usedQuota.toLocaleString()}
+                subtitle="Waiting approval"
+                icon=""
+                color="warning"
+              />
+              <StatCard
+                title="Remaining Quota"
+                value={dashboard.quota.remainingQuota.toLocaleString()}
+                subtitle="Waiting approval"
+                icon=""
+                color="warning"
               />
             </div>
 
             {/* Charts Section */}
-            <div className="mb-8 grid gap-8 lg:grid-cols-2">
-              {/* Request Activity Chart */}
-              <div className="rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-md">
-                <div className="border-b border-gray-100 p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Request Activity
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        API requests over the last 7 days
-                      </p>
+
+            <div className="grid gap-5 mb-6 lg:grid-cols-2">
+              <div className="overflow-hidden duration-300 bg-white border border-gray-100 rounded-md shadow-sm hover:shadow-lg">
+                <div className="">
+                  <div className="flex items-center justify-between px-6 py-2 bg-primary">
+                    {/* LEFT */}
+                    <div className="flex items-center gap-3">
+                      {/* Accent line touching left border */}
+                      <div className="w-1 h-6 -ml-6 rounded-r-full bg-menuActive" />
+
+                      {/* Title */}
+                      <div>
+                        <h6 className=" sm:text-xl text-white/60">
+                          Response Overview
+                        </h6>
+                        <p className="mt-1 text-xs text-indigo-100/80">
+                          Showing{" "}
+                          {(
+                            dashboard?.responseOverviewTotal ??
+                            Object.values(dashboard.apiStatusCounts).reduce(
+                              (a, b) => a + b,
+                              0,
+                            ) ??
+                            0
+                          ).toLocaleString()}{" "}
+                          requests for {filterLabels[timeFilter]}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <select className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none">
-                        <option>Last 7 days</option>
-                        <option>Last 14 days</option>
-                        <option>Last 30 days</option>
-                      </select>
+
+                    {/* RIGHT - Time Filter */}
+                    <TimeFilterDropdown />
+                  </div>
+                </div>
+                <div className="p-5">
+                  <div className="space-y-4">
+                    {[
+                      {
+                        label: "Success",
+                        value: dashboard?.apiStatusCounts?.SUCCESS,
+                        color: COLORS.success,
+                        icon: CheckCircle,
+                      },
+                      {
+                        label: "Inctive Keys",
+                        value: dashboard?.apiStatusCounts?.KEY_NOT_ACTIVE,
+                        color: COLORS.neutral,
+                        icon: Key,
+                      },
+                      {
+                        label: "Limit Exceeded",
+                        value: dashboard?.apiStatusCounts?.LIMIT_EXCEED,
+                        color: COLORS.warning,
+                        icon: Zap,
+                      },
+                      {
+                        label: "Proxy Key Deleted ",
+                        value: dashboard?.apiStatusCounts?.INVALID_PROXY,
+                        color: COLORS.pending,
+                        icon: XCircle,
+                      },
+                      {
+                        label: "Missing Request Params ",
+                        value: dashboard?.apiStatusCounts?.PARAM_MISSING,
+                        color: COLORS.secondary,
+                        icon: AlertTriangle,
+                      },
+                      {
+                        label: "API call error",
+                        value:
+                          dashboard?.apiStatusCounts?.EXTERNAL_ERROR +
+                          dashboard?.apiStatusCounts?.INTERNAL_SERVER,
+                        color: COLORS.error,
+                        icon: ServerCrash,
+                      },
+                      // {
+                      //   label: "Internal Server Error",
+                      //   value: dashboard?.apiStatusCounts?.INTERNAL_SERVER,
+                      //   color: COLORS.error,
+                      //   icon: AlertCircle,
+                      // },
+                    ].map((status) => {
+                      const total =
+                        (dashboard?.responseOverviewTotal ??
+                          dashboard?.totalRequests) ||
+                        0;
+                      const value = status?.value || 0;
+
+                      // ✅ Safe percentage
+                      const percentage = total > 0 ? (value / total) * 100 : 0;
+
+                      // ✅ Better display with appropriate precision
+                      const formattedPercentage =
+                        percentage === 0
+                          ? "0%"
+                          : percentage < 0.01
+                            ? "< 0.01%"
+                            : percentage < 1
+                              ? `${percentage.toFixed(2)}%`
+                              : `${percentage.toFixed(1)}%`;
+
+                      // ✅ Ensure bar is visible
+                      const progressWidth =
+                        percentage > 0 && percentage < 1 ? 1 : percentage;
+
+                      return (
+                        <div key={status.label} className="space-y-2">
+                          {/* Top Row */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <status.icon className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm font-medium text-gray-700">
+                                {status.label}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm font-semibold text-gray-900">
+                                {(value || 0).toLocaleString()}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {formattedPercentage}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Progress Bar */}
+                          <div className="w-full h-2 overflow-hidden bg-gray-100 rounded-full">
+                            <div
+                              className="h-full transition-all duration-700 rounded-full"
+                              style={{
+                                width: `${progressWidth}%`,
+                                minWidth: percentage > 0 ? "4px" : "0px", // 👈 ensures visibility
+                                backgroundColor: status.color,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              {/* Request Activity Chart */}
+              <div className="overflow-hidden duration-300 bg-white border border-gray-100 shadow-sm hover:shadow-md rounded-xl">
+                <div>
+                  <div className="flex items-center justify-between px-6 py-4 bg-primary">
+                    <div className="flex items-center gap-3">
+                      {/* Accent line touching left border */}
+                      <div className="w-1 h-6 -ml-6 rounded-r-full bg-menuActive" />
+
+                      {/* Title */}
+                      <div>
+                        <h6 className=" sm:text-xl text-white/60">
+                          Last 7 days Activity
+                        </h6>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div className="p-6">
+                <div className="p-5">
                   <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={dashboard.requestsLast7Days}>
+                      <AreaChart
+                        data={dashboard.requestsLast7Days}
+                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                      >
                         <defs>
-                          <linearGradient id="colorRequests" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                          <linearGradient
+                            id="colorCount"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor={COLORS.primary}
+                              stopOpacity={0.3}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor={COLORS.primary}
+                              stopOpacity={0}
+                            />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis dataKey="date" stroke="#9ca3af" tick={{ fontSize: 12 }} />
-                        <YAxis stroke="#9ca3af" tick={{ fontSize: 12 }} />
+                        <XAxis
+                          dataKey="date"
+                          stroke="#9ca3af"
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis
+                          stroke="#9ca3af"
+                          tick={{ fontSize: 12 }}
+                          width={30} // 👈 reduce space
+                        />
                         <Tooltip content={<CustomTooltip />} />
                         <Area
                           type="monotone"
                           dataKey="count"
-                          stroke="#3b82f6"
+                          stroke={COLORS.primary}
                           strokeWidth={3}
-                          fill="url(#colorRequests)"
+                          fill="url(#colorCount)"
                         />
                       </AreaChart>
                     </ResponsiveContainer>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quota Usage Card */}
-              <div className="rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-md">
-                <div className="border-b border-gray-100 p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Quota Usage
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Current billing period consumption
-                      </p>
-                    </div>
-                    <div className="rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 p-2.5">
-                      <Gauge className="h-5 w-5 text-blue-600" />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="mb-6">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-600">Usage Rate</span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {dashboard.quota.usedPercent}%
-                      </span>
-                    </div>
-                    <div className="relative h-3 overflow-hidden rounded-full bg-gray-100">
-                      <div
-                        className="absolute h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-700"
-                        style={{ width: `${dashboard.quota.usedPercent}%` }}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 p-4">
-                      <p className="text-xs text-gray-500">Total Quota</p>
-                      <p className="mt-1 text-xl font-bold text-gray-900">
-                        {dashboard.quota.totalQuota.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 p-4">
-                      <p className="text-xs text-gray-500">Used Quota</p>
-                      <p className="mt-1 text-xl font-bold text-blue-600">
-                        {dashboard.quota.usedQuota.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="col-span-2 rounded-lg bg-gradient-to-r from-emerald-50 to-teal-50 p-4">
-                      <p className="text-xs text-emerald-600">Remaining Quota</p>
-                      <p className="mt-1 text-2xl font-bold text-emerald-600">
-                        {dashboard.quota.remainingQuota.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Response Distribution Section */}
-            <div className="grid gap-8 lg:grid-cols-2">
-              {/* Status Distribution */}
-              <div className="rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-md">
-                <div className="border-b border-gray-100 p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Response Distribution
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        API response status breakdown
-                      </p>
-                    </div>
-                    <div className="rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 p-2.5">
-                      <PieChartIcon className="h-5 w-5 text-purple-600" />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="mb-6">
-                    <p className="text-sm font-medium text-gray-700">Total Responses</p>
-                    <p className="text-3xl font-bold text-gray-900">
-                      {Object.values(dashboard.apiStatusCounts).reduce((a, b) => a + b, 0).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <StatusCard
-                      label="Success"
-                      value={dashboard.apiStatusCounts.SUCCESS}
-                      color={COLORS.success}
-                      icon={ThumbsUp}
-                      percentage={(dashboard.apiStatusCounts.SUCCESS / Object.values(dashboard.apiStatusCounts).reduce((a, b) => a + b, 0)) * 100}
-                    />
-                    <StatusCard
-                      label="Key Not Active"
-                      value={dashboard.apiStatusCounts.KEY_NOT_ACTIVE}
-                      color={COLORS.neutral}
-                      icon={MinusCircle}
-                      percentage={(dashboard.apiStatusCounts.KEY_NOT_ACTIVE / Object.values(dashboard.apiStatusCounts).reduce((a, b) => a + b, 0)) * 100}
-                    />
-                    <StatusCard
-                      label="Limit Exceeded"
-                      value={dashboard.apiStatusCounts.LIMIT_EXCEED}
-                      color={COLORS.warning}
-                      icon={AlertTriangle}
-                      percentage={(dashboard.apiStatusCounts.LIMIT_EXCEED / Object.values(dashboard.apiStatusCounts).reduce((a, b) => a + b, 0)) * 100}
-                    />
-                    <StatusCard
-                      label="Errors"
-                      value={dashboard.apiStatusCounts.EXTERNAL_ERROR + dashboard.apiStatusCounts.INTERNAL_SERVER}
-                      color={COLORS.error}
-                      icon={ThumbsDown}
-                      percentage={((dashboard.apiStatusCounts.EXTERNAL_ERROR + dashboard.apiStatusCounts.INTERNAL_SERVER) / Object.values(dashboard.apiStatusCounts).reduce((a, b) => a + b, 0)) * 100}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Activity */}
-              <div className="rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-md">
-                <div className="border-b border-gray-100 p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Recent Activity
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Latest API interactions
-                      </p>
-                    </div>
-                    <div className="rounded-xl bg-gradient-to-br from-orange-50 to-red-50 p-2.5">
-                      <Activity className="h-5 w-5 text-orange-600" />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between rounded-lg border border-gray-100 p-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Last Request</p>
-                        <p className="text-xs text-gray-500">
-                          {dashboard.lastRequestAt ? new Date(dashboard.lastRequestAt).toLocaleString() : 'No requests yet'}
-                        </p>
-                      </div>
-                      <div className="rounded-full bg-blue-100 p-2">
-                        <Clock className="h-4 w-4 text-blue-600" />
-                      </div>
-                    </div>
-                    <div className="rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-blue-900">Time Since Last Request</p>
-                          <p className="text-2xl font-bold text-blue-600">
-                            {dashboard.lastRequestMinutesAgo !== null ? `${dashboard.lastRequestMinutesAgo}` : "0"} minutes
-                          </p>
-                        </div>
-                        <Zap className="h-8 w-8 text-blue-500" />
-                      </div>
-                    </div>
-                    <div className="rounded-lg border border-gray-100 p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Daily Average</p>
-                          <p className="text-lg font-semibold text-gray-900">
-                            {(dashboard.totalRequests / 30).toFixed(0)} requests/day
-                          </p>
-                        </div>
-                        <TrendingUp className="h-5 w-5 text-emerald-500" />
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
