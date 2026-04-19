@@ -47,7 +47,7 @@ function ProxyRow({
   // Desktop Table View
   return (
     <div
-      className={`grid ${gridColsClass}  text-xs    px-4 py-3 border-b border-gray-200`}
+      className={`grid ${gridColsClass} items-center  text-xs    px-4 py-3 border-b border-gray-200`}
     >
       <div className="font-medium">{index + 1}</div>
       <div className="text-xs text-gray-800 truncate ">
@@ -72,10 +72,10 @@ function ProxyRow({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-0.5 p-0.5">
+      <div className="flex items-center gap-1">
         <button
           onClick={handleEdit}
-          className="p-1.5 text-blue-600 hover:text-white hover:bg-blue-500 rounded-md transition-all duration-200 group relative"
+          className="flex items-center justify-center p-1.5 text-blue-600 hover:text-white hover:bg-blue-500 rounded-md transition-all duration-200 group relative leading-none "
         >
           <FiEdit2 className="w-4 h-4" />
           <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
@@ -85,7 +85,7 @@ function ProxyRow({
 
         <button
           onClick={confirmDelete}
-          className="p-1.5 text-red-600 hover:text-white hover:bg-red-500 rounded-md transition-all duration-200 group relative"
+          className="flex items-center justify-center p-1.5 text-red-600 hover:text-white hover:bg-red-500 rounded-md transition-all duration-200 group relative leading-none "
         >
           <FiTrash2 className="w-4 h-4" />
           <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
@@ -94,7 +94,7 @@ function ProxyRow({
         </button>
         <button
           onClick={() => onActionClick(apiData)}
-          className="p-1.5 rounded-md transition-all duration-200 group relative"
+          className="flex items-center justify-center p-1.5 rounded-md transition-all duration-200 group relative leading-none "
         >
           <FiEye className="w-4 h-4"></FiEye>
           <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">

@@ -376,6 +376,7 @@ class AliasKeyController {
         {
           domain_name: req.body.domain_name,
           description: req.body.description,
+          cost_calculation: req.body.cost_calculation,
         },
         {
           new: true,

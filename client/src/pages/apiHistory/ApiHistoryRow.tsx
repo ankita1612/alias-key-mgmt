@@ -65,7 +65,7 @@ function AliasKeyRow({
   // Desktop Table View
   return (
     <div
-      className={`grid ${gridColsClass}  text-xs    px-4 py-3 border-b border-gray-200`}
+      className={`grid ${gridColsClass}  text-xs  items-center  px-4 py-3 border-b border-gray-200`}
     >
       {/* Index */}
       <div className="font-medium">{index + 1}</div>

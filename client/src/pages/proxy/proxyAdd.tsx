@@ -80,7 +80,7 @@ const parseCurlParams = (curl: string) => {
 
   const urlMatch = trimmed.match(/https?:\/\/[^\s'"]+/i);
   if (!urlMatch) {
-    return { params: [] as string[], error: "Invalid curl URL" };
+    return { params: [] as string[], error: "Invalid curl" };
   }
 
   const urlString = urlMatch[0];
@@ -88,7 +88,7 @@ const parseCurlParams = (curl: string) => {
   try {
     url = new URL(urlString);
   } catch {
-    return { params: [] as string[], error: "Invalid curl URL" };
+    return { params: [] as string[], error: "Invalid curl" };
   }
 
   const params = new Set<string>();
@@ -385,11 +385,15 @@ function ProxyAdd() {
                 type="text"
                 placeholder="e.g., BrightData US Proxy"
                 {...register("proxy_name")}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
-                  errors.proxy_name
-                    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
-                }`}
+                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
+disabled:text-gray-400 
+disabled:cursor-not-allowed 
+disabled:border-gray-200
+ ${
+   errors.proxy_name
+     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+     : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+ }`}
               />
             </div>
             {errors.proxy_name && (
@@ -409,11 +413,15 @@ function ProxyAdd() {
                 type="text"
                 placeholder="Enter API token or authentication key"
                 {...register("proxy_token")}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
-                  errors.proxy_token
-                    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
-                }`}
+                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
+disabled:text-gray-400 
+disabled:cursor-not-allowed 
+disabled:border-gray-200
+ ${
+   errors.proxy_token
+     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+     : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+ }`}
               />
             </div>
             {errors.proxy_token && (
@@ -433,11 +441,15 @@ function ProxyAdd() {
                 type="text"
                 placeholder="Paste full curl command (e.g., curl https://api.example.com ...)"
                 {...register("curl")}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
-                  errors.curl
-                    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
-                }`}
+                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
+disabled:text-gray-400 
+disabled:cursor-not-allowed 
+disabled:border-gray-200
+${
+  errors.curl
+    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+}`}
               />
               {errors.curl && (
                 <p className="mt-1.5 text-sm text-red-500">
@@ -478,9 +490,9 @@ function ProxyAdd() {
                 )}
               </>
             ) : (
-              <div className="p-4 mt-4 space-y-3 border border-gray-200 rounded-lg bg-gray-50">
+              <div className="mt-4 space-y-3 rounded-lg ">
                 <label className="block mb-2 text-sm">
-                  Token from curl request{" "}
+                  Curl URL Token Key{" "}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>

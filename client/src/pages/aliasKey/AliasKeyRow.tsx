@@ -109,7 +109,7 @@ function AliasKeyRow({
   return (
     <div
       className={`
-      grid ${gridColsClass}  text-xs    px-4 py-3 border-b border-gray-200 
+      grid ${gridColsClass}  text-xs items-center    px-4 py-3 border-b border-gray-200 
       ${isDeleted ? "bg-red-50  " : "border-gray-200"}
     `}
     >

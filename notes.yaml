@@ -27,4 +27,11 @@ http://172.28.148.155:5000/api/get-proxy-response?alias_key=ALIAS_KEY_TOKEN&url=
 2)curl --location --request GET 'http://localhost:5002/get_response?token=1&args1=test&args2=demo'
 
 
-curl --location --request GET 'http://localhost:5001/api/get-response?token=mOrEVyanEAtIXrO3JluEdaXB&args1=1&args2=2'
+curl --location --request GET 'http://localhost:5001/api/get-response?usernae=1&email=2&myToken=123&salary=2000'
+
+
+
+1) toaster message-2 line
+2)key history design
+3) key history view bread crumb
+4)admin side validation + structure change

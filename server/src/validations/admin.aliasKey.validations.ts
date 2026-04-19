@@ -23,21 +23,10 @@ export const validateAdd = [
 export const validateEdit = [
   param("id").isMongoId().withMessage("Invalid ID"),
   body("domain_name")
-    .optional()
     .notEmpty()
-    .withMessage("Domain name is required"),
-  body("total_quota")
-    .optional()
-    .isNumeric()
-    .withMessage("Total quota must be a number"),
-  body("remaining_quota")
-    .optional()
-    .isNumeric()
-    .withMessage("Remaining quota must be a number"),
-  body("status")
-    .optional()
-    .isIn(["Active", "Inactive", "Pending", "Rejected"])
-    .withMessage("Invalid status"),
+    .withMessage("Domain Name is required"),
+  body("cost_calculation").notEmpty().withMessage("Cost Calculation is required"),
+
 ];
 export const isRequestValidated = (
   req: Request,

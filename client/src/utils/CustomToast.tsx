@@ -39,7 +39,7 @@ const CustomToast = ({ t }: { t: ToastType }) => {
       className={`
         transform transition-all duration-300 ease-out
         ${t.visible ? "translate-x-0 opacity-100" : "translate-x-6 opacity-0"}
-        w-[260px] bg-white/90 backdrop-blur-md
+        min-w-[280px] max-w-[400px] bg-white/90 backdrop-blur-md
         shadow-lg rounded-xl border border-gray-200 overflow-hidden
         hover:shadow-xl
       `}

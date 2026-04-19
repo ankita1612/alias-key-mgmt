@@ -128,6 +128,7 @@ function AliasKeyAdd() {
           total_quota: data.data.total_quota,
           total_estimated_cost: data.data.total_estimated_cost,
           description: data.data.description || "",
+          proxy_permission_required: data.data.proxy_permission_required || "",
         });
         setOriginalData(data.data);
       } catch (error: any) {
@@ -205,17 +206,17 @@ function AliasKeyAdd() {
   const totalQuotaValue = watch("total_quota");
 
   return (
-    <div className="bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm">
+    <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
       {/* HEADER */}
       <div className="flex items-center justify-between px-6 py-4 bg-primary">
         {/* LEFT */}
         <div className="flex items-center gap-3">
           {/* Accent line touching left border */}
-          <div className="-ml-6 w-1 h-6 rounded-r-full bg-menuActive" />
+          <div className="w-1 h-6 -ml-6 rounded-r-full bg-menuActive" />
 
           {/* Title */}
           <div>
-            <h5 className=" sm:text-xl  text-white/60">
+            <h5 className=" sm:text-xl text-white/60">
               {" "}
               {mode === "add" ? "Add Key" : "Edit Key"}
             </h5>
@@ -243,11 +244,15 @@ function AliasKeyAdd() {
                 type="text"
                 placeholder="e.g., Ecommerce Scraper / Lead Generation"
                 {...register("project_name")}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
-                  errors.project_name
-                    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
-                }`}
+                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
+disabled:text-gray-400 
+disabled:cursor-not-allowed 
+disabled:border-gray-200
+ ${
+   errors.project_name
+     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+     : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+ }`}
               />
               {errors.project_name && (
                 <p className="mt-1.5 text-sm text-red-500">
@@ -321,11 +326,15 @@ function AliasKeyAdd() {
                   const val = e.target.value.replace(/[^0-9]/g, ""); // keep only numbers
                   setValue("total_quota", val); // ✅ correct usage
                 }}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
-                  errors.total_quota
-                    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
-                }`}
+                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
+disabled:text-gray-400 
+disabled:cursor-not-allowed 
+disabled:border-gray-200
+ ${
+   errors.total_quota
+     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+     : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+ }`}
               />
             </div>
             {errors.total_quota && (
@@ -342,7 +351,6 @@ function AliasKeyAdd() {
             <div>
               <textarea
                 rows={4}
-                disabled={mode === "edit"}
                 placeholder="Define cost per request or formula (e.g., ₹0.01 per request)"
                 {...register("cost_calculation")}
                 className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
@@ -375,11 +383,15 @@ function AliasKeyAdd() {
                   const val = e.target.value.replace(/[^0-9]/g, ""); // keep only numbers
                   setValue("total_estimated_cost", val); // ✅ correct usage
                 }}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
-                  errors.total_estimated_cost
-                    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
-                }`}
+                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
+disabled:text-gray-400 
+disabled:cursor-not-allowed 
+disabled:border-gray-200
+ ${
+   errors.total_estimated_cost
+     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+     : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+ }`}
               />
               {errors.total_estimated_cost && (
                 <p className="mt-1.5 text-sm text-red-500">
