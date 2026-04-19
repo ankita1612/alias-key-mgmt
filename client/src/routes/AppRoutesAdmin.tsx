@@ -12,6 +12,8 @@ import AliasKeyAdd from "../pages/aliasKey/AliasKeyAdd";
 import ProxyList from "../pages/proxy/ProxyList";
 import ProxyAdd from "../pages/proxy/ProxyAdd";
 import ApiHistory from "../pages/apiHistory/ApiHistory";
+import ApiHistoryView from "../pages/apiHistory/ApiHistoryView";
+
 import { useAuth } from "../context/AuthContext";
 
 const AppRoutes = () => {
@@ -66,7 +68,10 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="api-history/view/:apiHistoryId"
+          element={<ApiHistoryView />}
+        />
         <Route path="api-history/:aliasKeyId?" element={<ApiHistory />} />
 
         <Route path="*" element={<PageNotFound />} />

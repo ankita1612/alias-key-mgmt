@@ -19,7 +19,7 @@ import aliasKeyRouter from "./routes/admin.aliasKey.route";
 import proxyRouter from "./routes/admin.proxy.route";
 import proxyAPIRouter from "./routes/admin.proxyAPI.route";
 
-import apiHisoryRouter from "./routes/admin.apiHistory.route";
+import apiHistoryRouter from "./routes/admin.apiHistory.route";
 import dashboardRouter from "./routes/admin.dashbaord.route";
 
 // import reportRouter from "./routes/user.report.route";
@@ -64,7 +64,7 @@ if (cluster.isPrimary) {
   app.use("/api/user", adminUserRouter);
   app.use("/api/alias-key", aliasKeyRouter);
   app.use("/api/get-proxy-response", proxyAPIRouter);
-  app.use("/api/api-hisory", apiHisoryRouter);
+  app.use("/api/api-history", apiHistoryRouter);
   app.use("/api/dashboard", dashboardRouter);
   app.use("/api/proxy", proxyRouter);
  app.get("/api/get-response", (req, res) => {

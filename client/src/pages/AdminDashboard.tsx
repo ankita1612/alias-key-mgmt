@@ -231,7 +231,9 @@ function AdminDashboard() {
             <div>
               <div className="flex items-center space-x-3">
                 <div>
-                  <h5 className="sm:text-xl ">Key managment Overview</h5>
+                  <h5 className="font-bold sm:text-xl">
+                    Key managment Overview
+                  </h5>
                 </div>
               </div>
             </div>

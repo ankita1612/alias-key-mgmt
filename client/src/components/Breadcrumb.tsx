@@ -69,7 +69,7 @@ export default function Breadcrumb() {
 
         // ✅ /api-history
         if (path === "/api-history") {
-          items.push({ label: "API History", clickable: false });
+          items.push({ label: "Key Monitor", clickable: false });
         }
 
         // ✅ /api-history/:id
@@ -108,7 +108,7 @@ export default function Breadcrumb() {
 
       {/* 🔥 BREADCRUMB */}
       <nav aria-label="Breadcrumb">
-        <ol className="flex items-center gap-2  py-2 text-sm  text-slate-600">
+        <ol className="flex items-center gap-2 py-2 text-sm text-slate-600">
           {breadcrumbItems.map((item, index) => {
             return (
               <li key={index} className="flex items-center gap-2">
@@ -116,7 +116,7 @@ export default function Breadcrumb() {
                 {item.icon && (
                   <Link
                     to={HOME_ROUTE}
-                    className="hover:text-primary transition"
+                    className="transition hover:text-primary"
                   >
                     {item.icon}
                   </Link>

@@ -8,6 +8,17 @@ interface AuthRequest extends Request {
   user?: any;
 }
 class ApiHistoryController {
+  getApiHistoryDetail= async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      res.json(1)
+    } catch (error) {
+      next(error);
+    }
+  };
   getApiHistory = async (
     req: AuthRequest,
     res: Response,

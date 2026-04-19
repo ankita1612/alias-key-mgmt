@@ -236,12 +236,12 @@ function ProxyList() {
   const columns = [
     { label: "#", field: "_id", sortable: true },
     { label: "Proxy Name", field: "proxy_name", sortable: true },
-    { label: "Proxy Token", field: "proxy_token", sortable: true },
+    // { label: "Proxy Token", field: "proxy_token", sortable: true },
     { label: "Curl", field: "curl", sortable: true },
     { label: "Credit", field: "credit", sortable: true },
     { label: "Created", field: "createdAt", sortable: true },
   ];
-  const gridColsClass = "grid-cols-[40px_1.2fr_1.2fr_2fr_80px_100px_80px]";
+  const gridColsClass = "grid-cols-[40px_1.2fr_2fr_80px_100px_80px]";
 
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
@@ -471,7 +471,7 @@ function ProxyList() {
           {/* Modal */}
           <div
             ref={actionModalRef}
-            className="relative w-full max-w-2xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+            className="relative w-full max-w-3xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
           >
             {/* Close Icon */}
             <button
@@ -576,32 +576,9 @@ function ProxyList() {
                   Curl Command
                 </label>
                 <div className="relative group">
-                  <pre className="p-3 overflow-x-auto font-mono text-xs text-gray-500 border border-gray-100 rounded-lg bg-gray-50">
+                  <pre className="text-sm text-gray-500 break-words whitespace-pre-wrap">
                     <code>{selectedRow?.curl || "-"}</code>
                   </pre>
-                  {selectedRow?.curl && (
-                    <button
-                      onClick={() =>
-                        navigator.clipboard.writeText(selectedRow?.curl)
-                      }
-                      className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-gray-600 transition-colors bg-white rounded-md shadow-sm"
-                      title="Copy to clipboard"
-                    >
-                      <svg
-                        className="w-3.5 h-3.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                        />
-                      </svg>
-                    </button>
-                  )}
                 </div>
               </div>
             </div>

@@ -88,7 +88,7 @@ function TotalHitsModal({ data, onClose }: TotalHitsModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 text-sm transition-all duration-300 bg-black/60 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
       onClick={onClose}
     >
       <div
@@ -208,10 +208,11 @@ function TotalHitsModal({ data, onClose }: TotalHitsModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-white border-t border-slate-200">
+        <div className="border-t border-gray-100"></div>
+        <div className="flex justify-end px-6 py-4">
           <button
             onClick={onClose}
-            className="w-full px-4 py-2.5 text-sm font-medium bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200"
+            className="px-5 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-gray-100 rounded-lg hover:bg-gray-200 hover:shadow-sm active:scale-95"
           >
             Close
           </button>

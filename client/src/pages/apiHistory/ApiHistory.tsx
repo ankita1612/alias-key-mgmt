@@ -91,6 +91,7 @@ function ApiHistory() {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     setPage(1);
   }, [selectedAliasKey, selectedUser, debouncedSearch]);
@@ -107,7 +108,7 @@ function ApiHistory() {
       setLoading(true);
 
       try {
-        const { data } = await apiClient.get(BACKEND_URL + "/api/api-hisory", {
+        const { data } = await apiClient.get(BACKEND_URL + "/api/api-history", {
           signal: controller.signal,
           params: {
             page,
@@ -164,18 +165,6 @@ function ApiHistory() {
     selectedAliasKey,
     aliasKeyId,
   ]);
-
-  const handleDelete = async (id: string) => {
-    const previousData = apiData;
-    setApiData((prev) => prev.filter((p) => p._id !== id));
-    try {
-      const res = await apiClient.delete(`${BACKEND_URL}/api/alias-key/${id}`);
-      toast.success(res.data.message);
-    } catch (error: any) {
-      setApiData(previousData);
-      toast.error(error.response?.data?.message || "Delete failed");
-    }
-  };
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -320,10 +309,8 @@ function ApiHistory() {
                       key={item._id}
                       index={index}
                       apiData={item}
-                      handleDelete={handleDelete}
                       userRole={user?.role}
                       onActionClick={handleActionClick}
-                      mobileView={false}
                       gridColsClass={gridColsClass}
                     />
                   ))
@@ -409,204 +396,153 @@ function ApiHistory() {
         >
           {/* Modal */}
           <div
-            className="relative w-full max-w-4xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+            className="relative w-full max-w-2xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Decorative top bar */}
-
-            {/* Close Icon - Improved */}
+            {/* Close Icon */}
             <button
               onClick={() => setShowModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
+              className="absolute z-10 flex items-center justify-center w-8 h-8 transition-all duration-200 bg-white rounded-full shadow-sm top-4 right-4 hover:bg-gray-100 group"
             >
-              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
+              <MdClose className="w-4 h-4 transition-transform group-hover:scale-110" />
             </button>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
               <h2 className="text-lg font-semibold text-slate-800">
                 API Call Detail
               </h2>
             </div>
 
             {/* Content */}
-            <div className="px-6 py-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
-              {/* Two Column Grid for Requester and  Key */}
-              <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2">
-                {/* Requester Information Card */}
-                <div className="overflow-hidden transition-all duration-300 bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md">
-                  <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-semibold tracking-wide text-gray-700 uppercase">
-                        Requester
-                      </span>
-                    </div>
-                  </div>
-                  <div className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
-                        <span className="text-sm font-semibold text-white">
-                          {selectedRow?.user_id?.first_name?.charAt(0) || "U"}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {selectedRow?.user_id?.first_name || "-"}{" "}
-                          {selectedRow?.user_id?.last_name || ""}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {selectedRow?.user_id?.email || "-"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+            <div className="flex-1 px-6 py-5 overflow-y-auto max-h-[55vh] custom-scrollbar">
+              {/* Two Column Grid for Requester and Key */}
+              <div className="grid grid-cols-1 gap-4 mb-5 md:grid-cols-2">
+                {/* Requester */}
+                <div className="group">
+                  <label className="block mb-1 text-xs font-medium text-gray-500 uppercase">
+                    Requester
+                  </label>
+                  <p className="text-sm font-medium text-gray-900">
+                    {selectedRow?.user_id?.first_name || "-"}{" "}
+                    {selectedRow?.user_id?.last_name || ""}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {selectedRow?.user_id?.email || "-"}
+                  </p>
                 </div>
 
-                <div className="overflow-hidden transition-all duration-300 bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md">
-                  <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50">
-                    <div className="flex items-center gap-2">
-                      <Key className="w-4 h-4 text-purple-600" />
-                      <span className="text-sm font-semibold tracking-wide text-gray-700 uppercase">
-                        Key
-                      </span>
-                    </div>
-                  </div>
-                  <div className="px-4 py-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="flex-1 font-mono text-sm font-medium text-gray-900 break-all">
-                        {selectedRow?.alias.alias_key}
-                      </p>
-                    </div>
-                  </div>
+                {/* Key */}
+                <div className="group">
+                  <label className="block mb-1 text-xs font-medium text-gray-500 uppercase">
+                    API Key
+                  </label>
+                  <p className="font-mono text-sm text-gray-900 break-all">
+                    {selectedRow?.alias?.alias_key || "-"}
+                  </p>
                 </div>
               </div>
 
-              {/* Two Column Grid for Metadata */}
-              <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-3">
-                <div className="p-4 transition-all duration-200 border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl hover:shadow-md">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Clock className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm font-semibold text-gray-500 uppercase">
-                      Execution Time
-                    </span>
-                  </div>
-                  <p className="text-lg font-bold text-gray-900">
+              {/* Three Column Grid for Metrics */}
+              <div className="grid grid-cols-1 gap-4 mb-5 sm:grid-cols-3">
+                <div className="group">
+                  <label className="block mb-1 text-xs font-medium text-gray-500 uppercase">
+                    Execution Time
+                  </label>
+                  <p className="text-base font-semibold text-blue-600">
                     {selectedRow?.execution_time || "0"}ms
                   </p>
                 </div>
 
-                <div className="p-4 transition-all duration-200 border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl hover:shadow-md">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Activity className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm font-semibold text-gray-500 uppercase">
-                      Status
-                    </span>
-                  </div>
-
+                <div className="group">
+                  <label className="block mb-1 text-xs font-medium text-gray-500 uppercase">
+                    Status
+                  </label>
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
+                    className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${
                       selectedRow?.response_status === "success"
-                        ? "bg-green-100 text-green-700"
+                        ? "bg-green-100 text-green-800"
                         : selectedRow?.response_status === "fail"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-yellow-100 text-yellow-700"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
-                    <div
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        selectedRow?.response_status === "success"
-                          ? "bg-green-500"
-                          : selectedRow?.response_status === "fail"
-                            ? "bg-red-500"
-                            : "bg-yellow-500"
-                      }`}
-                    ></div>
                     {capitalize(selectedRow?.response_status)}
                   </span>
                 </div>
 
-                <div className="p-4 transition-all duration-200 border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl hover:shadow-md">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Calendar className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm font-semibold text-gray-500 uppercase">
-                      Created On
-                    </span>
-                  </div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {new Date(selectedRow?.createdAt || "").toLocaleString(
-                      "en-US",
-                      {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      },
-                    )}
+                <div className="group">
+                  <label className="block mb-1 text-xs font-medium text-gray-500 uppercase">
+                    Created On
+                  </label>
+                  <p className="text-sm text-gray-900">
+                    {selectedRow?.createdAt
+                      ? new Date(selectedRow.createdAt).toLocaleString()
+                      : "-"}
                   </p>
                 </div>
               </div>
 
-              {/* Request Info Section */}
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-1.5 rounded-lg bg-blue-100">
-                    <Send className="w-4 h-4 text-blue-600" />
+              {/* Request Information */}
+              <div className="pt-3 mb-5 border-t border-gray-100">
+                <label className="block mb-2 text-xs font-medium text-gray-500 uppercase">
+                  Request Information
+                </label>
+                <div className="p-3 overflow-x-auto font-mono text-xs text-gray-700 border border-gray-100 rounded-lg bg-gray-50">
+                  <div>
+                    <span className="font-semibold">Method:</span>{" "}
+                    {selectedRow?.method || "-"}
                   </div>
-                  <h4 className="text-sm font-semibold text-gray-900">
-                    Request Information
-                  </h4>
-                </div>
-                <div className="overflow-hidden bg-gray-900 border border-gray-800 shadow-lg rounded-xl">
-                  <pre className="p-4 overflow-auto font-mono text-sm text-gray-300 max-h-48 scrollbar-thin">
-                    Method: {selectedRow?.method}
-                    <br></br>
-                    Query Parameters:
-                    {selectedRow.request_params &&
-                      Object.keys(selectedRow.request_params).length > 0 && (
-                        <div className="mt-0">
-                          <pre className="p-4 overflow-auto text-sm text-gray-300rounded-lg">
-                            {JSON.stringify(
-                              Object.fromEntries(
-                                Object.entries(
-                                  selectedRow.request_params || {},
-                                ).filter(([key]) => key !== "alias_key"),
-                              ),
-                              null,
-                              2,
-                            )}
-                          </pre>
-                        </div>
-                      )}
-                  </pre>
+                  {selectedRow?.request_params &&
+                    Object.keys(selectedRow.request_params).length > 0 && (
+                      <div className="mt-2">
+                        <span className="font-semibold">Query Parameters:</span>
+                        <pre className="mt-1 text-xs text-gray-600 whitespace-pre-wrap">
+                          {JSON.stringify(
+                            Object.fromEntries(
+                              Object.entries(
+                                selectedRow.request_params || {},
+                              ).filter(([key]) => key !== "alias_key"),
+                            ),
+                            null,
+                            2,
+                          )}
+                        </pre>
+                      </div>
+                    )}
                 </div>
               </div>
 
-              {/* Response Section */}
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-1.5 rounded-lg bg-green-100">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
+              {/* Response Information */}
+              <div className="pt-3 border-t border-gray-100">
+                <label className="block mb-2 text-xs font-medium text-gray-500 uppercase">
+                  Response Information
+                </label>
+                <div className="p-3 space-y-1 font-mono text-xs text-gray-700 border border-gray-100 rounded-lg bg-gray-50">
+                  <div>
+                    <span className="font-semibold">Status:</span>{" "}
+                    {capitalize(selectedRow?.response_status) || "-"}
                   </div>
-                  <h4 className="text-sm font-semibold text-gray-900">
-                    Response Data
-                  </h4>
-                </div>
-                <div className="overflow-hidden bg-gray-900 border border-gray-800 shadow-lg rounded-xl">
-                  <pre className="p-4 overflow-auto font-mono text-sm text-gray-300 max-h-48 scrollbar-thin">
-                    Status: {capitalize(selectedRow?.response_status)} <br></br>
-                    Response Message: {selectedRow?.response_msg}
-                    <br></br>
-                    Response Code: {selectedRow?.response_code}
-                  </pre>
+                  <div>
+                    <span className="font-semibold">Response Code:</span>{" "}
+                    {selectedRow?.response_code || "-"}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Response Message:</span>{" "}
+                    {selectedRow?.response_msg || "-"}
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="px-6 py-2 border-t border-slate-200"></div>
+
+            {/* Divider */}
+            <div className="border-t border-gray-100"></div>
 
             {/* Footer Actions */}
-            <div className="flex flex-col-reverse gap-3 px-6 pb-4 sm:flex-row">
+            <div className="px-6 py-4">
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2.5 text-sm font-medium transition-all duration-200 bg-white border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 hover:border-gray-400"
+                className="w-full px-4 py-2.5 text-sm font-medium text-gray-700 transition-all duration-200 bg-gray-100 rounded-lg hover:bg-gray-200 hover:shadow-sm active:scale-95"
               >
                 Close
               </button>

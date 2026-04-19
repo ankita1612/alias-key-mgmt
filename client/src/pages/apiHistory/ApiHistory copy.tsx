@@ -71,7 +71,7 @@ function AliasKeyList() {
     setLoading(true);
 
     try {
-      const { data } = await apiClient.get(BACKEND_URL + "/api/api-hisory", {
+      const { data } = await apiClient.get(BACKEND_URL + "/api/api-history", {
         signal: controller.signal,
         params: {
           page,

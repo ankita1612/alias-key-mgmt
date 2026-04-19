@@ -53,9 +53,9 @@ function ProxyRow({
       <div className="text-xs text-gray-800 truncate ">
         {apiData.proxy_name || "-"}
       </div>
-      <div className="text-xs truncate">{apiData.proxy_token || "-"}</div>
-      <div className="text-xs  truncate">{apiData.curl || "-"}</div>
-      <div className="text-xs  truncate">
+      {/* <div className="text-xs truncate">{apiData.proxy_token || "-"}</div> */}
+      <div className="text-xs truncate">{apiData.curl || "-"}</div>
+      <div className="text-xs truncate">
         &nbsp;&nbsp;{apiData.credit || "0"}
       </div>
       {/* Status Badge */}
@@ -78,7 +78,7 @@ function ProxyRow({
           className="p-1.5 text-blue-600 hover:text-white hover:bg-blue-500 rounded-md transition-all duration-200 group relative"
         >
           <FiEdit2 className="w-4 h-4" />
-          <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-primary rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+          <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
             Edit
           </span>
         </button>
@@ -88,7 +88,7 @@ function ProxyRow({
           className="p-1.5 text-red-600 hover:text-white hover:bg-red-500 rounded-md transition-all duration-200 group relative"
         >
           <FiTrash2 className="w-4 h-4" />
-          <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-primary rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+          <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
             Delete
           </span>
         </button>
@@ -97,7 +97,7 @@ function ProxyRow({
           className="p-1.5 rounded-md transition-all duration-200 group relative"
         >
           <FiEye className="w-4 h-4"></FiEye>
-          <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-primary rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+          <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
             View
           </span>
         </button>
