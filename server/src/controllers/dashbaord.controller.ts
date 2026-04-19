@@ -258,7 +258,8 @@ class DashboardController {
           previousMonthUsers,
           approvedAliasKeys,
           pendingApprovals,
-          totalRequests,
+          overallTotalRequests,
+          filteredTotalRequests,
           totalAliasKeysAdmin,
           aliasStatusAggregates,
           apiStatusAggregates,
@@ -277,6 +278,9 @@ class DashboardController {
           AliasKeyModel.countDocuments({ status: "Active" }),
           AliasKeyModel.countDocuments({ status: "Pending" }),
           ApiHistoryModel.countDocuments(),
+          ApiHistoryModel.countDocuments(
+            timeFilter === "all" ? {} : { createdAt: { $gte: startDate } },
+          ),
           AliasKeyModel.countDocuments(),
           AliasKeyModel.aggregate([
             {
@@ -410,13 +414,14 @@ class DashboardController {
           userGrowthPercent,
           approvedAliasKeys,
           pendingApprovals,
-          totalRequests,
+          totalRequests: overallTotalRequests,
+          responseOverviewTotal: filteredTotalRequests,
           totalAliasKeys: totalAliasKeysAdmin,
           requestSuccessRate,
           aliasStatusCounts,
           apiStatusCounts,
           requestsLast7Days,
-          totalProxy
+          totalProxy,
         });
       }
 

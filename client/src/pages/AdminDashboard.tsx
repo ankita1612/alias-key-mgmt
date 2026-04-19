@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+
 import { toast } from "react-hot-toast";
 import apiClient from "../services/apiClient";
 import {
@@ -49,6 +50,7 @@ interface AdminDashboardData {
   approvedAliasKeys: number;
   pendingApprovals: number;
   totalRequests: number;
+  responseOverviewTotal: number;
   totalAliasKeys: number;
   requestSuccessRate: number;
   aliasStatusCounts: {
@@ -97,11 +99,19 @@ function AdminDashboard() {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [timeFilter, setTimeFilter] = useState<string>("today");
 
+  const filterLabels: Record<string, string> = {
+    today: "Today",
+    week: "This Week",
+    month: "This Month",
+    all: "All Time",
+  };
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const response =
-        await apiClient.get<AdminDashboardData>(`/api/dashboard?timeFilter=${timeFilter}`);
+      const response = await apiClient.get<AdminDashboardData>(
+        `/api/dashboard?timeFilter=${timeFilter}`,
+      );
       setDashboard(response.data);
       setLastUpdated(new Date());
     } catch (caughtError) {
@@ -154,10 +164,10 @@ function AdminDashboard() {
 
         {/* Content */}
         <div className="flex-1">
-          <p className="text-sm font-bold leading-tight text-gray-900">
-            {value}
-          </p>
-          <p className="text-[10px] text-gray-500  tracking-wide">{title}</p>
+          <div className="flex flex-col">
+            <p className="text-[11px] text-gray-500  leading-none">{title}</p>
+            <p className="mt-1 text-lg font-semibold text-gray-900">{value}</p>
+          </div>
         </div>
       </div>
     );
@@ -178,6 +188,71 @@ function AdminDashboard() {
       );
     }
     return null;
+  };
+
+  const TimeFilterDropdown = () => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const options = [
+      { value: "today", label: "Today" },
+      { value: "week", label: "This Week" },
+      { value: "month", label: "This Month" },
+      { value: "all", label: "All Time" },
+    ];
+
+    const selectedOption = options.find(
+      (option) => option.value === timeFilter,
+    );
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          isOpen &&
+          !(event.target as Element).closest(".time-filter-dropdown")
+        ) {
+          setIsOpen(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }, [isOpen]);
+
+    return (
+      <div className="relative time-filter-dropdown">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        >
+          <Filter className="w-4 h-4" />
+          {selectedOption?.label}
+          <ChevronDown className="w-4 h-4" />
+        </button>
+
+        {isOpen && (
+          <div className="absolute right-0 z-10 w-40 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => {
+                  setTimeFilter(option.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 focus:outline-none ${
+                  timeFilter === option.value
+                    ? "bg-indigo-50 text-indigo-700 font-medium"
+                    : "text-gray-700"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   if (loading) {
@@ -206,11 +281,19 @@ function AdminDashboard() {
         { name: "Rejected", value: dashboard.aliasStatusCounts.Rejected },
       ].filter((item) => item.value > 0)
     : [];
-  const TopStatCard = ({ title, value }: any) => {
+  const TopStatCard = ({ title, value, icon: Icon }: any) => {
     return (
-      <div className="px-4 py-3 transition bg-white border border-t-4 rounded-lg shadow-sm border-primary hover:shadow">
-        <p className="text-[11px] text-gray-500 uppercase">{title}</p>
-        <p className="mt-1 text-lg font-semibold">{value}</p>
+      <div className="flex items-center gap-3 px-4 py-3 transition bg-white border-t-4 rounded-lg shadow-sm border-primary hover:shadow-md">
+        {/* LEFT ICON */}
+        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
+          <Icon className="w-5 h-5 text-primary" />
+        </div>
+
+        {/* RIGHT CONTENT */}
+        <div className="flex flex-col">
+          <p className="text-[11px] text-gray-500  leading-none">{title}</p>
+          <p className="mt-1 text-lg font-semibold text-gray-900">{value}</p>
+        </div>
       </div>
     );
   };
@@ -236,7 +319,7 @@ function AdminDashboard() {
               <div className="flex items-center space-x-3">
                 <div>
                   <h5 className="font-bold sm:text-xl">
-                    Key managment Overview
+                    Key management Overview
                   </h5>
                 </div>
               </div>
@@ -251,14 +334,17 @@ function AdminDashboard() {
               <TopStatCard
                 title="Total Users"
                 value={dashboard.totalUsers.toLocaleString()}
+                icon={Users}
               />
               <TopStatCard
                 title="Total Proxy"
                 value={dashboard.totalProxy.toLocaleString()}
+                icon={Server}
               />
               <TopStatCard
-                title="Total Requests"
+                title="Total API Requests"
                 value={dashboard.totalRequests.toLocaleString()}
+                icon={Activity}
               />
             </div>
             <h6 className="pb-2">Key Monitoring</h6>
@@ -302,8 +388,20 @@ function AdminDashboard() {
                         <h6 className=" sm:text-xl text-white/60">
                           Response Overview
                         </h6>
+                        <p className="mt-1 text-xs text-indigo-100/80">
+                          Showing{" "}
+                          {(
+                            dashboard?.responseOverviewTotal ??
+                            dashboard?.totalRequests ??
+                            0
+                          ).toLocaleString()}{" "}
+                          requests for {filterLabels[timeFilter]}
+                        </p>
                       </div>
                     </div>
+
+                    {/* RIGHT - Time Filter */}
+                    <TimeFilterDropdown />
                   </div>
 
                   <div className="p-5">
@@ -352,7 +450,10 @@ function AdminDashboard() {
                           icon: AlertCircle,
                         },
                       ].map((status) => {
-                        const total = dashboard?.totalRequests || 0;
+                        const total =
+                          (dashboard?.responseOverviewTotal ??
+                            dashboard?.totalRequests) ||
+                          0;
                         const value = status?.value || 0;
 
                         // ✅ Safe percentage
@@ -414,23 +515,28 @@ function AdminDashboard() {
               </div>
               {/* API Requests Trend */}
               <div className="overflow-hidden duration-300 bg-white border border-gray-100 shadow-sm hover:shadow-md rounded-xl">
-                <div className="p-4 border-b border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900">
-                        Request Activity
-                      </h3>
-                      <p className="text-xs text-gray-500">Last 7 days</p>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50">
-                      <TrendingUp className="w-5 h-5 text-indigo-600" />
+                <div>
+                  <div className="flex items-center justify-between px-6 py-4 bg-primary">
+                    <div className="flex items-center gap-3">
+                      {/* Accent line touching left border */}
+                      <div className="w-1 h-6 -ml-6 rounded-r-full bg-menuActive" />
+
+                      {/* Title */}
+                      <div>
+                        <h6 className=" sm:text-xl text-white/60">
+                          Last 7 days Activity
+                        </h6>
+                      </div>
                     </div>
                   </div>
                 </div>
                 <div className="p-5">
                   <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={dashboard.requestsLast7Days}>
+                      <AreaChart
+                        data={dashboard.requestsLast7Days}
+                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                      >
                         <defs>
                           <linearGradient
                             id="colorCount"
@@ -457,7 +563,11 @@ function AdminDashboard() {
                           stroke="#9ca3af"
                           tick={{ fontSize: 12 }}
                         />
-                        <YAxis stroke="#9ca3af" tick={{ fontSize: 12 }} />
+                        <YAxis
+                          stroke="#9ca3af"
+                          tick={{ fontSize: 12 }}
+                          width={30} // 👈 reduce space
+                        />
                         <Tooltip content={<CustomTooltip />} />
                         <Area
                           type="monotone"
