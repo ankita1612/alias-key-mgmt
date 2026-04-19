@@ -309,38 +309,6 @@ function UserDashboard() {
     );
   }
 
-  const getPieChartData = () => {
-    if (!dashboard) return [];
-    const total = Object.values(dashboard.apiStatusCounts).reduce(
-      (a, b) => a + b,
-      0,
-    );
-    return [
-      {
-        name: "Success",
-        value: dashboard.apiStatusCounts.SUCCESS,
-        color: COLORS.success,
-      },
-      {
-        name: "Key Not Active",
-        value: dashboard.apiStatusCounts.KEY_NOT_ACTIVE,
-        color: COLORS.neutral,
-      },
-      {
-        name: "Limit Exceeded",
-        value: dashboard.apiStatusCounts.LIMIT_EXCEED,
-        color: COLORS.warning,
-      },
-      {
-        name: "Errors",
-        value:
-          dashboard.apiStatusCounts.EXTERNAL_ERROR +
-          dashboard.apiStatusCounts.INTERNAL_SERVER,
-        color: COLORS.error,
-      },
-    ].filter((item) => item.value > 0);
-  };
-
   return (
     <div className="min-h-screen ">
       <div className="">
@@ -369,6 +337,7 @@ function UserDashboard() {
                 description="All keys created"
                 icon=""
                 color="primary"
+                valueColor="text-black"
               />
               <StatCard
                 title="Active Keys"
@@ -376,6 +345,7 @@ function UserDashboard() {
                 description="Currently active"
                 icon=""
                 color="success"
+                valueColor="text-blue-500"
               />
               <StatCard
                 title="Pending Keys"
@@ -383,6 +353,7 @@ function UserDashboard() {
                 description="Awaiting approval"
                 icon=""
                 color="warning"
+                valueColor="text-red-500"
               />
               <StatCard
                 title="Total Requests"
@@ -390,6 +361,7 @@ function UserDashboard() {
                 description="All-time API calls"
                 icon=""
                 color="info"
+                valueColor="text-orange-500"
               />
               <StatCard
                 title="Total Quota"
@@ -397,6 +369,7 @@ function UserDashboard() {
                 subtitle="Waiting approval"
                 icon=""
                 color="warning"
+                valueColor="text-blue-900"
               />
               <StatCard
                 title="Used Quota"
@@ -404,6 +377,7 @@ function UserDashboard() {
                 subtitle="Waiting approval"
                 icon=""
                 color="warning"
+                valueColor="text-green-900"
               />
               <StatCard
                 title="Remaining Quota"
@@ -411,6 +385,7 @@ function UserDashboard() {
                 subtitle="Waiting approval"
                 icon=""
                 color="warning"
+                valueColor="text-red-900"
               />
             </div>
 
