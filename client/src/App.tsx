@@ -7,7 +7,7 @@ import CustomToast from "./utils/CustomToast";
 
 toast.info = (message: string) =>
   toast(message, {
-    duration: 4000,
+    duration: 2000,
     icon: <FiInfo size={18} className="text-blue-500" />,
   });
 
