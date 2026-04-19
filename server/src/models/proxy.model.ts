@@ -5,11 +5,15 @@ export interface IProxy extends Document {
   project_name: string;
   proxy_name: string;
   proxy_token: string;
+  proxy_url?: string;
   curl: string;
   curl_token?: string;
+  description?: string;
   query_params: Record<string, string>;
   credit: number;
   counter: number;
+  is_deleted?: boolean;
+  deleted_at?: Date;
 }
 
 const ProxySchema: Schema = new Schema(
@@ -28,6 +32,14 @@ const ProxySchema: Schema = new Schema(
     proxy_token: {
       type: String,
       required: true,
+      trim: true,
+    },
+    proxy_url: {
+      type: String,
+      trim: true,
+    },
+    description: {
+      type: String,
       trim: true,
     },
     curl_token: {
