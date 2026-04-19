@@ -84,6 +84,17 @@ export default function Breadcrumb() {
             label: "Key Monitor",
             clickable: false,
           });
+        } else if (parts.length === 3 && isMongoId(parts[2])) {
+          items.push({
+            label: "Key Monitor",
+            to: "/api-history", // ✅ redirect here
+            clickable: true,
+          });
+
+          items.push({
+            label: "Key Monitor View",
+            clickable: false,
+          });
         }
       }
     }

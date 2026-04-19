@@ -108,7 +108,7 @@ function ApiHistoryView() {
 
           {/* Title */}
           <div>
-            <h5 className=" sm:text-xl text-white/60">Key Monitor</h5>
+            <h5 className=" sm:text-xl text-white/60">Key Monitor View</h5>
           </div>
         </div>
       </div>
@@ -148,7 +148,11 @@ function ApiHistoryView() {
 
               {/* Card Content */}
               <div className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-5 pb-4 ">
+                <div className="grid grid-cols-2 gap-5 pb-0 ">
+                  <InfoRow label="User Name" value={data.user.first_name} />
+                  <InfoRow label="Email" value={data.user.email} />
+                </div>
+                <div className="grid grid-cols-2 gap-5 pb-0 ">
                   <InfoRow label="Method" value={data.method} />
                   <InfoRow
                     label="Response Status"
@@ -157,7 +161,7 @@ function ApiHistoryView() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-5 pb-4 ">
+                <div className="grid grid-cols-2 gap-5 pb-0 ">
                   <InfoRow label="Response Code" value={data.response_code} />
 
                   <div>
@@ -173,7 +177,7 @@ function ApiHistoryView() {
                 {data.request_params &&
                   Object.keys(data.request_params).length > 0 && (
                     <InfoRow
-                      label="Request Parameters"
+                      label="Input Parameters"
                       value={JSON.stringify(
                         Object.fromEntries(
                           Object.entries(data.request_params).filter(
