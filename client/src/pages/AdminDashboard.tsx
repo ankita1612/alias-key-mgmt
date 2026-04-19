@@ -39,6 +39,8 @@ import {
   AlertTriangle,
   ServerCrash,
   BarChart3,
+  Filter,
+  ChevronDown,
 } from "lucide-react";
 
 interface AdminDashboardData {
@@ -65,6 +67,7 @@ interface AdminDashboardData {
     PARAM_MISSING: number;
   };
   requestsLast7Days: Array<{ date: string; count: number }>;
+  totalProxy: number;
 }
 
 const COLORS = {
@@ -92,12 +95,13 @@ function AdminDashboard() {
   const [dashboard, setDashboard] = useState<AdminDashboardData | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [timeFilter, setTimeFilter] = useState<string>("today");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const response =
-        await apiClient.get<AdminDashboardData>("/api/dashboard");
+        await apiClient.get<AdminDashboardData>(`/api/dashboard?timeFilter=${timeFilter}`);
       setDashboard(response.data);
       setLastUpdated(new Date());
     } catch (caughtError) {
@@ -116,7 +120,7 @@ function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [timeFilter]);
 
   useEffect(() => {
     fetchData();
@@ -243,10 +247,14 @@ function AdminDashboard() {
         {/* Stats Grid */}
         {dashboard && (
           <>
-            <div className="grid gap-4 mb-6 sm:grid-cols-2">
+            <div className="grid gap-4 mb-6 sm:grid-cols-3">
               <TopStatCard
                 title="Total Users"
                 value={dashboard.totalUsers.toLocaleString()}
+              />
+              <TopStatCard
+                title="Total Proxy"
+                value={dashboard.totalProxy.toLocaleString()}
               />
               <TopStatCard
                 title="Total Requests"

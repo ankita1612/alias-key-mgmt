@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import ApiHistoryModel from "../models/apiHistory.model";
 import AliasKeyModel from "../models/aliasKey.model";
 import User from "../models/user.model";
+import ProxyModel from "../models/proxy.model";
 
 interface AuthRequest extends Request {
   user?: any;
@@ -19,8 +20,32 @@ class DashboardController {
         return res.status(401).json({ message: "Unauthorized user" });
       }
 
+      // Get time filter from query params, default to "today"
+      const timeFilter = req.query.timeFilter as string || "today";
+      const now = new Date();
+
+      // Calculate date ranges based on filter
+      let startDate: Date;
+      switch (timeFilter) {
+        case "today":
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          break;
+        case "week":
+          const weekStart = new Date(now);
+          weekStart.setDate(now.getDate() - now.getDay()); // Start of week (Sunday)
+          weekStart.setHours(0, 0, 0, 0);
+          startDate = weekStart;
+          break;
+        case "month":
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        case "all":
+        default:
+          startDate = new Date(0); // Beginning of time
+          break;
+      }
+
       if (req.user.role === "User") {
-        const now = new Date();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         const sevenDaysAgo = new Date(
           Date.UTC(
@@ -59,6 +84,7 @@ class DashboardController {
             {
               $match: {
                 user_id: userId,
+                createdAt: { $gte: startDate },
               },
             },
             {
@@ -237,6 +263,7 @@ class DashboardController {
           aliasStatusAggregates,
           apiStatusAggregates,
           requestsLast7DaysAggregate,
+          totalProxy,
         ] = await Promise.all([
           User.countDocuments({ role: "User" }),
           User.countDocuments({
@@ -260,6 +287,11 @@ class DashboardController {
             },
           ]),
           ApiHistoryModel.aggregate([
+            {
+              $match: timeFilter === "all" ? {} : {
+                createdAt: { $gte: startDate },
+              },
+            },
             {
               $group: {
                 _id: "$response_code_str",
@@ -289,6 +321,8 @@ class DashboardController {
               $sort: { _id: 1 },
             },
           ]),
+          ProxyModel.countDocuments({ is_deleted: false }),
+
         ]);
 
         const aliasStatusCounts = {
@@ -382,6 +416,7 @@ class DashboardController {
           aliasStatusCounts,
           apiStatusCounts,
           requestsLast7Days,
+          totalProxy
         });
       }
 
