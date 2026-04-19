@@ -72,6 +72,7 @@ class ProxyController {
       const proxy = await ProxyModel.create({
         proxy_name: data.proxy_name?.trim(),
         proxy_token: data.proxy_token?.trim(),
+        curl_token: data.curl_token?.trim(),
         curl: data.curl?.trim(),
         query_params: finalParams,
         domain_name: data.domain_name?.trim(),

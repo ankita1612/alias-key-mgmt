@@ -227,6 +227,9 @@ class AliasKeyController {
         total_limit_exceed: 0,
         total_internal_server: 0,
         total_key_not_active: 0,
+        total_extrenal_error: 0,
+        total_invalid_proxy: 0,
+        total_invalid_params: 0,
       };
 
       // 🔥 Fetch stats ONLY if active aliases exist
@@ -264,7 +267,7 @@ class AliasKeyController {
               total_internal_server: {
                 $sum: {
                   $cond: [
-                    { $eq: ["$response_code_str", "INTERNAL_SEREVER"] }, // ⚠️ check typo
+                    { $eq: ["$response_code_str", "INTERNAL_SERVER"] }, // ⚠️ check typo
                     1,
                     0,
                   ],
@@ -275,6 +278,33 @@ class AliasKeyController {
                 $sum: {
                   $cond: [
                     { $eq: ["$response_code_str", "KEY_NOT_ACTIVE"] },
+                    1,
+                    0,
+                  ],
+                },
+              },
+              total_extrenal_error: {
+                $sum: {
+                  $cond: [
+                    { $eq: ["$response_code_str", "EXTERNAL_ERROR"] },
+                    1,
+                    0,
+                  ],
+                },
+              },
+              total_invalid_proxy: {
+                $sum: {
+                  $cond: [
+                    { $eq: ["$response_code_str", "INVALID_PROXY"] },
+                    1,
+                    0,
+                  ],
+                },
+              },
+              total_invalid_params: {
+                $sum: {
+                  $cond: [
+                    { $eq: ["$response_code_str", "PARAM_MISSING"] },
                     1,
                     0,
                   ],

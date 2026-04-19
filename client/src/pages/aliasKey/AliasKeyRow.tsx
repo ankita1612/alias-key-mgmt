@@ -95,10 +95,8 @@ function AliasKeyRow({
       const result = await apiClient.get(
         `api/get-proxy-response?alias_key=${apiData.alias_key}`,
       );
-
-      console.log("API Response:", result);
     } catch (error) {
-      console.error("Error:", error);
+      toast.error("Error:", error);
     }
   };
   const availablePercentage =
@@ -111,43 +109,39 @@ function AliasKeyRow({
   return (
     <div
       className={`
-      grid ${gridColsClass} text-base font-semibold text-gray-600 px-4 py-3 border-b 
+      grid ${gridColsClass}  text-xs    px-4 py-3 border-b border-gray-200 
       ${isDeleted ? "bg-red-50 opacity-75 " : "border-gray-200"}
     `}
     >
       {/* Index */}
-      <div className="font-medium text-gray-400">{index + 1}</div>
+      <div className="font-medium ">{index + 1}</div>
 
       {/* Admin Fields */}
       {userRole === "Admin" && (
         <>
-          <div className="text-base font-medium text-gray-800">
+          <div className="text-xs font-medium ">
             {apiData?.user?.first_name || "-"}
           </div>
-          <div className="text-base text-gray-600 truncate">
-            {apiData?.user?.email || "-"}
-          </div>
+          <div className="text-xs truncate">{apiData?.user?.email || "-"}</div>
         </>
       )}
 
-      <div className="font-mono text-base text-gray-800 truncate">
+      <div className="font-mono text-xs text-gray-800 truncate">
         {apiData.alias_key || "-"}
       </div>
 
       {/* Domain */}
-      <div className="text-base text-gray-600 truncate">
-        {apiData.domain_name || "-"}
-      </div>
+      <div className="text-xs  truncate">{apiData.domain_name || "-"}</div>
 
       {/* Status Badge */}
-      <div className="text-base ">
+      <div className="text-xs ">
         {userRole === "Admin" ? (
           <>
             {apiData.status === "Pending" ? (
               <button
                 disabled={isDeleted}
                 onClick={() => onActionClick(apiData)}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-base font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
                 title="Click here to change status"
               >
                 <Clock className="w-4 h-4" />
@@ -157,7 +151,7 @@ function AliasKeyRow({
               <button
                 disabled={isDeleted}
                 onClick={() => makeActiveInactiveClick(apiData, "Inactive")}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-base font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
                 title="Click here to change status"
               >
                 <CheckCircle className="w-4 h-4" />
@@ -167,7 +161,7 @@ function AliasKeyRow({
               <button
                 disabled={isDeleted}
                 onClick={() => makeActiveInactiveClick(apiData, "Active")}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-base font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
                 title="Click here to change status"
               >
                 <XCircle className="w-4 h-4" />
@@ -175,7 +169,7 @@ function AliasKeyRow({
               </button>
             ) : (
               <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-base font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
               >
                 {apiData.status || "-"}
               </span>
@@ -184,7 +178,7 @@ function AliasKeyRow({
         ) : (
           <>
             <span
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-base font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
             >
               {apiData.status || "-"}
             </span>
@@ -193,14 +187,12 @@ function AliasKeyRow({
       </div>
 
       {/* Total Quota */}
-      <div className="text-base font-semibold text-gray-800">
-        {apiData.total_quota || "-"}
-      </div>
+      <div className="text-xs font-semibold ">{apiData.total_quota || "-"}</div>
 
       {/* Used Quota */}
       <div>
-        <div className="flex items-center gap-2 text-base">
-          <span className="text-gray-700">
+        <div className="flex items-center gap-2 text-xs">
+          <span>
             {["Active", "Inactive"].includes(apiData.status)
               ? (apiData.remaining_quota ?? "-")
               : "-"}
@@ -209,18 +201,18 @@ function AliasKeyRow({
           {["Active", "Inactive"].includes(apiData.status) &&
             apiData.total_quota != null &&
             apiData.remaining_quota != null && (
-              <span className="text-base text-gray-400">
+              <span className="text-xs text-gray-400">
                 ({availablePercentage}%)
               </span>
             )}
         </div>
         {/* Mini progress bar */}
       </div>
-      <div className="text-base font-semibold text-gray-800">
+      <div className="text-xs font-semibold ">
         {["Active", "Inactive"].includes(apiData.status) ? (
           <button
             onClick={() => setShowStats(true)}
-            className="px-2 py-1 text-base font-medium text-indigo-600 rounded-md bg-indigo-50 hover:bg-indigo-100"
+            className="px-2 py-1 text-xs font-medium text-indigo-600 rounded-md bg-indigo-50 hover:bg-indigo-100"
           >
             {apiData.total_history_records}
           </button>
@@ -229,7 +221,7 @@ function AliasKeyRow({
         )}
       </div>
       {/* Created Date */}
-      <div className="text-base text-gray-500">
+      <div className="text-xs ">
         {apiData.createdAt
           ? new Date(apiData.createdAt).toLocaleDateString("en-US", {
               year: "numeric",
@@ -250,7 +242,7 @@ function AliasKeyRow({
               title="Edit"
             >
               <FiEdit2 className="w-4 h-4" />
-              <span className="absolute px-2 py-1 text-base text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+              <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-primary rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
                 Edit
               </span>
             </button>
@@ -262,13 +254,13 @@ function AliasKeyRow({
                 title="Delete"
               >
                 <FiTrash2 className="w-4 h-4" />
-                <span className="absolute px-2 py-1 text-base text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+                <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-primary rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
                   Delete
                 </span>
               </button>
             )}
 
-            {apiData.status === "Active" && (
+            {/* {apiData.status === "Active" && (
               <>
                 <button
                   type="button"
@@ -277,23 +269,22 @@ function AliasKeyRow({
                   title="Test Proxy"
                 >
                   <FiArrowRight className="w-4 h-4" />
-                  <span className="absolute px-2 py-1 text-base text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+                  <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
                     Test Proxy
                   </span>
                 </button>
               </>
-            )}
+            )} */}
           </>
         ) : null}
         <button
           type="button"
           onClick={() => showKeyDetail(apiData)}
           className="p-1.5  rounded-md transition-all duration-200 group relative"
-          title="View Details"
         >
           <FiEye className="w-4 h-4" />
-          <span className="absolute px-2 py-1 text-base text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
-            View Details
+          <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-primary rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+            View
           </span>
         </button>
         {["Active", "Inactive"].includes(apiData.status) && (
@@ -307,7 +298,7 @@ function AliasKeyRow({
             title="View Requests"
           >
             <FiList className="w-4 h-4" />
-            <span className="absolute px-2 py-1 text-base text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+            <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-primary rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
               History
             </span>
           </button>

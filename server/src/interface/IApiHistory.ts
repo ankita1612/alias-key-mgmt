@@ -9,6 +9,7 @@ export interface IApiHistory extends Document {
   response_status: string;
   response_msg: string;
   response_code: number;
+  request_params?: Record<string, string>;
   createdAt?: Date;
   updatedAt?: Date;
 }

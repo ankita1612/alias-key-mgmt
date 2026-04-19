@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+
+import { NavLink, Outlet, Link } from "react-router-dom";
 import {
   FiHome,
   FiList,
@@ -7,7 +8,7 @@ import {
   FiMenu,
   FiMaximize2, // Add this for expand icon
 } from "react-icons/fi";
-import { FaExchangeAlt } from "react-icons/fa";
+import { FaExchangeAlt, FaHome } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { MdClose } from "react-icons/md";
 
@@ -16,7 +17,7 @@ import Header from "../../layouts/user/Header";
 import Footer from "../../layouts/user/Footer";
 import Breadcrumb from "../../components/Breadcrumb";
 import { useAuth } from "../../context/AuthContext";
-
+import { HiHome } from "react-icons/hi";
 const AdminLayout = () => {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -70,50 +71,69 @@ const AdminLayout = () => {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className={`
-          bg-primary text-gray-200 flex flex-col shadow-2xl
-          transition-all duration-300 ease-in-out
-         ${
-           isMobile
-             ? `fixed top-0 left-0 h-full z-50 w-64 transform ${
-                 sidebarOpen ? "translate-x-0" : "-translate-x-full"
-               }`
-             : sidebarOpen
-               ? "w-72 md:w-80 lg:w-[260px]" // Responsive widths
-               : isHovering
-                 ? "w-72 md:w-80 lg:w-[260px]" // Responsive on hover
-                 : "w-20" // Collapsed
-         }
-        `}
+  fixed top-0 left-0 h-screen
+  bg-primary text-gray-200 flex flex-col shadow-2xl
+  transition-all duration-300 ease-in-out
+  z-50
+  ${
+    isMobile
+      ? `w-64 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`
+      : sidebarOpen
+        ? "w-72 md:w-80 lg:w-[260px]"
+        : isHovering
+          ? "w-72 md:w-80 lg:w-[260px]"
+          : "w-20"
+  }
+`}
       >
         {/* Logo */}
-        <div className="flex items-center h-24 px-4 bg-primary">
-          <div className="flex items-center w-full gap-3">
+        <div className="flex items-center px-4 py-4 h-[72px]">
+          <Link
+            to="/dashboard"
+            className="flex items-center gap-2.5 min-w-0 flex-1"
+          >
+            {/* <div className="flex items-center w-full gap-3"> */}
             {/* Logo Icon */}
-            <div className="flex items-center justify-center flex-shrink-0 w-16 h-16 overflow-hidden bg-white rounded-full">
+            <div
+              className={`
+  flex items-center justify-center flex-shrink-0 
+  overflow-hidden bg-white rounded-full
+  transition-all duration-300 ease-in-out
+  ${showExpanded ? "w-13 h-13" : "w-9 h-9"}
+`}
+            >
               <img
                 src={logo}
                 alt="App logo"
-                className="object-contain w-full h-full scale-125"
+                className={`
+            shrink-0 scale-110
+            transition-all duration-300 ease-in-out
+            ${
+              showExpanded
+                ? "h-13 w-13" // 14px height when showExpanded is true
+                : "h-9 w-9" // 9px height when collapsed
+            }
+          `}
               />
             </div>
 
             {/* Text and Icons Container */}
             <div
               className={`
-                flex items-center justify-between flex-1
-                overflow-hidden transition-all duration-300
-                ${
-                  showExpanded
-                    ? "max-w-full opacity-100 translate-x-0"
-                    : "max-w-0 opacity-0 -translate-x-2"
-                }
-              `}
+          flex items-center justify-between flex-1
+          overflow-hidden transition-all duration-300
+          ${
+            showExpanded
+              ? "max-w-full opacity-100 translate-x-0 visible"
+              : "max-w-0 opacity-0 -translate-x-2 invisible"
+          }
+        `}
             >
               <div className="flex flex-col w-full">
-                <span className="m-0 text-4xl font-bold leading-snug text-left uppercase">
+                <span className="text-[25px] font-bold text-white tracking-widest uppercase">
                   Actowiz
                 </span>
-                <span className="text-lg font-medium text-left text-white">
+                <span className="text-base font-medium text-left text-white">
                   Key Management
                 </span>
               </div>
@@ -124,18 +144,24 @@ const AdminLayout = () => {
                 {sidebarOpen && !isMobile && (
                   <IoClose
                     size={24}
-                    onClick={toggleSidebar}
-                    className="text-gray-300 transition-all duration-200 cursor-pointer hover:brightness-90"
+                    onClick={(e) => {
+                      e.stopPropagation(); // ✅ IMPORTANT
+                      e.preventDefault(); // ✅ prevent link navigation
+                      toggleSidebar();
+                    }}
+                    className="text-gray-300 cursor-pointer"
                   />
                 )}
 
                 {/* Show Expand icon when sidebar is collapsed - ALWAYS VISIBLE */}
                 {!sidebarOpen && !isMobile && (
-                  <FiMaximize2
-                    size={22}
-                    onClick={toggleSidebar}
-                    className="flex-shrink-0 text-gray-300 transition-all duration-200 cursor-pointer hover:text-primary"
-                    title="Expand sidebar"
+                  <FiMenu
+                    size={16}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      toggleSidebar();
+                    }}
                   />
                 )}
 
@@ -143,15 +169,18 @@ const AdminLayout = () => {
                 {isMobile && sidebarOpen && (
                   <MdClose
                     size={22}
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex-shrink-0 text-gray-300 cursor-pointer hover:text-menuActive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setSidebarOpen(false);
+                    }}
                   />
                 )}
               </div>
             </div>
-          </div>
+            {/* </div> */}
+          </Link>
         </div>
-
         {/* Navigation */}
         <nav
           className={`
@@ -160,6 +189,9 @@ const AdminLayout = () => {
             ${showExpanded ? "overflow-y-auto" : "overflow-visible"}
           `}
         >
+          {/* <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-white/40">
+            Main
+          </p> */}
           {/* Dashboard Link */}
           <NavLink
             to="/dashboard"
@@ -170,11 +202,11 @@ const AdminLayout = () => {
               ${isActive ? "text-menuActive" : "text-gray-300 hover:text-menuActive"}`
             }
           >
-            <FiHome size={22} className="flex-shrink-0" />
+            <FaHome size={16} className="flex-shrink-0" />
             {/* Only show text when expanded */}
             <span
               className={`
-                text-xl font-normal whitespace-nowrap
+                text-[15px] font-normal whitespace-nowrap
                 transition-all duration-200
                 ${showExpanded ? "inline-block opacity-100" : "hidden"}
               `}
@@ -182,7 +214,13 @@ const AdminLayout = () => {
               Dashboard
             </span>
           </NavLink>
-
+          {showExpanded && (
+            <>
+              <p className="px-3 pt-2 pb-2 text-[10px] font-semibold uppercase tracking-widest text-white/90">
+                ACT-Key Management
+              </p>
+            </>
+          )}
           {/* Upload File Link */}
           {user?.role == "Admin" && (
             <NavLink
@@ -194,11 +232,11 @@ const AdminLayout = () => {
               ${isActive ? "text-menuActive" : "text-gray-300 hover:text-menuActive"}`
               }
             >
-              <FaExchangeAlt size={22} className="flex-shrink-0" />
+              <FaExchangeAlt size={16} className="flex-shrink-0" />
               {/* Only show text when expanded */}
               <span
                 className={`
-                text-xl font-normal whitespace-nowrap
+                text-[15px] font-normal whitespace-nowrap
                 transition-all duration-200
                 ${showExpanded ? "inline-block opacity-100" : "hidden"}
               `}
@@ -216,16 +254,16 @@ const AdminLayout = () => {
               ${isActive ? "text-menuActive" : "text-gray-300 hover:text-menuActive"}`
             }
           >
-            <FiKey size={22} className="flex-shrink-0" />
+            <FiKey size={16} className="flex-shrink-0" />
             {/* Only show text when expanded */}
             <span
               className={`
-                text-xl font-normal whitespace-nowrap
+                text-[15px] font-normal whitespace-nowrap
                 transition-all duration-200
                 ${showExpanded ? "inline-block opacity-100" : "hidden"}
               `}
             >
-              Key
+              Key Management
             </span>
           </NavLink>
 
@@ -238,16 +276,16 @@ const AdminLayout = () => {
               ${isActive ? "text-menuActive" : "text-gray-300 hover:text-menuActive"}`
             }
           >
-            <FiList size={22} className="flex-shrink-0" />
+            <FiList size={16} className="flex-shrink-0" />
             {/* Only show text when expanded */}
             <span
               className={`
-                text-xl font-normal whitespace-nowrap
+                text-[15px] font-normal whitespace-nowrap
                 transition-all duration-200
                 ${showExpanded ? "inline-block opacity-100" : "hidden"}
               `}
             >
-              Api History
+              Key Monitor
             </span>
           </NavLink>
         </nav>
@@ -262,7 +300,18 @@ const AdminLayout = () => {
       )}
 
       {/* Main Content Area */}
-      <div className="flex flex-col flex-1 min-w-0 bg-gray-white">
+      <div
+        className={`flex flex-col flex-1 min-w-0 bg-gray-white transition-all duration-300
+  ${
+    isMobile
+      ? ""
+      : sidebarOpen
+        ? "ml-72 md:ml-80 lg:ml-[260px]"
+        : isHovering
+          ? "ml-72 md:ml-80 lg:ml-[260px]"
+          : "ml-20"
+  }`}
+      >
         <Header />
 
         <div className="flex flex-col flex-1">

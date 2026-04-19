@@ -1,138 +1,160 @@
 import { Link, useLocation } from "react-router-dom";
-import { FiChevronRight, FiHome } from "react-icons/fi";
-
-const routeNameMap: Record<string, string> = {
-  admin: "Admin",
-  dashboard: "Dashboard",
-  "alias-key": "Keys",
-  "api-history": "API History",
-  add: "Add",
-  proxy: "Proxies",
-  change_password: "Change Password",
-};
-
-const formatSegment = (segment: string) => {
-  if (routeNameMap[segment]) return routeNameMap[segment];
-  return segment
-    .replace(/[-_]/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-};
-
+import { FaHome } from "react-icons/fa";
 export default function Breadcrumb() {
   const location = useLocation();
+  const path = location.pathname;
+  const HOME_ROUTE = "/dashboard";
 
-  const isMongoId = (value: string) => /^[0-9a-fA-F]{24}$/.test(value);
+  // 🧠 Breadcrumb Logic
+  const breadcrumbItems = (() => {
+    const items: any[] = [
+      {
+        label: "",
+        to: HOME_ROUTE,
+        clickable: true,
+        icon: <FaHome size={16} />,
+      },
+    ];
 
-  const pathnames = location.pathname
-    .split("/")
-    .filter(Boolean)
-    .filter((value) => value !== "admin");
+    // ✅ DASHBOARD
+    if (path === "/dashboard") {
+      items.push({ label: "Main", clickable: false });
+      items.push({ label: "Dashboard", clickable: false });
+    } else {
+      // ✅ COMMON ROOT
+      // items.push({
+      //   label: "Key Management",
+      //   clickable: false,
+      // });
 
-  const aliasName = location.state?.aliasName;
+      // ✅ PROXY
+      if (path.startsWith("/proxy")) {
+        if (path === "/proxy") {
+          items.push({ label: "Proxy", clickable: false });
+        } else if (path === "/proxy/add") {
+          items.push({ label: "Proxy", to: "/proxy", clickable: true });
+          items.push({ label: "Proxy Add", clickable: false });
+        } else if (/^\/proxy\/add\/[0-9a-fA-F]{24}$/.test(path)) {
+          items.push({ label: "Proxy", to: "/proxy", clickable: true });
+          items.push({ label: "Proxy Edit", clickable: false });
+        }
+      }
 
-  const apiHistoryId =
-    pathnames[0] === "api-history" && pathnames[1] ? pathnames[1] : null;
+      // ✅ ALIAS KEY
+      if (path.startsWith("/alias-key")) {
+        if (path === "/alias-key") {
+          items.push({ label: "Key Management", clickable: false });
+        } else if (path === "/alias-key/add") {
+          items.push({
+            label: "Key Management",
+            to: "/alias-key",
+            clickable: true,
+          });
+          items.push({ label: "Key Add", clickable: false });
+        } else if (/^\/alias-key\/[0-9a-fA-F]{24}$/.test(path)) {
+          items.push({
+            label: "Key Management",
+            to: "/alias-key",
+            clickable: true,
+          });
+          items.push({ label: "Key Edit", clickable: false });
+        }
+      }
 
-  const breadcrumbItems = apiHistoryId
-    ? [
-        {
-          label: "",
-          to: "/dashboard",
-          isLast: false,
-          clickable: true,
-          icon: <FiHome size={14} className="text-slate-500" />,
-        },
-        {
-          label: "Keys",
-          to: "/alias-key",
-          isLast: false,
-          clickable: true,
-        },
-        {
-          label: "API History",
-          to: "/api-history",
-          isLast: false,
-          clickable: true,
-        },
-        {
-          label: aliasName || apiHistoryId,
-          to: `/api-history/${apiHistoryId}`,
-          isLast: true,
-          clickable: false,
-        },
-      ]
-    : [
-        {
-          label: "",
-          to: "/dashboard",
-          isLast: pathnames.length === 0,
-          clickable: pathnames.length > 0,
-          icon: <FiHome size={14} className="text-slate-500" />,
-        },
-        ...pathnames.map((value, index) => {
-          const isLast = index === pathnames.length - 1;
-          const to = "/" + pathnames.slice(0, index + 1).join("/");
+      // ✅ API HISTORY
+      const isMongoId = (val: string) => /^[0-9a-fA-F]{24}$/.test(val);
 
-          let label = formatSegment(value);
-          let clickable = !isLast && value !== "add";
-          let href = to;
+      if (path.startsWith("/api-history")) {
+        const parts = path.split("/").filter(Boolean);
 
-          if (value === "add") {
-            label = isLast ? "Add New" : "Edit";
-            if (!isLast) {
-              href = `/${pathnames[0]}`;
-            }
-          }
+        // ✅ /api-history
+        if (path === "/api-history") {
+          items.push({ label: "API History", clickable: false });
+        }
 
-          if (isMongoId(value)) {
-            label = aliasName || value;
-            clickable = false;
-          }
+        // ✅ /api-history/:id
+        else if (parts.length === 2 && isMongoId(parts[1])) {
+          items.push({
+            label: "Key Management",
+            to: "/alias-key", // ✅ redirect here
+            clickable: true,
+          });
 
-          if (value === "api-history" && pathnames.length > 1 && !isLast) {
-            clickable = true;
-          }
+          items.push({
+            label: "Key Monitor",
+            clickable: false,
+          });
+        }
+      }
+    }
 
-          return {
-            label,
-            to: href,
-            isLast,
-            clickable,
-          };
-        }),
-      ];
+    // ✅ Mark last item
+    items.forEach((item, index) => {
+      item.isLast = index === items.length - 1;
+    });
+
+    return items;
+  })();
+
+  // ✅ Page Title
+  const lastItem = breadcrumbItems[breadcrumbItems.length - 1];
 
   return (
-    <nav aria-label="Breadcrumb" className="mb-4">
-      <ol className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm border shadow-sm rounded-2xl border-slate-200 bg-slate-50/80 text-slate-600">
-        {breadcrumbItems.map((item, index) => (
-          <li
-            key={`${item.label}-${index}`}
-            className="flex items-center gap-2"
-          >
-            <div className="flex items-center gap-2">
-              {item.icon}
-              {item.clickable ? (
-                <Link
-                  to={item.to}
-                  className="font-medium text-slate-700 hover:text-slate-900"
-                >
-                  {item.label}
-                </Link>
-              ) : (
-                <span
-                  className={`font-medium ${item.isLast ? "text-slate-900" : "text-slate-700"}`}
-                >
-                  {item.label}
-                </span>
-              )}
-            </div>
-            {index < breadcrumbItems.length - 1 && (
-              <FiChevronRight size={14} className="text-slate-400" />
-            )}
-          </li>
-        ))}
-      </ol>
-    </nav>
+    <div className="mb-4">
+      {/* 🔥 PAGE TITLE */}
+      <h2 className="mb-2 text-xl font-semibold text-slate-900">
+        {lastItem?.label}
+      </h2>
+
+      {/* 🔥 BREADCRUMB */}
+      <nav aria-label="Breadcrumb">
+        <ol className="flex items-center gap-2  py-2 text-sm  text-slate-600">
+          {breadcrumbItems.map((item, index) => {
+            return (
+              <li key={index} className="flex items-center gap-2">
+                {/* ✅ Home Icon */}
+                {item.icon && (
+                  <Link
+                    to={HOME_ROUTE}
+                    className="hover:text-primary transition"
+                  >
+                    {item.icon}
+                  </Link>
+                )}
+
+                {/* ✅ Label */}
+                {item.label && (
+                  <>
+                    {item.clickable && !item.isLast ? (
+                      <Link
+                        to={item.to}
+                        className="text-slate-600 hover:text-primary"
+                      >
+                        {item.label}
+                      </Link>
+                    ) : (
+                      <span
+                        className={`${
+                          item.isLast
+                            ? "font-semibold text-slate-900" // ✅ bold last
+                            : "text-slate-600"
+                        }`}
+                      >
+                        {item.label}
+                      </span>
+                    )}
+                  </>
+                )}
+
+                {/* ✅ Separator */}
+                {index != 0 && index < breadcrumbItems.length - 1 && (
+                  <span className="text-slate-400">/</span>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
+    </div>
   );
 }

@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { MdFirstPage, MdLastPage } from "react-icons/md";
-
 import {
   FiChevronLeft,
   FiChevronRight,
@@ -43,7 +41,7 @@ function ProxyList() {
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit] = useState(10);
   const [total, setTotal] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
@@ -57,10 +55,6 @@ function ProxyList() {
   const [mobileView, setMobileView] = useState(false);
   const deleteModalRef = useRef<HTMLDivElement>(null);
   const actionModalRef = useRef<HTMLDivElement>(null);
-  const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setLimit(Number(e.target.value));
-    setPage(1); // reset to first page
-  };
   // Check screen size for mobile view
   useEffect(() => {
     const checkMobile = () => {
@@ -233,178 +227,234 @@ function ProxyList() {
   const gridColsClass = "grid-cols-[40px_1.2fr_1.2fr_2fr_80px_100px_80px]";
 
   return (
-    <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
-      {/* HEADER */}
-      <div className="flex items-center justify-between px-6 py-4 bg-primary">
-        {/* LEFT */}
+    <div className=" border border-gray-300">
+      <div className="flex items-center justify-between mb-6 bg-primary px-5 py-4  shadow-sm">
+        {/* LEFT SIDE */}
         <div className="flex items-center gap-3">
-          {/* Accent line touching left border */}
-          <div className="w-1 h-6 -ml-6 rounded-r-full bg-menuActive" />
+          {/* Accent Line */}
+          <div className="w-1 h-6 rounded-full bg-menuActive" />
 
           {/* Title */}
           <div>
-            <h5 className=" sm:text-xl text-white/60">Proxy</h5>
+            <h2 className="text-lg sm:text-xl font-semibold text-white tracking-tight">
+              Proxy
+            </h2>
+            <p className="text-xs sm:text-sm text-white/70">
+              Manage and monitor your proxies
+            </p>
           </div>
         </div>
+
+        {/* RIGHT SIDE (Optional actions) */}
+        {/* Example: Add button here later */}
       </div>
+      <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl sm:p-5">
+        {/* Header - Responsive */}
 
-      {/* BODY */}
-      <div className="p-5 sm:p-6">
-        {/* Search + Action Row */}
-        <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between">
-          {/* Search */}
-          <div className="relative w-full sm:w-80">
-            <input
-              ref={searchRef}
-              type="text"
-              placeholder="Search ..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
-            />
-
-            <FiSearch className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
-
-            {search && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearch("");
-                  searchRef.current?.focus();
-                }}
-                className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2 hover:text-gray-600"
-              >
-                <MdClose size={18} />
-              </button>
-            )}
+        {/* Loading */}
+        {loading ? (
+          <div className="flex justify-center py-10">
+            <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
           </div>
+        ) : (
+          <>
+            {/* Search - Responsive */}
+            <div className="flex items-center justify-between gap-3 mb-5">
+              {/* LEFT SIDE (Search) */}
+              <div className="relative w-full sm:w-80">
+                <input
+                  ref={searchRef}
+                  type="text"
+                  placeholder="Search ..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all duration-200"
+                />
 
-          {/* Button */}
-          <Link
-            to="/proxy/add"
-            className="whitespace-nowrap inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm"
-          >
-            <FiPlus className="w-4 h-4" />
-            Create Proxy
-          </Link>
-        </div>
+                {/* Search Icon */}
+                <FiSearch className="absolute w-4 h-4 text-gray-400 left-3 top-1/2 -translate-y-1/2" />
 
-        {/* CONTENT (Table / List / etc.) */}
-        <div className="overflow-hidden ">
-          <div className="overflow-hidden bordershadow-sm rounded-xl">
-            {/* Header Row */}
-            <div
-              className={`grid ${gridColsClass} text-sm font-semibold text-gray-600  px-4 py-3 border-b border-gray-300`}
-            >
-              {columns.map((col) => (
+                {/* Clear Button */}
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearch("");
+                      searchRef.current?.focus();
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                  >
+                    <MdClose size={18} />
+                  </button>
+                )}
+              </div>
+
+              {/* RIGHT SIDE (Button) */}
+              <Link
+                to="/proxy/add"
+                className="whitespace-nowrap inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all duration-200"
+              >
+                <FiPlus className="w-4 h-4" />
+                Create Proxy
+              </Link>
+            </div>
+            {/* Table - Responsive with Card View on Mobile */}
+            <div className="overflow-x-auto border border-gray-200 shadow-sm rounded-xl">
+              <div className="overflow-hidden border border-gray-200 shadow-sm rounded-xl">
+                {/* Header Row */}
                 <div
-                  key={col.label}
-                  onClick={() => col.sortable && handleSort(col.field)}
-                  className={`flex items-center gap-1 text-sm transition-colors duration-200 
+                  className={`grid ${gridColsClass} bg-gradient-to-r from-gray-50 to-gray-100 text-sm font-semibold text-gray-600  px-4 py-3 border-b border-gray-200`}
+                >
+                  {columns.map((col) => (
+                    <div
+                      key={col.label}
+                      onClick={() => col.sortable && handleSort(col.field)}
+                      className={`flex items-center gap-1 text-sm transition-colors duration-200 
       ${col.sortable ? "cursor-pointer hover:text-primary" : "cursor-default"}
     `}
-                >
-                  {col.label}
+                    >
+                      {col.label}
 
-                  {col.sortable && sortField === col.field && (
-                    <span className="text-sm text-primary">
-                      {sortOrder === "asc" ? <FiArrowUp /> : <FiArrowDown />}
-                    </span>
-                  )}
+                      {col.sortable && sortField === col.field && (
+                        <span className="text-sm text-primary">
+                          {sortOrder === "asc" ? (
+                            <FiArrowUp />
+                          ) : (
+                            <FiArrowDown />
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                  <div className="text-sm text-center">Actions</div>
                 </div>
-              ))}
-              <div className="text-sm text-center">Actions</div>
+
+                {/* Rows */}
+                {apiData.length === 0 ? (
+                  <div className="py-10 text-center text-gray-500">
+                    <p className="text-sm font-semibold">No proxy found</p>
+                    <p className="mt-1 text-sm text-gray-400">
+                      Try adjusting your search or filters
+                    </p>
+                  </div>
+                ) : (
+                  apiData.map((item, index) => (
+                    <ProxyRow
+                      key={item._id}
+                      index={index}
+                      apiData={item}
+                      handleDelete={handleDeleteClick}
+                      userRole={user?.role}
+                      onActionClick={handleActionClick}
+                      makeActiveInactiveClick={handleActiveInactiveClick}
+                      mobileView={false}
+                      gridColsClass={gridColsClass}
+                    />
+                  ))
+                )}
+              </div>
             </div>
 
-            {/* Rows */}
-            {apiData.length === 0 ? (
-              <div className="py-10 text-center text-gray-600">
-                <p className="text-sm font-semibold">No proxy found</p>
+            {total > limit && (
+              <div className="flex flex-col items-center justify-between gap-4 mt-8 sm:flex-row">
+                {/* Page info */}
+                <div className="text-sm text-gray-600">
+                  Showing{" "}
+                  <span className="font-semibold text-gray-900">
+                    {Math.min((page - 1) * limit + 1, total)}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-semibold text-gray-900">
+                    {Math.min(page * limit, total)}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-semibold text-gray-900">{total}</span>{" "}
+                  entries
+                </div>
+
+                {/* Pagination controls */}
+                <div className="flex items-center gap-1">
+                  {/* First Page */}
+                  <button
+                    onClick={() => setPage(1)}
+                    disabled={page === 1}
+                    className="items-center justify-center hidden text-gray-600 transition-all duration-200 bg-white border border-gray-300 rounded-lg md:flex w-9 h-9 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    title="First page"
+                  >
+                    <FiChevronsLeft className="w-4 h-4" />
+                  </button>
+
+                  {/* Previous */}
+                  <button
+                    onClick={() => setPage(page - 1)}
+                    disabled={page === 1}
+                    className="flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    <FiChevronLeft className="w-4 h-4" />
+                    <span className="hidden sm:inline">Previous</span>
+                  </button>
+
+                  {/* Page Numbers */}
+                  <div className="flex gap-1">
+                    {Array.from(
+                      { length: Math.min(5, Math.ceil(total / limit)) },
+                      (_, i) => {
+                        let pageNum;
+                        const totalPages = Math.ceil(total / limit);
+
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (page <= 3) {
+                          pageNum = i + 1;
+                        } else if (page >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = page - 2 + i;
+                        }
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setPage(pageNum)}
+                            className={`relative min-w-[36px] h-9 px-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                              page === pageNum
+                                ? "bg-gradient-to-r from-primary to-primaryHover text-white shadow-md scale-105"
+                                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      },
+                    )}
+                  </div>
+
+                  {/* Next */}
+                  <button
+                    onClick={() => setPage(page + 1)}
+                    disabled={page === Math.ceil(total / limit)}
+                    className="flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    <span className="hidden sm:inline">Next</span>
+                    <FiChevronRight className="w-4 h-4" />
+                  </button>
+
+                  {/* Last Page */}
+                  <button
+                    onClick={() => setPage(Math.ceil(total / limit))}
+                    disabled={page === Math.ceil(total / limit)}
+                    className="items-center justify-center hidden text-gray-600 transition-all duration-200 bg-white border border-gray-300 rounded-lg md:flex w-9 h-9 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    title="Last page"
+                  >
+                    <FiChevronsRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            ) : (
-              apiData.map((item, index) => (
-                <ProxyRow
-                  key={item._id}
-                  index={index}
-                  apiData={item}
-                  handleDelete={handleDeleteClick}
-                  userRole={user?.role}
-                  onActionClick={handleActionClick}
-                  makeActiveInactiveClick={handleActiveInactiveClick}
-                  mobileView={false}
-                  gridColsClass={gridColsClass}
-                />
-              ))
             )}
-          </div>
-        </div>
-        {total > limit && (
-          <div className="flex justify-end mt-8">
-            <div className="flex items-center gap-4">
-              {/* 1️⃣ LIMIT DROPDOWN */}
-              <div className="flex items-center gap-0 pr-4 text-xs text-gray-500">
-                <span>Rows Per Page :</span>
-                <select
-                  value={limit}
-                  onChange={handleLimitChange}
-                  className="px-1 py-1 text-gray-500 rounded-md focus:outline-none focus:ring-2"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-              </div>
-              {/* Page info */}
-              <div className="pr-4 text-xs text-gray-500 whitespace-nowrap">
-                <span>{Math.min((page - 1) * limit + 1, total)}</span>-
-                <span>{Math.min(page * limit, total)}</span> of{" "}
-                <span>{total}</span>{" "}
-              </div>
-
-              {/* Pagination controls */}
-              <div className="flex items-center gap-3 text-xs">
-                {/* First */}
-                <button
-                  onClick={() => setPage(1)}
-                  disabled={page === 1}
-                  className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                >
-                  <MdFirstPage size={25} />
-                </button>
-
-                {/* Previous */}
-                <button
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
-                  className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                >
-                  <FiChevronLeft size={22} />
-                </button>
-
-                {/* Next */}
-                <button
-                  onClick={() => setPage(page + 1)}
-                  disabled={page === Math.ceil(total / limit)}
-                  className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                >
-                  <FiChevronRight size={22} />
-                </button>
-
-                {/* Last */}
-                <button
-                  onClick={() => setPage(Math.ceil(total / limit))}
-                  disabled={page === Math.ceil(total / limit)}
-                  className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                >
-                  <MdLastPage size={25} />
-                </button>
-              </div>
-            </div>
-          </div>
+          </>
         )}
       </div>
+
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
           {/* Modal */}
@@ -415,7 +465,7 @@ function ProxyList() {
             {/* Close Icon */}
             <button
               onClick={() => setShowDeleteModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
+              className="absolute z-10 flex items-center justify-center w-10 h-10 text-gray-400 transition-all duration-200 bg-white rounded-full shadow-md top-4 right-4 hover:text-gray-600 hover:bg-gray-100 hover:shadow-lg group"
             >
               <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>
@@ -489,20 +539,30 @@ function ProxyList() {
             {/* Close Icon */}
             <button
               onClick={() => setShowModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
+              className="absolute z-10 flex items-center justify-center w-10 h-10 text-gray-400 transition-all duration-200 bg-white rounded-full shadow-md top-4 right-4 hover:text-gray-600 hover:bg-gray-100 hover:shadow-lg group"
             >
               <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>
 
             {/* Header - Kept as requested */}
-            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-800">
-                Proxy Details
-              </h2>
+            <div className="px-6 pt-8 pb-4 text-left bg-gradient-to-b from-white to-gray-50">
+              <div className="flex items-center gap-3">
+                {/* Left Thick Line */}
+                <div className="w-1 h-6 rounded-full bg-primary"></div>
+
+                {/* Title */}
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Proxy Details
+                </h3>
+              </div>
+
+              <p className="pl-4 mt-1 text-sm text-gray-500">
+                View complete proxy configuration information
+              </p>
             </div>
 
             {/* Proxy Details Grid */}
-            <div className="flex-1 px-6 py-4 overflow-y-auto">
+            <div className="px-6 pt-6 pb-2">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {/* Proxy Name */}
                 <div className="p-4 transition-all duration-200 border border-gray-100 rounded-lg bg-gray-50 hover:shadow-md hover:border-gray-200">
@@ -597,7 +657,7 @@ function ProxyList() {
             {/* Close Icon */}
             <button
               onClick={() => setShowActiveInactiveModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
+              className="absolute z-10 flex items-center justify-center w-10 h-10 text-gray-400 transition-all duration-200 bg-white rounded-full shadow-md top-4 right-4 hover:text-gray-600 hover:bg-gray-100 hover:shadow-lg group"
             >
               <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>

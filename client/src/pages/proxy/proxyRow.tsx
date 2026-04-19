@@ -47,24 +47,20 @@ function ProxyRow({
   // Desktop Table View
   return (
     <div
-      className={`grid ${gridColsClass}  text-base font-semibold text-gray-600  px-4 py-3 border-b border-gray-200`}
+      className={`grid ${gridColsClass}  text-xs    px-4 py-3 border-b border-gray-200`}
     >
-      <div className="font-medium text-gray-400">{index + 1}</div>
-      <div className="text-base text-gray-800 truncate ">
+      <div className="font-medium">{index + 1}</div>
+      <div className="text-xs text-gray-800 truncate ">
         {apiData.proxy_name || "-"}
       </div>
-      <div className="text-base text-gray-600 truncate">
-        {apiData.proxy_token || "-"}
-      </div>
-      <div className="text-base text-gray-600 truncate">
-        {apiData.curl || "-"}
-      </div>
-      <div className="text-base text-gray-600 truncate">
-        {apiData.credit || "0"}
+      <div className="text-xs truncate">{apiData.proxy_token || "-"}</div>
+      <div className="text-xs  truncate">{apiData.curl || "-"}</div>
+      <div className="text-xs  truncate">
+        &nbsp;&nbsp;{apiData.credit || "0"}
       </div>
       {/* Status Badge */}
 
-      <div className="text-base text-gray-500">
+      <div className="text-xs ">
         {" "}
         {apiData.createdAt
           ? new Date(apiData.createdAt).toLocaleDateString("en-US", {
@@ -80,10 +76,9 @@ function ProxyRow({
         <button
           onClick={handleEdit}
           className="p-1.5 text-blue-600 hover:text-white hover:bg-blue-500 rounded-md transition-all duration-200 group relative"
-          title="Edit"
         >
           <FiEdit2 className="w-4 h-4" />
-          <span className="absolute px-2 py-1 text-base text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+          <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-primary rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
             Edit
           </span>
         </button>
@@ -91,21 +86,19 @@ function ProxyRow({
         <button
           onClick={confirmDelete}
           className="p-1.5 text-red-600 hover:text-white hover:bg-red-500 rounded-md transition-all duration-200 group relative"
-          title="Delete"
         >
           <FiTrash2 className="w-4 h-4" />
-          <span className="absolute px-2 py-1 text-base text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+          <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-primary rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
             Delete
           </span>
         </button>
         <button
           onClick={() => onActionClick(apiData)}
           className="p-1.5 rounded-md transition-all duration-200 group relative"
-          title="Delete"
         >
           <FiEye className="w-4 h-4"></FiEye>
-          <span className="absolute px-2 py-1 text-base text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
-            View Details
+          <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-primary rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+            View
           </span>
         </button>
       </div>

@@ -7,13 +7,15 @@ export const validateAdd = [
   body("proxy_name").notEmpty().withMessage("Proxy name is required"),
   body("proxy_token").notEmpty().withMessage("Proxy token is required"),
   body("curl").notEmpty().withMessage("Curl is required"),
+  body("curl_token").notEmpty().withMessage("Token variable is required"),
 ];
 
 export const validateEdit = [
   param("id").isMongoId().withMessage("Invalid ID"),
-  body("proxy_name").notEmpty().withMessage("Proxy name is required"),
-  body("proxy_token").notEmpty().withMessage("Proxy token is required"),
-  body("curl").notEmpty().withMessage("Curl is required"),
+  // body("proxy_name").notEmpty().withMessage("Proxy name is required"),
+  // body("proxy_token").notEmpty().withMessage("Proxy token is required"),
+  // body("curl").notEmpty().withMessage("Curl is required"),
+  // body("curl_token").notEmpty().withMessage("Token variable is required"),
 ];
 export const isRequestValidated = (
   req: Request,

@@ -16,7 +16,6 @@ import { useAuth } from "../context/AuthContext";
 
 const AppRoutes = () => {
   const { user } = useAuth();
-  console.log(user?.role);
   return (
     <Routes>
       <Route

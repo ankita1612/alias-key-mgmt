@@ -20,9 +20,9 @@ const schema = yup.object({
     .email("Invalid email address") // replaces your regex
     .required("Email is required"),
   password: yup
-    .string()
-    .min(6, "Password must be at least 6 characters")
-    .required("Password is required"),
+    .string()    
+    .required("Password is required")
+    .min(6, "Password must be at least 6 characters"),
 });
 const Login = () => {
   const { setUserData } = useAuth();
@@ -53,15 +53,15 @@ const Login = () => {
       toast.error(error.response?.data?.message || "Login failed"); // ✅ error toast
     }
   };
-  useEffect(() => {
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.message) {
-        toast.error(firstError.message as string);
-      }
-    }
-  }, [errors]);
-  const label_style = "block text-base font-medium text-gray-700 mb-1.5";
+  // useEffect(() => {
+  //   if (errors) {
+  //     const firstError = Object.values(errors)[0];
+  //     if (firstError?.message) {
+  //       toast.error(firstError.message as string);
+  //     }
+  //   }
+  // }, [errors]);
+  const label_style = "block text-sm font-medium text-gray-700 mb-1.5";
   const textbox_style =
     "w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all duration-200";
   return (
@@ -86,7 +86,7 @@ const Login = () => {
             </svg>
           </div>
           <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
-          <p className="mt-2 text-base text-gray-600">
+          <p className="mt-2 text-sm text-gray-600">
             Please sign in to your account
           </p>
         </div>
@@ -114,6 +114,11 @@ const Login = () => {
               }`}
               {...register("email")}
             />
+             {errors.email && (
+              <p className="mt-1.5 text-sm text-red-500">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           {/* Password Field */}
@@ -141,14 +146,19 @@ const Login = () => {
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-[38px] text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-[45px] text-gray-400 hover:text-gray-600"
             >
               {showPassword ? (
                 <EyeOff className="w-5 h-5" />
               ) : (
                 <Eye className="w-5 h-5" />
               )}
-            </button>
+            </button>  
+            {errors.password && (
+              <p className="mt-1.5 text-sm text-red-500">
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
           {/* Submit Button */}
@@ -186,7 +196,7 @@ const Login = () => {
           </button>
 
           {/* Sign Up Link */}
-          {/* <p className="text-center text-base text-gray-600">
+          {/* <p className="text-center text-sm text-gray-600">
             Don't have an account?{" "}
             <button
               type="button"

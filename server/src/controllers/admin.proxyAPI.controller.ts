@@ -1,6 +1,5 @@
-const mongoose = require("mongoose");
-
 import { Request, Response } from "express";
+import { Types } from "mongoose";
 import AliasKeyModel from "../models/aliasKey.model";
 import ProxyModel from "../models/proxy.model";
 //import { axiosInstance } from "../utils/axiosInstance";
@@ -76,23 +75,25 @@ class ProxyController {
     response_msg: string,
     response_code: number,
     response_code_str: string,
-    requestParams: any
+    requestParams: any,
   ) => {
     const execTime = Date.now() - startTime;
 
-    ApiHistoryModel.create({
-      user_id: user_id,
-      user_alias_key_id: alias_key_id,
-      method: method,
-      execution_time: execTime,
-      response_status: response_status,
-      response_msg: response_msg,
-      response_code: response_code,
-      response_code_str: response_code_str,
-      request_params:requestParams
-    }).catch((err) => {
-      console.error("❌ Logging failed:", err.message);
-    });
+    if (user_id && alias_key_id) {
+      ApiHistoryModel.create({
+        user_id: user_id,
+        user_alias_key_id: alias_key_id,
+        method: method,
+        execution_time: `${execTime}`,
+        response_status: response_status,
+        response_msg: response_msg,
+        response_code: response_code,
+        response_code_str: response_code_str,
+        request_params: requestParams,
+      }).catch((err) => {
+        console.error("❌ Logging failed:", err.message);
+      });
+    }
 
     return res.status(response_code).json({
       status: response_status,
@@ -106,7 +107,7 @@ class ProxyController {
     const alias_key = req.query.alias_key || req.body.alias_key;
 
     if (!alias_key) {
-      return res.status(400).json({ message: "Alias key required" });
+      return res.status(400).json({ message: "Key is required" });
     }
 
     try {
@@ -115,7 +116,7 @@ class ProxyController {
         ...req.query,
         ...req.body,
       };
-      const allRequestParams=JSON.parse(JSON.stringify(requestParams));
+      const allRequestParams = JSON.parse(JSON.stringify(requestParams));
 
       delete requestParams.alias_key;
       const existingKey = await AliasKeyModel.findOne({ alias_key }).lean();
@@ -123,7 +124,7 @@ class ProxyController {
       if (!existingKey) {
         return res.status(400).json({
           status: "fail",
-          message: "Invalid alias key",
+          message: "Invalid key",
         });
       }
 
@@ -136,10 +137,10 @@ class ProxyController {
           req.method,
           startTime,
           "fail",
-          "Alias key is inactive",
+          "Key is inactive",
           403,
           "KEY_NOT_ACTIVE",
-          allRequestParams
+          allRequestParams,
         );
       }
 
@@ -155,7 +156,7 @@ class ProxyController {
           "Quota exceeded",
           429,
           "LIMIT_EXCEED",
-          allRequestParams
+          allRequestParams,
         );
       }
 
@@ -176,15 +177,19 @@ class ProxyController {
           "Proxy not found",
           404,
           "INVALID_PROXY",
-          allRequestParams
+          allRequestParams,
         );
       }
 
-      const { curl, proxy_token, query_params } = proxy;
+      const { curl, proxy_token, query_params, curl_token } = proxy;
 
       // ✅ Validate params (exclude token)
       for (const key of Object.keys(query_params)) {
-        if (key === "token") continue;
+        if (
+          (curl_token && key === curl_token) ||
+          (!curl_token && key === "token")
+        )
+          continue;
 
         if (!(key in requestParams)) {
           return this.handleResponse(
@@ -197,7 +202,7 @@ class ProxyController {
             `Missing param: ${key}`,
             400,
             "PARAM_MISSING",
-            allRequestParams
+            allRequestParams,
           );
         }
       }
@@ -219,7 +224,10 @@ class ProxyController {
       // ✅ GET
       if (method === "GET") {
         for (const key of Object.keys(query_params)) {
-          if (key === "token") {
+          if (
+            (curl_token && key === curl_token) ||
+            (!curl_token && key === "token")
+          ) {
             urlParams.set(key, proxy_token);
           } else {
             urlParams.set(key, String(requestParams[key]));
@@ -241,7 +249,10 @@ class ProxyController {
         }
 
         for (const key of Object.keys(query_params)) {
-          if (key === "token") {
+          if (
+            (curl_token && key === curl_token) ||
+            (!curl_token && key === "token")
+          ) {
             body[key] = proxy_token;
           } else {
             body[key] = requestParams[key];
@@ -298,7 +309,7 @@ class ProxyController {
           "Api call success",
           200,
           "SUCCESS",
-          allRequestParams
+          allRequestParams,
         );
       } catch (error: any) {
         // ✅ Axios error handling
@@ -314,7 +325,7 @@ class ProxyController {
             "External API error - " + error.response?.data?.message,
             error.response?.status || 500,
             "EXTERNAL_ERROR",
-            allRequestParams
+            allRequestParams,
           );
         }
 
@@ -328,25 +339,25 @@ class ProxyController {
             req.method,
             startTime,
             "fail",
-            "External API error -No response from external API11",
+            "External API error -No response from external API",
             504,
             "EXTERNAL_ERROR",
-            allRequestParams
+            allRequestParams,
           );
         }
 
         // Something else (config issue, parsing, etc.)
         return this.handleResponse(
           res,
-          null,
-          null,
+          existingKey.user_id,
+          existingKey._id,
           req.method,
           startTime,
           "fail",
-          "External API error - Internal server error",
+          error.message, // Changed from "External API error - Internal server error"
           500,
-          "INTERNAL_ERROR",
-          allRequestParams
+          "INTERNAL_SERVER",
+          allRequestParams,
         );
       }
 

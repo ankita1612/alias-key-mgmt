@@ -143,7 +143,7 @@ function AdminDashboard() {
         <div className="relative p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-base font-medium tracking-wider text-gray-500 uppercase">
+              <p className="text-sm font-medium tracking-wider text-gray-500 uppercase">
                 {title}
               </p>
               <div className="flex items-baseline mt-2 space-x-2">
@@ -157,7 +157,7 @@ function AdminDashboard() {
                     ) : (
                       <ArrowDownRight className="w-4 h-4" />
                     )}
-                    <span className="text-base font-semibold">
+                    <span className="text-sm font-semibold">
                       {Math.abs(trend)}%
                     </span> */}
                   </div>
@@ -190,8 +190,8 @@ function AdminDashboard() {
     if (active && payload && payload.length) {
       return (
         <div className="px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-lg">
-          <p className="text-base font-semibold text-gray-900">{label}</p>
-          <p className="text-base text-gray-600">
+          <p className="text-sm font-semibold text-gray-900">{label}</p>
+          <p className="text-sm text-gray-600">
             Value:{" "}
             <span className="font-medium">
               {payload[0].value.toLocaleString()}
@@ -213,7 +213,7 @@ function AdminDashboard() {
           <p className="mt-6 text-xl font-semibold text-gray-900">
             Loading Dashboard
           </p>
-          <p className="mt-2 text-base text-gray-500">
+          <p className="mt-2 text-sm text-gray-500">
             Fetching latest analytics data...
           </p>
         </div>
@@ -244,7 +244,7 @@ function AdminDashboard() {
         />
       </div>
 
-      <div className="relative px-6 py-8 md:px-8 lg:px-10">
+      <div className="">
         {/* Header */}
         <div className="mb-10">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
@@ -262,25 +262,6 @@ function AdminDashboard() {
                   </p>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center mt-4 space-x-4 lg:mt-0">
-              <div className="flex items-center px-4 py-2 space-x-2 bg-white border border-gray-100 shadow-sm rounded-xl">
-                <Globe className="w-4 h-4 text-gray-400" />
-                <span className="text-base text-gray-600">Live</span>
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Last updated</p>
-                <p className="text-base font-medium text-gray-700">
-                  {lastUpdated.toLocaleTimeString()}
-                </p>
-              </div>
-              <button
-                onClick={fetchData}
-                className="p-2.5 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 hover:border-gray-200"
-              >
-                <RefreshCw className="w-5 h-5 text-gray-600" />
-              </button>
             </div>
           </div>
         </div>
@@ -343,7 +324,7 @@ function AdminDashboard() {
                       <h3 className="text-lg font-semibold text-gray-900">
                         Aliad Key Status Distribution
                       </h3>
-                      <p className="mt-1 text-base text-gray-500">
+                      <p className="mt-1 text-sm text-gray-500">
                         Breakdown of all keys by status
                       </p>
                     </div>
@@ -400,7 +381,7 @@ function AdminDashboard() {
                         <h3 className="text-lg font-semibold text-gray-900">
                           Distribution of API response types
                         </h3>
-                        <p className="mt-1 text-base text-gray-500">
+                        <p className="mt-1 text-sm text-gray-500">
                           API response distribution
                         </p>
                       </div>
@@ -411,7 +392,7 @@ function AdminDashboard() {
                   </div>
                   <div className="p-6">
                     <div className="mb-4">
-                      <p className="text-base font-medium text-gray-700">
+                      <p className="text-sm font-medium text-gray-700">
                         Total responses tracked
                       </p>
                       <p className="text-3xl font-bold text-gray-900">
@@ -477,7 +458,6 @@ function AdminDashboard() {
                         // ✅ Safe percentage
                         const percentage =
                           total > 0 ? (value / total) * 100 : 0;
-                        console.log(percentage);
 
                         // ✅ Better display with appropriate precision
                         const formattedPercentage =
@@ -488,7 +468,7 @@ function AdminDashboard() {
                               : percentage < 1
                                 ? `${percentage.toFixed(2)}%`
                                 : `${percentage.toFixed(1)}%`;
-                        console.log(formattedPercentage);
+
                         // ✅ Ensure bar is visible
                         const progressWidth =
                           percentage > 0 && percentage < 1 ? 1 : percentage;
@@ -499,13 +479,13 @@ function AdminDashboard() {
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-2">
                                 <status.icon className="w-4 h-4 text-gray-400" />
-                                <span className="text-base font-medium text-gray-700">
+                                <span className="text-sm font-medium text-gray-700">
                                   {status.label}
                                 </span>
                               </div>
 
                               <div className="flex items-center space-x-2">
-                                <span className="text-base font-semibold text-gray-900">
+                                <span className="text-sm font-semibold text-gray-900">
                                   {(value || 0).toLocaleString()}
                                 </span>
                                 <span className="text-xs text-gray-500">
@@ -540,7 +520,7 @@ function AdminDashboard() {
                       <h3 className="text-lg font-semibold text-gray-900">
                         Request Activity
                       </h3>
-                      <p className="mt-1 text-base text-gray-500">
+                      <p className="mt-1 text-sm text-gray-500">
                         API requests over the last 7 days
                       </p>
                     </div>
@@ -605,7 +585,7 @@ function AdminDashboard() {
                       <h3 className="text-lg font-semibold text-gray-900">
                         API Response Status
                       </h3>
-                      <p className="mt-1 text-base text-gray-500">
+                      <p className="mt-1 text-sm text-gray-500">
                         Distribution of API response types
                       </p>
                     </div>
@@ -663,13 +643,13 @@ function AdminDashboard() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                               <status.icon className="w-4 h-4 text-gray-400" />
-                              <span className="text-base font-medium text-gray-700">
+                              <span className="text-sm font-medium text-gray-700">
                                 {status.label}
                               </span>
                             </div>
 
                             <div className="flex items-center space-x-2">
-                              <span className="text-base font-semibold text-gray-900">
+                              <span className="text-sm font-semibold text-gray-900">
                                 {(value || 0).toLocaleString()}
                               </span>
                               <span className="text-xs text-gray-500">
@@ -703,7 +683,7 @@ function AdminDashboard() {
                       <h3 className="text-xl font-semibold text-white">
                         Platform Health
                       </h3>
-                      <p className="mt-1 text-base text-indigo-200">
+                      <p className="mt-1 text-sm text-indigo-200">
                         Key performance indicators
                       </p>
                     </div>
@@ -714,8 +694,8 @@ function AdminDashboard() {
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <p className="text-base text-indigo-200">System Uptime</p>
-                        <p className="text-base font-semibold text-white">
+                        <p className="text-sm text-indigo-200">System Uptime</p>
+                        <p className="text-sm font-semibold text-white">
                           99.95%
                         </p>
                       </div>
@@ -730,7 +710,7 @@ function AdminDashboard() {
                       <div>
                         <div className="flex items-center space-x-2">
                           <Cpu className="w-4 h-4 text-indigo-200" />
-                          <p className="text-base text-indigo-200">
+                          <p className="text-sm text-indigo-200">
                             Avg Response Time
                           </p>
                         </div>
@@ -741,7 +721,7 @@ function AdminDashboard() {
                       <div>
                         <div className="flex items-center space-x-2">
                           <AlertCircle className="w-4 h-4 text-indigo-200" />
-                          <p className="text-base text-indigo-200">Error Rate</p>
+                          <p className="text-sm text-indigo-200">Error Rate</p>
                         </div>
                         <p className="mt-2 text-2xl font-bold text-white">
                           {(
@@ -757,7 +737,7 @@ function AdminDashboard() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                           <Activity className="w-4 h-4 text-indigo-200" />
-                          <p className="text-base text-indigo-200">
+                          <p className="text-sm text-indigo-200">
                             Active Monitoring
                           </p>
                         </div>

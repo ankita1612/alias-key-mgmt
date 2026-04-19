@@ -55,7 +55,7 @@ const UpdateProfile: React.FC = () => {
         "/admin/auth/update_profile",
         payload,
       );
-      console.log(result.data.data);
+
       const apiUser = result.data.data;
       setUserData(apiUser);
       toast.success("Profile updated successfully");

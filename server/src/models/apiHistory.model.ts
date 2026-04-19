@@ -39,7 +39,7 @@ const ApiHistorySchema = new Schema<IApiHistory>(
       enum: [
         "LIMIT_EXCEED",
         "SUCCESS",
-        "INTERNAL_SEREVER",
+        "INTERNAL_SERVER",
         "KEY_NOT_ACTIVE",
         "EXTERNAL_ERROR",
         "INVALID_PROXY",
@@ -47,7 +47,7 @@ const ApiHistorySchema = new Schema<IApiHistory>(
       ],
       default: "SUCCESS",
     },
-     request_params: {
+    request_params: {
       type: Map,
       of: String,
       default: {},

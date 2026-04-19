@@ -28,7 +28,7 @@ import toast from "react-hot-toast";
 import apiClient from "../../services/apiClient";
 
 import { CheckCircle, Clock } from "lucide-react";
-import { MdClose } from "react-icons/md";
+import { MdClose, MdFirstPage, MdLastPage } from "react-icons/md";
 const capitalize = (text?: string) =>
   text ? text.charAt(0).toUpperCase() + text.slice(1) : "-";
 function ApiHistory() {
@@ -38,7 +38,8 @@ function ApiHistory() {
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const [limit, setLimit] = useState(10);
+
   const [total, setTotal] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
@@ -53,7 +54,10 @@ function ApiHistory() {
   const aliasKeysLoaded = useRef(false);
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedAliasKey, setSelectedAliasKey] = useState(aliasKeyId || "");
-
+  const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setLimit(Number(e.target.value));
+    setPage(1); // reset to first page
+  };
   // Check screen size for mobile view
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -63,12 +67,12 @@ function ApiHistory() {
     return () => clearTimeout(timer);
   }, [search]);
   const handleActionClick = async (row: IAliasKey) => {
-    console.log(row);
     try {
       setLoading(true);
-
+      console.log(row);
+      const aliasKeyId = row?.user_alias_key_id?._id || row?.user_alias_key_id;
       const { data } = await apiClient.get(
-        `${BACKEND_URL}/api/user/get-user-by-alias_id/${row.user_alias_key_id._id}`,
+        `${BACKEND_URL}/api/user/get-user-by-alias_id/${aliasKeyId}`,
       );
 
       // merge API response into row
@@ -191,14 +195,14 @@ function ApiHistory() {
   const isAdmin = user?.role === "Admin";
 
   const columns = [
-    { label: "#", field: "_id" },
-    { label: "Key", field: "user_alias_key_id.alias_key" },
-    { label: "Request", field: "request_info" },
-    { label: "Time", field: "execution_time" },
-    { label: "Status", field: "response_status" },
-    { label: "Message", field: "response_msg" },
-    { label: "Code", field: "response_code" },
-    { label: "Created", field: "createdAt" },
+    { label: "#", field: "_id", sortable: true },
+    { label: "Key", field: "user_alias_key_id.alias_key", sortable: true },
+    { label: "Request", field: "request_info", sortable: true },
+    { label: "Time", field: "execution_time", sortable: true },
+    { label: "Status", field: "response_status", sortable: true },
+    { label: "Message", field: "response_msg", sortable: true },
+    { label: "Code", field: "response_code", sortable: true },
+    { label: "Created", field: "createdAt", sortable: true },
   ];
 
   // Responsive grid columns based on screen size and admin status
@@ -207,21 +211,23 @@ function ApiHistory() {
     user?.role === "Admin"
       ? "grid-cols-[40px_1.2fr_100px_100px_100px_1.2fr_80px_80px_80px]"
       : "grid-cols-[40px_1.2fr_100px_100px_100px_1.2fr_80px_80px_80px]";
+  const isFilterActive = selectedAliasKey || search;
   return (
-    <div className="py-4">
-      <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl sm:p-5">
-        {/* Header - Responsive */}
-        <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+    <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
+      {/* HEADER */}
+      <div className="flex items-center justify-between px-6 py-4 bg-primary">
+        {/* LEFT */}
+        <div className="flex items-center gap-3">
+          {/* Accent line touching left border */}
+          <div className="w-1 h-6 -ml-6 rounded-r-full bg-menuActive" />
+
+          {/* Title */}
           <div>
-            <h2 className="text-xl font-semibold tracking-tight text-gray-800 sm:text-2xl">
-              API History
-            </h2>
-            <p className="mt-1 text-base text-gray-500 sm:text-base">
-              API history
-            </p>
+            <h5 className=" sm:text-xl text-white/60">Key Monitor</h5>
           </div>
         </div>
-
+      </div>
+      <div className="p-5 sm:p-6">
         {/* Loading */}
         {loading ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
@@ -233,7 +239,7 @@ function ApiHistory() {
               <select
                 value={selectedAliasKey}
                 onChange={(e) => setSelectedAliasKey(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2.5 text-base shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
+                className="border border-gray-300 rounded-lg px-3 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
               >
                 <option value="">All Keys</option>
                 {aliasKeys.map((k) => (
@@ -247,31 +253,49 @@ function ApiHistory() {
                 <input
                   ref={searchRef}
                   type="text"
-                  placeholder="Search..."
+                  placeholder="Search by key, request, status, message, code"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2.5 text-base shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all duration-200"
+                  className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all duration-200"
                 />
-                <FiSearch className="absolute w-4 h-4 text-gray-400 left-3 top-4" />
+                <FiSearch className="absolute w-4 h-4 text-gray-400 left-3 top-3" />
               </div>
+              <button
+                onClick={() => {
+                  setSelectedAliasKey("");
+                  setSearch("");
+                  searchRef.current?.focus();
+                }}
+                disabled={!isFilterActive}
+                className={`px-4 py-2.5 text-sm rounded-lg transition-all duration-200
+    ${
+      isFilterActive
+        ? "bg-gray-100 hover:bg-gray-200 text-gray-700 cursor-pointer"
+        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+    }`}
+              >
+                Clear All
+              </button>
             </div>
             {/* Table - Responsive with Card View on Mobile */}
-            <div className="overflow-x-auto border border-gray-200 shadow-sm rounded-xl">
-              <div className="overflow-hidden border border-gray-200 shadow-sm rounded-xl">
+            <div className="overflow-hidden ">
+              <div className="overflow-hidden bordershadow-sm rounded-xl">
                 {/* Header Row */}
                 <div
-                  className={`grid ${gridColsClass} bg-gradient-to-r from-gray-50 to-gray-100 text-base font-semibold text-gray-600  px-4 py-3 border-b border-gray-200`}
+                  className={`grid ${gridColsClass} text-sm font-semibold text-gray-600  px-4 py-3 border-b border-gray-300`}
                 >
                   {columns.map((col) => (
                     <div
-                      key={col.field}
-                      onClick={() => handleSort(col.field)}
-                      className="flex items-center gap-1 text-base transition-colors duration-200 cursor-pointer hover:text-primary"
+                      key={col.label}
+                      onClick={() => col.sortable && handleSort(col.field)}
+                      className={`flex items-center gap-1 text-sm transition-colors duration-200 
+      ${col.sortable ? "cursor-pointer hover:text-primary" : "cursor-default"}
+    `}
                     >
                       {col.label}
                       {sortField === col.field && (
-                        <span className="text-base text-primary">
-                          <span className="text-base text-primary">
+                        <span className="text-sm text-primary">
+                          <span className="text-sm text-primary">
                             {sortOrder === "asc" ? (
                               <FiArrowUp />
                             ) : (
@@ -282,16 +306,13 @@ function ApiHistory() {
                       )}
                     </div>
                   ))}
-                  <div className="text-base text-center">Actions</div>
+                  <div className="text-sm text-center">Actions</div>
                 </div>
 
                 {/* Rows */}
                 {apiData.length === 0 ? (
-                  <div className="py-10 text-center text-gray-500">
-                    <p className="text-base font-semibold">No data found</p>
-                    <p className="mt-1 text-base text-gray-400">
-                      Try adjusting your search or filters
-                    </p>
+                  <div className="py-10 text-center text-gray-600">
+                    <p className="text-sm font-semibold">No data found</p>
                   </div>
                 ) : (
                   apiData.map((item, index) => (
@@ -311,98 +332,68 @@ function ApiHistory() {
             </div>
             {/* Pagination - Responsive */}
             {total > limit && (
-              <div className="flex flex-col items-center justify-between gap-4 mt-8 sm:flex-row">
-                {/* Page info */}
-                <div className="text-sm text-gray-600">
-                  Showing{" "}
-                  <span className="font-semibold text-gray-900">
-                    {Math.min((page - 1) * limit + 1, total)}
-                  </span>{" "}
-                  to{" "}
-                  <span className="font-semibold text-gray-900">
-                    {Math.min(page * limit, total)}
-                  </span>{" "}
-                  of{" "}
-                  <span className="font-semibold text-gray-900">{total}</span>{" "}
-                  entries
-                </div>
-
-                {/* Pagination controls */}
-                <div className="flex items-center gap-1">
-                  {/* First Page */}
-                  <button
-                    onClick={() => setPage(1)}
-                    disabled={page === 1}
-                    className="items-center justify-center hidden text-gray-600 transition-all duration-200 bg-white border border-gray-300 rounded-lg md:flex w-9 h-9 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                    title="First page"
-                  >
-                    <FiChevronsLeft className="w-4 h-4" />
-                  </button>
-
-                  {/* Previous */}
-                  <button
-                    onClick={() => setPage(page - 1)}
-                    disabled={page === 1}
-                    className="flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                  >
-                    <FiChevronLeft className="w-4 h-4" />
-                    <span className="hidden sm:inline">Previous</span>
-                  </button>
-
-                  {/* Page Numbers */}
-                  <div className="flex gap-1">
-                    {Array.from(
-                      { length: Math.min(5, Math.ceil(total / limit)) },
-                      (_, i) => {
-                        let pageNum;
-                        const totalPages = Math.ceil(total / limit);
-
-                        if (totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (page <= 3) {
-                          pageNum = i + 1;
-                        } else if (page >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i;
-                        } else {
-                          pageNum = page - 2 + i;
-                        }
-
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => setPage(pageNum)}
-                            className={`relative min-w-[36px] h-9 px-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                              page === pageNum
-                                ? "bg-gradient-to-r from-primary to-primaryHover text-white shadow-md scale-105"
-                                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
-                            }`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      },
-                    )}
+              <div className="flex justify-end mt-8">
+                <div className="flex items-center gap-4">
+                  {/* 1️⃣ LIMIT DROPDOWN */}
+                  <div className="flex items-center gap-0 pr-4 text-xs text-gray-500">
+                    <span>Rows Per Page :</span>
+                    <select
+                      value={limit}
+                      onChange={handleLimitChange}
+                      className="px-1 py-1 text-gray-500 rounded-md focus:outline-none focus:ring-2"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
+                  {/* Page info */}
+                  <div className="pr-4 text-xs text-gray-500 whitespace-nowrap">
+                    <span>{Math.min((page - 1) * limit + 1, total)}</span>-
+                    <span>{Math.min(page * limit, total)}</span> of{" "}
+                    <span>{total}</span>{" "}
                   </div>
 
-                  {/* Next */}
-                  <button
-                    onClick={() => setPage(page + 1)}
-                    disabled={page === Math.ceil(total / limit)}
-                    className="flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                  >
-                    <span className="hidden sm:inline">Next</span>
-                    <FiChevronRight className="w-4 h-4" />
-                  </button>
+                  {/* Pagination controls */}
+                  <div className="flex items-center gap-3 text-xs">
+                    {/* First */}
+                    <button
+                      onClick={() => setPage(1)}
+                      disabled={page === 1}
+                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
+                    >
+                      <MdFirstPage size={25} />
+                    </button>
 
-                  {/* Last Page */}
-                  <button
-                    onClick={() => setPage(Math.ceil(total / limit))}
-                    disabled={page === Math.ceil(total / limit)}
-                    className="items-center justify-center hidden text-gray-600 transition-all duration-200 bg-white border border-gray-300 rounded-lg md:flex w-9 h-9 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                    title="Last page"
-                  >
-                    <FiChevronsRight className="w-4 h-4" />
-                  </button>
+                    {/* Previous */}
+                    <button
+                      onClick={() => setPage(page - 1)}
+                      disabled={page === 1}
+                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
+                    >
+                      <FiChevronLeft size={22} />
+                    </button>
+
+                    {/* Next */}
+                    <button
+                      onClick={() => setPage(page + 1)}
+                      disabled={page === Math.ceil(total / limit)}
+                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
+                    >
+                      <FiChevronRight size={22} />
+                    </button>
+
+                    {/* Last */}
+                    <button
+                      onClick={() => setPage(Math.ceil(total / limit))}
+                      disabled={page === Math.ceil(total / limit)}
+                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
+                    >
+                      <MdLastPage size={25} />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -426,26 +417,16 @@ function ApiHistory() {
             {/* Close Icon - Improved */}
             <button
               onClick={() => setShowModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 text-gray-400 transition-all duration-200 bg-white rounded-full shadow-md top-4 right-4 hover:text-gray-600 hover:bg-gray-100 hover:shadow-lg group"
+              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
             >
               <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>
 
             {/* Header */}
-            <div className="px-6 pt-8 pb-4 text-left bg-gradient-to-b from-white to-gray-50">
-              <div className="flex items-center gap-3">
-                {/* Left Thick Line */}
-                <div className="w-1 h-6 rounded-full bg-primary"></div>
-
-                {/* Title */}
-                <h3 className="text-2xl font-bold text-gray-900">
-                  API Request Details
-                </h3>
-              </div>
-
-              <p className="pl-4 mt-1 text-sm text-gray-500">
-                Complete information about this API call
-              </p>
+            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-800">
+                API Call Detail
+              </h2>
             </div>
 
             {/* Content */}
@@ -457,7 +438,7 @@ function ApiHistory() {
                   <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-blue-600" />
-                      <span className="text-base font-semibold tracking-wide text-gray-700 uppercase">
+                      <span className="text-sm font-semibold tracking-wide text-gray-700 uppercase">
                         Requester
                       </span>
                     </div>
@@ -465,16 +446,16 @@ function ApiHistory() {
                   <div className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
-                        <span className="text-base font-semibold text-white">
+                        <span className="text-sm font-semibold text-white">
                           {selectedRow?.user_id?.first_name?.charAt(0) || "U"}
                         </span>
                       </div>
                       <div>
-                        <p className="text-base font-semibold text-gray-900">
+                        <p className="text-sm font-semibold text-gray-900">
                           {selectedRow?.user_id?.first_name || "-"}{" "}
                           {selectedRow?.user_id?.last_name || ""}
                         </p>
-                        <p className="text-base text-gray-500">
+                        <p className="text-sm text-gray-500">
                           {selectedRow?.user_id?.email || "-"}
                         </p>
                       </div>
@@ -486,14 +467,14 @@ function ApiHistory() {
                   <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50">
                     <div className="flex items-center gap-2">
                       <Key className="w-4 h-4 text-purple-600" />
-                      <span className="text-base font-semibold tracking-wide text-gray-700 uppercase">
+                      <span className="text-sm font-semibold tracking-wide text-gray-700 uppercase">
                         Key
                       </span>
                     </div>
                   </div>
                   <div className="px-4 py-3">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="flex-1 font-mono text-base font-medium text-gray-900 break-all">
+                      <p className="flex-1 font-mono text-sm font-medium text-gray-900 break-all">
                         {selectedRow?.alias.alias_key}
                       </p>
                     </div>
@@ -506,7 +487,7 @@ function ApiHistory() {
                 <div className="p-4 transition-all duration-200 border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl hover:shadow-md">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="w-4 h-4 text-blue-500" />
-                    <span className="text-base font-semibold text-gray-500 uppercase">
+                    <span className="text-sm font-semibold text-gray-500 uppercase">
                       Execution Time
                     </span>
                   </div>
@@ -518,13 +499,13 @@ function ApiHistory() {
                 <div className="p-4 transition-all duration-200 border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl hover:shadow-md">
                   <div className="flex items-center gap-2 mb-2">
                     <Activity className="w-4 h-4 text-blue-500" />
-                    <span className="text-base font-semibold text-gray-500 uppercase">
+                    <span className="text-sm font-semibold text-gray-500 uppercase">
                       Status
                     </span>
                   </div>
 
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-base font-medium ${
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
                       selectedRow?.response_status === "success"
                         ? "bg-green-100 text-green-700"
                         : selectedRow?.response_status === "fail"
@@ -548,11 +529,11 @@ function ApiHistory() {
                 <div className="p-4 transition-all duration-200 border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl hover:shadow-md">
                   <div className="flex items-center gap-2 mb-2">
                     <Calendar className="w-4 h-4 text-blue-500" />
-                    <span className="text-base font-semibold text-gray-500 uppercase">
+                    <span className="text-sm font-semibold text-gray-500 uppercase">
                       Created On
                     </span>
                   </div>
-                  <p className="text-base font-medium text-gray-900">
+                  <p className="text-sm font-medium text-gray-900">
                     {new Date(selectedRow?.createdAt || "").toLocaleString(
                       "en-US",
                       {
@@ -570,12 +551,12 @@ function ApiHistory() {
                   <div className="p-1.5 rounded-lg bg-blue-100">
                     <Send className="w-4 h-4 text-blue-600" />
                   </div>
-                  <h4 className="text-base font-semibold text-gray-900">
+                  <h4 className="text-sm font-semibold text-gray-900">
                     Request Information
                   </h4>
                 </div>
                 <div className="overflow-hidden bg-gray-900 border border-gray-800 shadow-lg rounded-xl">
-                  <pre className="p-4 overflow-auto font-mono text-base text-gray-300 max-h-48 scrollbar-thin">
+                  <pre className="p-4 overflow-auto font-mono text-sm text-gray-300 max-h-48 scrollbar-thin">
                     Method: {selectedRow?.method}
                     <br></br>
                     Query Parameters:
@@ -584,7 +565,11 @@ function ApiHistory() {
                         <div className="mt-0">
                           <pre className="p-4 overflow-auto text-sm text-gray-300rounded-lg">
                             {JSON.stringify(
-                              selectedRow.request_params || {},
+                              Object.fromEntries(
+                                Object.entries(
+                                  selectedRow.request_params || {},
+                                ).filter(([key]) => key !== "alias_key"),
+                              ),
                               null,
                               2,
                             )}
@@ -601,12 +586,12 @@ function ApiHistory() {
                   <div className="p-1.5 rounded-lg bg-green-100">
                     <CheckCircle className="w-4 h-4 text-green-600" />
                   </div>
-                  <h4 className="text-base font-semibold text-gray-900">
+                  <h4 className="text-sm font-semibold text-gray-900">
                     Response Data
                   </h4>
                 </div>
                 <div className="overflow-hidden bg-gray-900 border border-gray-800 shadow-lg rounded-xl">
-                  <pre className="p-4 overflow-auto font-mono text-base text-gray-300 max-h-48 scrollbar-thin">
+                  <pre className="p-4 overflow-auto font-mono text-sm text-gray-300 max-h-48 scrollbar-thin">
                     Status: {capitalize(selectedRow?.response_status)} <br></br>
                     Response Message: {selectedRow?.response_msg}
                     <br></br>
@@ -615,17 +600,16 @@ function ApiHistory() {
                 </div>
               </div>
             </div>
+            <div className="px-6 py-2 border-t border-slate-200"></div>
 
             {/* Footer Actions */}
-            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2.5 text-base font-medium transition-all duration-200 bg-white border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 hover:border-gray-400"
-                >
-                  Close
-                </button>
-              </div>
+            <div className="flex flex-col-reverse gap-3 px-6 pb-4 sm:flex-row">
+              <button
+                onClick={() => setShowModal(false)}
+                className="flex-1 px-4 py-2.5 text-sm font-medium transition-all duration-200 bg-white border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 hover:border-gray-400"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

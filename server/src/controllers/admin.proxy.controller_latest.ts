@@ -127,7 +127,7 @@ class ProxyController {
         "fail",
         "Internal server error",
         500,
-        "INTERNAL_SEREVER",
+        "INTERNAL_SERVER",
       );
     }
   };

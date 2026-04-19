@@ -1,4 +1,18 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { MdFirstPage, MdLastPage } from "react-icons/md";
+
+import {
+  User,
+  FolderOpen,
+  Globe,
+  TrendingUp,
+  Calculator,
+  DollarSign,
+  Shield,
+  FileText,
+  XCircle,
+  CheckCircle,
+} from "lucide-react";
 import {
   FiChevronLeft,
   FiChevronRight,
@@ -19,20 +33,88 @@ import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import apiClient from "../../services/apiClient";
 
-import {
-  AlertTriangle,
-  X,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Mail,
-  Globe,
-  Database,
-  FileText,
-  User,
-} from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { MdClose } from "react-icons/md";
 
+const API_URL = import.meta.env.VITE_BACKEND_URL + "/api/get-proxy-response";
+function generatePostProxyData(curl: string, curl_token: string) {
+  try {
+    // ✅ Extract ALL quoted parts
+    const matches = curl.match(/'(.*?)'/g);
+
+    if (!matches || matches.length < 2) {
+      return { url: "", body: "" };
+    }
+
+    // ✅ Last match = URL
+    const url = API_URL;
+    // ✅ Second last match = BODY
+    const jsonStr = matches[matches.length - 2].replace(/'/g, "");
+    try {
+      const json = JSON.parse(jsonStr);
+      // ✅ Remove original token
+      if (json.hasOwnProperty(curl_token)) {
+        delete json[curl_token];
+      }
+      // ✅ Add alias_key
+      json["alias_key"] = "Please enter alias key";
+
+      return {
+        url,
+        body: JSON.stringify(json, null, 2),
+      };
+    } catch {
+      return { url, body: jsonStr };
+    }
+  } catch {
+    return { url: "", body: "" };
+  }
+}
+function generateGetProxyUrl(curl: string, curl_token: string) {
+  try {
+    const urlMatch = curl.match(/'(.*?)'/);
+
+    if (!urlMatch || !urlMatch[1]) return "";
+
+    const originalUrl = urlMatch[1];
+    const url = new URL(originalUrl);
+
+    // ✅ Remove original token
+    if (url.searchParams.has(curl_token)) {
+      url.searchParams.delete(curl_token);
+    }
+
+    // ✅ Build new params
+    const newParams = new URLSearchParams();
+
+    // Add alias_key first
+    newParams.set("alias_key", "Please enter alias key");
+
+    // Add remaining params
+    url.searchParams.forEach((value, key) => {
+      newParams.set(key, value);
+    });
+
+    // ✅ Final proxy URL
+    return `${API_URL}?${newParams.toString()}`;
+  } catch (err) {
+    console.error("Error generating proxy URL");
+    return "";
+  }
+}
+function generateProxyUrl(curl: string, curl_token: string) {
+  if (!curl) return "";
+
+  const lowerCurl = curl.toLowerCase();
+
+  // ✅ Detect POST
+  if (lowerCurl.includes("--request post") || lowerCurl.includes("--data")) {
+    return generatePostProxyData(curl, curl_token);
+  }
+
+  // ✅ Default = GET
+  return generateGetProxyUrl(curl, curl_token);
+}
 function AliasKeyList() {
   const { user } = useAuth();
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -41,7 +123,8 @@ function AliasKeyList() {
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
+
   const [total, setTotal] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
@@ -58,6 +141,11 @@ function AliasKeyList() {
   const deleteModalRef = useRef<HTMLDivElement>(null);
   const actionModalRef = useRef<HTMLDivElement>(null);
   const actionDetailRef = useRef<HTMLDivElement>(null);
+  const [liveUrl, setLiveUrl] = useState("");
+  const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setLimit(Number(e.target.value));
+    setPage(1); // reset to first page
+  };
   // Check screen size for mobile view
   useEffect(() => {
     const checkMobile = () => {
@@ -101,6 +189,11 @@ function AliasKeyList() {
   const handleshowKeyDetail = (row: IAliasKey) => {
     setSelectedRow(row);
     setShowDetailModal(true);
+
+    const proxyResult = row?.proxy
+      ? generateProxyUrl(row.proxy.curl || "", row.proxy.curl_token || "")
+      : null;
+    setLiveUrl(proxyResult);
   };
   const handleActiveInactiveClick = (row: IAliasKey, newStatus: string) => {
     setSelectedRow(row);
@@ -123,7 +216,6 @@ function AliasKeyList() {
       fetchData();
       setShowModal(false);
     } catch (err) {
-      console.error(err);
       toast.error("Something went wrong");
     } finally {
       setLoading(false);
@@ -145,7 +237,6 @@ function AliasKeyList() {
       setShowActiveInactiveModal(false);
       setNewStatus("");
     } catch (err) {
-      console.error(err);
       toast.error("Something went wrong");
     } finally {
       setLoading(false);
@@ -253,29 +344,21 @@ function AliasKeyList() {
       ? "grid-cols-[40px_1.2fr_1.5fr_2fr_1.5fr_100px_80px_100px_80px_80px_40px]"
       : "grid-cols-[40px_2fr_1.5fr_100px_100px_100px_100px_100px_80px]";
   return (
-    <div className="py-4">
-      <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl sm:p-5">
-        {/* Header - Responsive */}
-        <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight text-gray-800 sm:text-2xl">
-              Keys
-            </h2>
-            <p className="mt-1 text-base text-gray-500 sm:text-base">
-              Manage and monitor key usage
-            </p>
-          </div>
-          {user?.role === "User" && (
-            <Link
-              to="/alias-key/add"
-              className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-base font-medium shadow-sm transition-all duration-200"
-            >
-              <FiPlus className="w-4 h-4" />
-              Create Key Request
-            </Link>
-          )}
-        </div>
+    <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
+      {/* HEADER */}
+      <div className="flex items-center justify-between px-6 py-4 bg-primary">
+        {/* LEFT */}
+        <div className="flex items-center gap-3">
+          {/* Accent line touching left border */}
+          <div className="w-1 h-6 -ml-6 rounded-r-full bg-menuActive" />
 
+          {/* Title */}
+          <div>
+            <h5 className=" sm:text-xl text-white/60"> Key Management</h5>
+          </div>
+        </div>
+      </div>
+      <div className="p-5 sm:p-6">
         {/* Loading */}
         {loading ? (
           <div className="flex justify-center py-10">
@@ -283,37 +366,61 @@ function AliasKeyList() {
           </div>
         ) : (
           <>
-            {/* Search - Responsive */}
-            <div className="relative w-full mb-5 sm:w-80">
-              <input
-                ref={searchRef}
-                type="text"
-                placeholder="Search ..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2.5 text-base shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all duration-200"
-              />
-              <FiSearch className="absolute w-4 h-4 text-gray-400 left-3 top-4" />
+            <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between">
+              {/* Search - Responsive */}
+              <div className="relative w-full sm:w-80">
+                <input
+                  ref={searchRef}
+                  type="text"
+                  placeholder="Search by key, domain name, status..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
+                />
+
+                <FiSearch className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
+
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearch("");
+                      searchRef.current?.focus();
+                    }}
+                    className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2 hover:text-gray-600"
+                  >
+                    <MdClose size={18} />
+                  </button>
+                )}
+              </div>
+              {/* Button */}
+              <Link
+                to="/alias-key/add"
+                className="whitespace-nowrap inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm"
+              >
+                <FiPlus className="w-4 h-4" />
+                Create Key
+              </Link>
             </div>
             {/* Table - Responsive with Card View on Mobile */}
-            <div className="overflow-x-auto border border-gray-200 shadow-sm rounded-xl">
-              <div className="overflow-hidden border border-gray-200 shadow-sm rounded-xl">
+            <div className="overflow-hidden ">
+              <div className="overflow-hidden bordershadow-sm rounded-xl">
                 {/* Header Row */}
                 <div
-                  className={`grid ${gridColsClass} bg-gradient-to-r from-gray-50 to-gray-100 text-base font-semibold text-gray-600  px-4 py-3 border-b border-gray-200`}
+                  className={`grid ${gridColsClass} text-sm font-semibold text-gray-600  px-4 py-3 border-b border-gray-300`}
                 >
                   {columns.map((col) => (
                     <div
                       key={col.label}
                       onClick={() => col.sortable && handleSort(col.field)}
-                      className={`flex items-center gap-1 text-base transition-colors duration-200 
+                      className={`flex items-center gap-1 text-sm transition-colors duration-200 
       ${col.sortable ? "cursor-pointer hover:text-primary" : "cursor-default"}
     `}
                     >
                       {col.label}
 
                       {col.sortable && sortField === col.field && (
-                        <span className="text-base text-primary">
+                        <span className="text-sm text-primary">
                           {sortOrder === "asc" ? (
                             <FiArrowUp />
                           ) : (
@@ -323,16 +430,13 @@ function AliasKeyList() {
                       )}
                     </div>
                   ))}
-                  <div className="text-base text-center">Actions</div>
+                  <div className="text-sm text-center">Actions</div>
                 </div>
 
                 {/* Rows */}
                 {apiData.length === 0 ? (
-                  <div className="py-10 text-center text-gray-500">
-                    <p className="text-base font-semibold">No key found</p>
-                    <p className="mt-1 text-base text-gray-400">
-                      Try adjusting your search or filters
-                    </p>
+                  <div className="py-10 text-center text-gray-600">
+                    <p className="text-sm font-semibold">No key found</p>
                   </div>
                 ) : (
                   apiData.map((item, index) => (
@@ -354,170 +458,118 @@ function AliasKeyList() {
             </div>
 
             {total > limit && (
-              <div className="flex flex-col items-center justify-between gap-4 mt-8 sm:flex-row">
-                {/* Page info */}
-                <div className="text-base text-gray-600">
-                  Showing{" "}
-                  <span className="font-semibold text-gray-900">
-                    {Math.min((page - 1) * limit + 1, total)}
-                  </span>{" "}
-                  to{" "}
-                  <span className="font-semibold text-gray-900">
-                    {Math.min(page * limit, total)}
-                  </span>{" "}
-                  of{" "}
-                  <span className="font-semibold text-gray-900">{total}</span>{" "}
-                  entries
-                </div>
-
-                {/* Pagination controls */}
-                <div className="flex items-center gap-1">
-                  {/* First Page */}
-                  <button
-                    onClick={() => setPage(1)}
-                    disabled={page === 1}
-                    className="items-center justify-center hidden text-gray-600 transition-all duration-200 bg-white border border-gray-300 rounded-lg md:flex w-9 h-9 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                    title="First page"
-                  >
-                    <FiChevronsLeft className="w-4 h-4" />
-                  </button>
-
-                  {/* Previous */}
-                  <button
-                    onClick={() => setPage(page - 1)}
-                    disabled={page === 1}
-                    className="flex items-center justify-center gap-1 px-3 py-2 text-base font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                  >
-                    <FiChevronLeft className="w-4 h-4" />
-                    <span className="hidden sm:inline">Previous</span>
-                  </button>
-
-                  {/* Page Numbers */}
-                  <div className="flex gap-1">
-                    {Array.from(
-                      { length: Math.min(5, Math.ceil(total / limit)) },
-                      (_, i) => {
-                        let pageNum;
-                        const totalPages = Math.ceil(total / limit);
-
-                        if (totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (page <= 3) {
-                          pageNum = i + 1;
-                        } else if (page >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i;
-                        } else {
-                          pageNum = page - 2 + i;
-                        }
-
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => setPage(pageNum)}
-                            className={`relative min-w-[36px] h-9 px-2 text-base font-medium rounded-lg transition-all duration-200 ${
-                              page === pageNum
-                                ? "bg-gradient-to-r from-primary to-primaryHover text-white shadow-md scale-105"
-                                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
-                            }`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      },
-                    )}
+              <div className="flex justify-end mt-8">
+                <div className="flex items-center gap-4">
+                  {/* 1️⃣ LIMIT DROPDOWN */}
+                  <div className="flex items-center gap-0 pr-4 text-xs text-gray-500">
+                    <span>Rows Per Page :</span>
+                    <select
+                      value={limit}
+                      onChange={handleLimitChange}
+                      className="px-1 py-1 text-gray-500 rounded-md focus:outline-none focus:ring-2"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
+                  {/* Page info */}
+                  <div className="pr-4 text-xs text-gray-500 whitespace-nowrap">
+                    <span>{Math.min((page - 1) * limit + 1, total)}</span>-
+                    <span>{Math.min(page * limit, total)}</span> of{" "}
+                    <span>{total}</span>{" "}
                   </div>
 
-                  {/* Next */}
-                  <button
-                    onClick={() => setPage(page + 1)}
-                    disabled={page === Math.ceil(total / limit)}
-                    className="flex items-center justify-center gap-1 px-3 py-2 text-base font-medium text-gray-700 transition-all duration-200 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                  >
-                    <span className="hidden sm:inline">Next</span>
-                    <FiChevronRight className="w-4 h-4" />
-                  </button>
+                  {/* Pagination controls */}
+                  <div className="flex items-center gap-3 text-xs">
+                    {/* First */}
+                    <button
+                      onClick={() => setPage(1)}
+                      disabled={page === 1}
+                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
+                    >
+                      <MdFirstPage size={25} />
+                    </button>
 
-                  {/* Last Page */}
-                  <button
-                    onClick={() => setPage(Math.ceil(total / limit))}
-                    disabled={page === Math.ceil(total / limit)}
-                    className="items-center justify-center hidden text-gray-600 transition-all duration-200 bg-white border border-gray-300 rounded-lg md:flex w-9 h-9 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                    title="Last page"
-                  >
-                    <FiChevronsRight className="w-4 h-4" />
-                  </button>
+                    {/* Previous */}
+                    <button
+                      onClick={() => setPage(page - 1)}
+                      disabled={page === 1}
+                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
+                    >
+                      <FiChevronLeft size={22} />
+                    </button>
+
+                    {/* Next */}
+                    <button
+                      onClick={() => setPage(page + 1)}
+                      disabled={page === Math.ceil(total / limit)}
+                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
+                    >
+                      <FiChevronRight size={22} />
+                    </button>
+
+                    {/* Last */}
+                    <button
+                      onClick={() => setPage(Math.ceil(total / limit))}
+                      disabled={page === Math.ceil(total / limit)}
+                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
+                    >
+                      <MdLastPage size={25} />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
           </>
         )}
       </div>
-
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
           {/* Modal */}
           <div
             ref={deleteModalRef}
-            className="relative w-full max-w-2xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+            className="relative w-full max-w-lg  max-h-[90vh] flex flex-col transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
           >
             {/* Close Icon */}
             <button
               onClick={() => setShowDeleteModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 text-gray-400 transition-all duration-200 bg-white rounded-full shadow-md top-4 right-4 hover:text-gray-600 hover:bg-gray-100 hover:shadow-lg group"
+              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
             >
               <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>
 
             {/* Header */}
-            <div className="px-6 pt-8 pb-4 text-left bg-gradient-to-b from-white to-gray-50">
-              <div className="flex items-center gap-3">
-                {/* Left Thick Line */}
-                <div className="w-1 h-6 rounded-full bg-primary"></div>
-
-                {/* Title */}
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Confirm Delete
-                </h3>
-              </div>
-
-              <p className="pl-4 mt-1 text-base text-gray-500">
-                This action cannot be undone
-              </p>
+            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-800">
+                Delete Confirmation
+              </h2>
             </div>
 
             {/* Warning Content */}
-            <div className="px-6 mt-4">
-              {/* Warning Card */}
-              <div className="p-4 rounded-xl">
-                <div className="flex items-start gap-3">
-                  <div className="space-y-1">
-                    <p className="text-lg ">
-                      Are you sure you want to delete key?
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Key Details (if available) */}
-
-              {/* Danger Info Box */}
+            <div className="flex-1 px-6 py-4 overflow-y-auto">
+              <p className="text-sm font-normal">
+                Are you sure you want to delete key?
+              </p>
             </div>
 
             {/* Divider */}
-            <div className="my-6 border-t border-gray-100"></div>
+            <div className="px-6 py-2 border-t border-slate-200"></div>
 
             {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 px-6 pb-8 sm:flex-row">
+            <div className="flex flex-col-reverse gap-3 px-6 pb-4 sm:flex-row">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="flex-1 px-4 py-2.5 text-base font-medium bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200"
+                className="flex-1 px-4 py-2.5 text-sm font-medium bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200"
               >
                 Cancel
               </button>
 
               <button
                 onClick={handleConfirmDelete}
-                className="flex-1 px-4 py-2.5 text-base font-medium bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
               >
                 <AlertTriangle className="w-4 h-4" />
                 Delete Permanently
@@ -542,135 +594,130 @@ function AliasKeyList() {
           {/* Modal */}
           <div
             ref={actionDetailRef}
-            className="relative w-full max-w-6xl overflow-y-auto max-h-[90vh] transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+            className="relative w-full max-w-4xl max-h-[90vh] flex flex-col transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
           >
             <button
               onClick={() => setShowDetailModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 text-gray-400 transition-all duration-200 bg-white rounded-full shadow-md top-4 right-4 hover:text-gray-600 hover:bg-gray-100 hover:shadow-lg group"
+              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
             >
               <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>
 
             {/* Header - Kept as requested */}
-            <div className="px-6 pt-8 pb-4 text-left bg-gradient-to-b from-white to-gray-50">
-              <div className="flex items-center gap-3">
-                {/* Left Thick Line */}
-                <div className="w-1 h-6 rounded-full bg-primary"></div>
 
-                {/* Title */}
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Key Details
-                </h3>
-              </div>
-
-              <p className="pl-4 mt-1 text-sm text-gray-500">
-                Detaild information about key
-              </p>
+            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-800">
+                Key Details
+              </h2>
             </div>
 
-            <div className="px-6 pb-0">
-              {/* Request Details Section */}
+            <div className="flex-1 px-6 py-4 overflow-y-auto">
+              {/* Key Information Section */}
               <div className="mb-6 overflow-hidden border border-gray-200 rounded-xl">
                 <div className="px-5 py-3 border-b border-gray-200 bg-gray-50">
-                  <h4 className="text-base font-semibold tracking-wider text-gray-700 uppercase">
+                  <h4 className="text-sm font-semibold tracking-wider text-gray-700 uppercase">
                     Key Information
                   </h4>
                 </div>
-                <div className="p-5 space-y-4">
-                  {/* Requested By */}
-
-                  {/* Alias Key */}
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <div className="text-base font-medium text-gray-500">
+                <div className="p-5 space-y-5">
+                  {/* Key */}
+                  <div>
+                    <label className="block mb-1 text-sm font-medium text-gray-500">
                       Key
-                    </div>
-                    <div className="sm:col-span-2">
-                      <p className="font-mono text-base font-semibold text-gray-900 break-all">
-                        {selectedRow?.alias_key || "-"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Domain Name */}
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <div className="text-base font-medium text-gray-500">
-                      Domain Name
-                    </div>
-                    <div className="sm:col-span-2">
-                      <p className="text-base font-semibold text-gray-900">
-                        {selectedRow?.domain_name || "-"}
-                      </p>
-                    </div>
+                    </label>
+                    <p className="p-3 font-mono text-sm font-semibold text-gray-900 break-all rounded-lg bg-gray-50">
+                      {selectedRow?.alias_key || "-"}
+                    </p>
                   </div>
 
                   {/* Project Name */}
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <div className="text-base font-medium text-gray-500">
+                  <div>
+                    <label className="block mb-1 text-sm font-medium text-gray-500">
                       Project Name
-                    </div>
-                    <div className="sm:col-span-2">
-                      <p className="text-base font-semibold text-gray-900">
-                        {selectedRow?.project_name || "-"}
-                      </p>
-                    </div>
+                    </label>
+                    <p className="p-3 text-sm text-gray-900 break-words rounded-lg bg-gray-50">
+                      {selectedRow?.project_name || "-"}
+                    </p>
                   </div>
 
-                  {/* Quota Information */}
-                  <div className="grid grid-cols-4 gap-4 pt-2">
-                    <div className="p-3 rounded-lg bg-blue-50">
-                      <p className="text-base tracking-wider text-blue-600 uppercase">
-                        Total Quota1
+                  {/* Domain Name */}
+                  <div>
+                    <label className="block mb-1 text-sm font-medium text-gray-500">
+                      Domain Name
+                    </label>
+                    <p className="p-3 text-sm text-gray-900 break-words rounded-lg bg-gray-50">
+                      {selectedRow?.domain_name || "-"}
+                    </p>
+                  </div>
+
+                  {/* Quota Information - 3 columns grid */}
+                  <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-3">
+                    <div className="p-4 text-center rounded-lg bg-blue-50">
+                      <p className="text-sm font-semibold tracking-wider text-blue-600 uppercase">
+                        Total Quota
                       </p>
-                      <p className="mt-1 text-xl font-bold text-blue-700">
-                        {selectedRow?.total_quota || "-"}
+                      <p className="mt-2 text-2xl font-bold text-blue-700">
+                        {selectedRow?.total_quota?.toLocaleString() || "-"}
                       </p>
                     </div>
-                    <div className="p-3 rounded-lg bg-green-50">
-                      <p className="text-base tracking-wider text-green-600 uppercase">
+                    <div className="p-4 text-center rounded-lg bg-green-50">
+                      <p className="text-sm font-semibold tracking-wider text-green-600 uppercase">
                         Remaining Quota
                       </p>
-                      <p className="mt-1 text-xl font-bold text-green-700">
-                        {selectedRow?.remaining_quota || "-"}
+                      <p className="mt-2 text-2xl font-bold text-green-700">
+                        {selectedRow?.remaining_quota?.toLocaleString() || "-"}
                       </p>
                     </div>
-                    <div className="p-3 border rounded-lg bg-gray-50">
-                      <p className="text-base tracking-wider uppercase">
-                        Cost Calculation
+                    <div className="p-4 text-center rounded-lg bg-amber-50">
+                      <p className="text-sm font-semibold tracking-wider uppercase text-amber-600">
+                        Total Cost
                       </p>
-                      <p className="mt-1 text-xl font-bold ">
-                        {selectedRow?.cost_calculation || "-"}
-                      </p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-yellow-50">
-                      <p className="text-base tracking-wider uppercase">
-                        Total Estimated Cost
-                      </p>
-                      <p className="mt-1 text-xl font-bold ">
-                        {selectedRow?.total_estimated_cost || "-"}
+                      <p className="mt-2 text-2xl font-bold text-amber-700">
+                        $
+                        {selectedRow?.total_estimated_cost?.toLocaleString() ||
+                          "-"}
                       </p>
                     </div>
                   </div>
 
-                  {/* Purpose/Description */}
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <div className="text-base font-medium text-gray-500">
+                  {/* Cost Calculation */}
+                  <div>
+                    <label className="block mb-1 text-sm font-medium text-gray-500">
+                      Cost Calculation
+                    </label>
+                    <div className="p-3 overflow-y-auto text-sm text-gray-700 break-words whitespace-pre-wrap rounded-lg bg-gray-50 max-h-48">
+                      {selectedRow?.cost_calculation || "-"}
+                    </div>
+                  </div>
+
+                  {/* Purpose */}
+                  <div>
+                    <label className="block mb-1 text-sm font-medium text-gray-500">
                       Purpose
-                    </div>
-                    <div className="sm:col-span-2">
-                      <p className="text-base text-gray-700">
-                        {selectedRow?.description || "-"}
-                      </p>
+                    </label>
+                    <div className="p-3 overflow-y-auto text-sm text-gray-700 break-words whitespace-pre-wrap rounded-lg bg-gray-50 max-h-48">
+                      {selectedRow?.description || "-"}
                     </div>
                   </div>
 
-                  {/* Status */}
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <div className="text-base font-medium text-gray-500">
+                  {/* Proxy Permission */}
+                  <div>
+                    <label className="block mb-1 text-sm font-medium text-gray-500">
+                      Proxy Permission Required
+                    </label>
+                    <p className="p-3 text-sm font-semibold text-gray-900 rounded-lg bg-gray-50">
+                      {selectedRow?.proxy_permission_required || "-"}
+                    </p>
+                  </div>
+
+                  {/* Current Status */}
+                  <div>
+                    <label className="block mb-1 text-sm font-medium text-gray-500">
                       Current Status
-                    </div>
-                    <div className="sm:col-span-2">
+                    </label>
+                    <div>
                       <span
-                        className={`inline-flex px-2 py-1 text-base font-semibold rounded-full ${
+                        className={`inline-flex px-3 py-1.5 text-sm font-semibold rounded-full ${
                           selectedRow?.status === "Active"
                             ? "bg-green-100 text-green-800"
                             : selectedRow?.status === "Pending"
@@ -689,62 +736,71 @@ function AliasKeyList() {
               {selectedRow?.proxy && (
                 <div className="mb-6 overflow-hidden border border-gray-200 rounded-xl">
                   <div className="px-5 py-3 border-b border-gray-200 bg-gray-50">
-                    <h4 className="text-base font-semibold tracking-wider text-gray-700 uppercase">
+                    <h4 className="text-sm font-semibold tracking-wider text-gray-700 uppercase">
                       Proxy Configuration
                     </h4>
                   </div>
-                  <div className="p-5 space-y-4">
+                  <div className="p-5 space-y-5">
                     {/* Proxy Name */}
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                      <div className="text-base font-medium text-gray-500">
+                    <div>
+                      <label className="block mb-1 text-sm font-medium text-gray-500">
                         Proxy Name
-                      </div>
-                      <div className="sm:col-span-2">
-                        <p className="text-base font-semibold text-gray-900">
-                          {selectedRow.proxy?.proxy_name || "-"}
-                        </p>
-                      </div>
+                      </label>
+                      <p className="p-3 text-sm font-semibold text-gray-900 break-all rounded-lg bg-gray-50">
+                        {selectedRow.proxy?.proxy_name || "-"}
+                      </p>
                     </div>
 
-                    {/* Credit */}
-
-                    {/* Curl Command */}
-                    {selectedRow.proxy?.curl && (
-                      <div className="mt-2">
-                        <div className="mb-2 text-base font-medium text-gray-500">
-                          Curl Command
-                        </div>
-                        <div className="overflow-hidden bg-gray-900 rounded-lg">
-                          <pre className="p-4 overflow-x-auto font-mono text-base text-gray-200 whitespace-pre-wrap">
-                            {selectedRow.proxy?.curl}
-                          </pre>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Query Parameters */}
-                    {selectedRow.proxy?.query_params &&
+                    {/* URL */}
+                    {["Active", "Inactive"].includes(selectedRow.status) &&
+                      selectedRow.proxy?.query_params &&
                       Object.keys(selectedRow.proxy.query_params).length >
                         0 && (
-                        <div className="mt-2">
-                          <div className="mb-2 text-base font-medium text-gray-500">
-                            Query Parameters
+                        <div>
+                          <div className="overflow-hidden bg-gray-900 rounded-lg">
+                            <div className="p-4 overflow-auto text-sm text-gray-200 whitespace-pre-wrap max-h-96">
+                              {!liveUrl && "No proxy data"}
+
+                              {typeof liveUrl === "string" && liveUrl && (
+                                <div className="mb-3 font-mono text-sm break-all">
+                                  <span className="font-semibold text-blue-400">
+                                    URL:
+                                  </span>{" "}
+                                  <span className="text-gray-300">
+                                    {liveUrl}
+                                  </span>
+                                </div>
+                              )}
+
+                              {typeof liveUrl === "object" && liveUrl && (
+                                <>
+                                  <div className="mb-3 font-mono text-sm break-all">
+                                    <span className="font-semibold text-blue-400">
+                                      URL:
+                                    </span>{" "}
+                                    <span className="text-gray-300">
+                                      {liveUrl.url}
+                                    </span>
+                                  </div>
+                                  <div className="mb-2 font-mono text-sm font-semibold text-blue-400">
+                                    Body:
+                                  </div>
+                                  <pre className="font-mono text-sm text-gray-300 whitespace-pre-wrap">
+                                    {liveUrl.body}
+                                  </pre>
+                                </>
+                              )}
+                            </div>
                           </div>
-                          <pre className="p-4 overflow-auto text-sm text-gray-300rounded-lg">
-                            {JSON.stringify(
-                              selectedRow.proxy.query_params || {},
-                              null,
-                              2,
-                            )}
-                          </pre>
                         </div>
                       )}
                   </div>
                 </div>
               )}
 
-              {selectedRow.proxy.is_deleted === true && (
-                <div className="p-3 mb-4 border-l-4 border-red-500 rounded-md bg-red-50">
+              {/* Proxy Deleted Alert */}
+              {selectedRow.proxy?.is_deleted === true && (
+                <div className="p-4 border-l-4 border-red-500 rounded-md bg-red-50">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       <FiAlertCircle className="w-5 h-5 text-red-500" />
@@ -760,20 +816,21 @@ function AliasKeyList() {
                   </div>
                 </div>
               )}
-              {/* Info Box */}
             </div>
 
             {/* Divider */}
-            <div className="border-t border-gray-100"></div>
+            <div className="border-t border-slate-200"></div>
 
             {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 px-6 py-6 sm:flex-row">
-              <button
-                onClick={() => setShowDetailModal(false)}
-                className="flex-1 px-4 py-2.5 text-base font-medium bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200"
-              >
-                Cancel
-              </button>
+            <div className="px-6 py-4 border-t border-slate-200">
+              <div className="flex flex-col-reverse gap-3 sm:flex-row">
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+              </div>{" "}
             </div>
           </div>
         </div>
@@ -783,113 +840,148 @@ function AliasKeyList() {
           {/* Modal */}
           <div
             ref={actionModalRef}
-            className="relative w-full max-w-4xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+            className="relative w-full max-w-4xl overflow-y-auto max-h-[90vh] transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
           >
-            {/* Decorative top bar */}
-
-            {/* Close Icon - Improved */}
+            {/* Close Icon */}
             <button
               onClick={() => setShowModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 text-gray-400 transition-all duration-200 bg-white rounded-full shadow-md top-4 right-4 hover:text-gray-600 hover:bg-gray-100 hover:shadow-lg group"
+              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
             >
               <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>
 
             {/* Header */}
-            <div className="px-6 pt-8 pb-4 text-left bg-gradient-to-b from-white to-gray-50">
-              <div className="flex items-center gap-3">
-                {/* Left Thick Line */}
-                <div className="w-1 h-6 rounded-full bg-primary"></div>
 
-                {/* Title */}
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Review Key Request
-                </h3>
-              </div>
-
-              <p className="pl-4 mt-1 text-base text-gray-500">
-                Please review the details before approving or rejecting this
-                request
-              </p>
+            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-800">
+                Review Key Activation Request
+              </h2>
             </div>
-
             {/* Key Details Card */}
-            <div className="p-4 mx-6 mt-6 border border-gray-100 bg-gray-50 rounded-xl">
-              <h4 className="mb-3 text-base font-semibold tracking-wider text-gray-500 uppercase">
+            <div className="flex-1 px-6 py-4 overflow-y-auto">
+              <h4 className="mb-3 text-sm font-semibold tracking-wider text-gray-500 uppercase">
                 Request Details
               </h4>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
+                {/* Requested By - Short field */}
                 {selectedRow?.user_id && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-gray-400" />
-                      <span className="text-base text-gray-600">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex items-center gap-2 min-w-[160px]">
+                      <User className="flex-shrink-0 w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">
                         Requested By
                       </span>
                     </div>
-                    <span className="text-base font-medium text-gray-800">
-                      {selectedRow.user.first_name || "-"}
+                    <span className="flex-1 text-sm font-medium text-gray-800 break-words">
+                      {selectedRow.user?.first_name ||
+                        selectedRow.user?.name ||
+                        "-"}
                     </span>
                   </div>
                 )}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-gray-400" />
-                    <span className="text-base text-gray-600">Domain Name</span>
+
+                {/* Project Name */}
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-center gap-2 min-w-[160px]">
+                    <FolderOpen className="flex-shrink-0 w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">Project Name</span>
                   </div>
-                  <span className="text-base font-medium text-gray-800">
+                  <span className="flex-1 text-sm font-medium text-gray-800 break-words">
+                    {selectedRow?.project_name || "-"}
+                  </span>
+                </div>
+
+                {/* Domain Name */}
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-center gap-2 min-w-[160px]">
+                    <Globe className="flex-shrink-0 w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">Domain Name</span>
+                  </div>
+                  <span className="flex-1 text-sm font-medium text-gray-800 break-words">
                     {selectedRow?.domain_name || "-"}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Database className="w-4 h-4 text-gray-400" />
-                    <span className="text-base text-gray-600">Total Quota</span>
+                {/* Total Quota */}
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-center gap-2 min-w-[160px]">
+                    <TrendingUp className="flex-shrink-0 w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">Total Quota</span>
                   </div>
-                  <span className="text-base font-medium text-gray-800">
-                    {selectedRow?.total_quota || "-"}
+                  <span className="flex-1 text-sm font-medium text-green-600 break-words">
+                    {selectedRow?.total_quota?.toLocaleString() || "-"}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-gray-400" />
-                    <span className="text-base text-gray-600">Purpose</span>
+                {/* Cost Calculation - Long text area */}
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+                  <div className="flex items-center gap-2 min-w-[160px]">
+                    <Calculator className="flex-shrink-0 w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">
+                      Cost Calculation
+                    </span>
                   </div>
-                  <span className="text-base font-medium text-gray-800">
-                    {selectedRow.description || "-"}
+                  <div className="flex-1 overflow-y-auto text-sm font-medium text-gray-800 break-words rounded-lg max-h-48">
+                    {selectedRow?.cost_calculation || "-"}
+                  </div>
+                </div>
+
+                {/* Total Estimated Cost */}
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-center gap-2 min-w-[160px]">
+                    <DollarSign className="flex-shrink-0 w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">
+                      Total Estimated Cost
+                    </span>
+                  </div>
+                  <span className="flex-1 text-sm font-semibold break-words">
+                    $
+                    {selectedRow?.total_estimated_cost?.toLocaleString() || "-"}
                   </span>
                 </div>
-              </div>
-            </div>
 
-            {/* Info Box */}
-            <div className="p-3 mx-6 mt-4 border border-blue-100 rounded-lg bg-blue-50">
-              <div className="flex items-start gap-2">
-                <Clock className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                <p className="text-base text-blue-700">
-                  This action can't be changed.
-                </p>
+                {/* Proxy Permission Required */}
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-center gap-2 min-w-[160px]">
+                    <Shield className="flex-shrink-0 w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">
+                      Proxy Permission Required
+                    </span>
+                  </div>
+                  <span className="flex-1 text-sm font-medium text-gray-800 break-words">
+                    {selectedRow?.proxy_permission_required || "-"}
+                  </span>
+                </div>
+
+                {/* Purpose - Long text area */}
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+                  <div className="flex items-center gap-2 min-w-[160px]">
+                    <FileText className="flex-shrink-0 w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">Purpose</span>
+                  </div>
+                  <div className="overflow-y-auto text-sm text-gray-700 break-words whitespace-pre-wrap rounded-lg flex-1p-3 max-h-48">
+                    {selectedRow?.description || "-"}
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Divider */}
-            <div className="my-6 border-t border-gray-100"></div>
+            <div className="px-6 py-2 border-t border-slate-200"></div>
 
             {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 px-6 pb-8 sm:flex-row">
+            <div className="flex flex-col-reverse gap-3 px-6 pb-4 sm:flex-row">
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2.5 text-base font-medium bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200"
+                className="flex-1 px-4 py-2.5 text-sm font-medium bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200"
               >
                 Cancel
               </button>
 
               <button
                 onClick={() => handleApprove("Rejected")}
-                className="flex-1 px-4 py-2.5 text-base font-medium bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2.5 text-sm font-medium bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
               >
                 <XCircle className="w-4 h-4" />
                 Reject
@@ -898,7 +990,7 @@ function AliasKeyList() {
               <button
                 onClick={() => handleApprove("Active")}
                 disabled={loading}
-                className="flex-1 px-4 py-2.5 text-base font-medium bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2.5 text-sm font-medium bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -921,62 +1013,40 @@ function AliasKeyList() {
           {/* Modal */}
           <div
             ref={actionModalRef}
-            className="relative w-full max-w-2xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+            className="relative w-full max-w-lg overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
           >
             {/* Close Icon */}
             <button
               onClick={() => setShowActiveInactiveModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 text-gray-400 transition-all duration-200 bg-white rounded-full shadow-md top-4 right-4 hover:text-gray-600 hover:bg-gray-100 hover:shadow-lg group"
+              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
             >
               <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>
 
             {/* Header - Kept as requested */}
-            <div className="px-6 pt-8 pb-4 text-left bg-gradient-to-b from-white to-gray-50">
-              <div className="flex items-center gap-3">
-                {/* Left Thick Line */}
-                <div className="w-1 h-6 rounded-full bg-primary"></div>
+            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-800">
+                Change Status
+              </h2>
+            </div>
+            <div className="flex-1 px-6 py-4 overflow-y-auto">
+              {/* Warning Card */}
 
-                {/* Title */}
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Change Status
-                </h3>
-              </div>
-
-              <p className="pl-4 mt-1 text-base text-gray-500">
-                Please review the details before change status request
+              <p className="text-sm ">
+                Are you sure you want to change the status from{" "}
+                <span className="font-bold">
+                  {selectedRow.status === "Active" ? "Active" : "Inactive"}
+                </span>{" "}
+                to <span className="font-bold">{newStatus}</span>?
               </p>
             </div>
-            <div className="px-6 mt-4">
-              {/* Warning Card */}
-              <div className="p-4 rounded-xl">
-                <div className="flex items-start gap-3">
-                  <div className="space-y-1">
-                    <p className="text-lg ">
-                      Are you sure you want to change the status from{" "}
-                      <span className="font-bold">
-                        {selectedRow.status === "Active"
-                          ? "Active"
-                          : "Inactive"}
-                      </span>{" "}
-                      to <span className="font-bold">{newStatus}</span>?
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* Confirmation Card */}
-
-            {/* Warning Box for Inactive Status */}
-
-            {/* Divider */}
-            <div className="my-6 border-t border-gray-100"></div>
+            <div className="px-6 py-2 border-t border-slate-200"></div>
 
             {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 px-6 pb-8 sm:flex-row">
+            <div className="flex flex-col-reverse gap-3 px-6 pb-4 sm:flex-row">
               <button
                 onClick={() => setShowActiveInactiveModal(false)}
-                className="flex-1 px-4 py-2.5 text-base font-medium transition-all duration-200 bg-gray-100 rounded-xl text-gray-700 hover:bg-gray-200 hover:shadow-md active:scale-95"
+                className="flex-1 px-4 py-2.5 text-sm font-medium transition-all duration-200 bg-gray-100 rounded-xl text-gray-700 hover:bg-gray-200 hover:shadow-md active:scale-95"
               >
                 Cancel
               </button>
@@ -984,7 +1054,7 @@ function AliasKeyList() {
               <button
                 onClick={() => handleActiveInactive(newStatus)}
                 disabled={loading}
-                className={`flex-1 px-4 py-2.5 text-base font-medium text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 ${
+                className={`flex-1 px-4 py-2.5 text-sm font-medium text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 ${
                   newStatus === "Active"
                     ? "bg-green-500 hover:bg-green-600"
                     : "bg-red-500 hover:bg-red-600"

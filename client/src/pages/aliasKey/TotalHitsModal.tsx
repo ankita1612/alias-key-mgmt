@@ -1,6 +1,15 @@
 import { X } from "lucide-react";
 import { MdClose } from "react-icons/md";
-
+import {
+  FiBarChart2,
+  FiCheckCircle,
+  FiAlertTriangle,
+  FiLock,
+  FiXCircle,
+  FiServer,
+  FiSlash,
+  FiShield,
+} from "react-icons/fi";
 interface TotalHitsModalProps {
   data: IAliasKey;
   onClose: () => void;
@@ -13,35 +22,56 @@ function TotalHitsModal({ data, onClose }: TotalHitsModalProps) {
       value: data.total_history_records,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
-      icon: "📊",
+      icon: <FiBarChart2 />,
     },
     {
       label: "Success",
       value: data.total_success,
       color: "text-green-600",
       bgColor: "bg-green-50",
-      icon: "✅",
+      icon: <FiCheckCircle />,
     },
     {
       label: "Limit Exceeded",
       value: data.total_limit_exceed,
       color: "text-yellow-600",
       bgColor: "bg-yellow-50",
-      icon: "⚠️",
+      icon: <FiAlertTriangle />,
     },
     {
       label: "Key Inactive",
       value: data.total_key_not_active,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
-      icon: "🔒",
+      icon: <FiLock />,
     },
     {
       label: "Server Errors",
       value: data.total_internal_server,
       color: "text-red-600",
       bgColor: "bg-red-50",
-      icon: "❌",
+      icon: <FiServer />,
+    },
+    {
+      label: "Invalid Parameter",
+      value: data.total_invalid_params,
+      color: "text-pink-600",
+      bgColor: "bg-pink-50",
+      icon: <FiSlash />,
+    },
+    {
+      label: "Invalid Proxy Key",
+      value: data.total_invalid_proxy,
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      icon: <FiShield />,
+    },
+    {
+      label: "External Server Errors",
+      value: data.total_extrenal_error,
+      color: "text-red-700",
+      bgColor: "bg-red-100",
+      icon: <FiXCircle />,
     },
   ];
 
@@ -60,40 +90,31 @@ function TotalHitsModal({ data, onClose }: TotalHitsModalProps) {
     >
       {/* Modal */}
       <div
-        className="relative w-full max-w-4xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+        className="relative w-full max-w-2xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Icon */}
         <button
           onClick={onClose}
-          className="absolute z-10 flex items-center justify-center w-10 h-10 text-gray-400 transition-all duration-200 bg-white rounded-full shadow-md top-4 right-4 hover:text-gray-600 hover:bg-gray-100 hover:shadow-lg group"
+          className="absolute z-10 flex items-center justify-center w-10 h-10  transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
         >
           <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
         </button>
 
-        {/* Header - Kept as requested */}
-        <div className="px-6 pt-8 pb-4 text-left bg-gradient-to-b from-white to-gray-50">
-          <div className="flex items-center gap-3">
-            {/* Left Thick Line */}
-            <div className="w-1 h-6 rounded-full bg-primary"></div>
-
-            {/* Title */}
-            <h3 className="text-2xl font-bold text-gray-900">API Statistics</h3>
-          </div>
-
-          <p className="pl-4 mt-1 text-base text-gray-500">
+        <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
+          <h2 className="text-lg font-semibold text-slate-800">
             Total hits overview
-          </p>
+          </h2>
         </div>
 
         {/* Success Rate Banner */}
-        <div className="px-6 pt-4 pb-2">
+        <div className="flex-1 px-6 py-4 overflow-y-auto">
           <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-base font-medium text-gray-600">
+              <span className="text-sm font-medium text-gray-600">
                 Success Rate
               </span>
-              <span className="text-base font-semibold text-blue-600">
+              <span className="text-sm font-semibold text-blue-600">
                 {successRate}%
               </span>
             </div>
@@ -119,7 +140,7 @@ function TotalHitsModal({ data, onClose }: TotalHitsModalProps) {
 
                 <div className="relative">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-base font-medium text-gray-500 uppercase tracking-wider">
+                    <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">
                       {item.label}
                     </p>
                     <span className="text-xl opacity-50">{item.icon}</span>
@@ -130,7 +151,7 @@ function TotalHitsModal({ data, onClose }: TotalHitsModalProps) {
                     {(item.value ?? 0).toLocaleString()}
                   </p>
                   {/* Mini trend indicator */}
-                  <div className="mt-2 text-base text-gray-400">
+                  <div className="mt-2 text-sm text-gray-400">
                     {item.label === "Total Requests" && "All time"}
                     {item.label === "Success" && `${successRate}% of total`}
                   </div>
@@ -142,13 +163,13 @@ function TotalHitsModal({ data, onClose }: TotalHitsModalProps) {
 
         {/* Additional Insights Section */}
 
-        <div className="my-2 border-t border-gray-100"></div>
+        <div className="border-t border-slate-200 px-6 py-2"></div>
 
         {/* Actions */}
-        <div className="flex flex-col-reverse gap-3 px-6 pb-8 sm:flex-row">
+        <div className="flex flex-col-reverse gap-3 px-6 pb-4 sm:flex-row">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 text-base font-medium transition-all duration-200 bg-gray-100 rounded-xl text-gray-700 hover:bg-gray-200 hover:shadow-md active:scale-95"
+            className="flex-1 px-4 py-2.5 text-sm font-medium transition-all duration-200 bg-gray-100 rounded-xl text-gray-700 hover:bg-gray-200 hover:shadow-md active:scale-95"
           >
             Close
           </button>
