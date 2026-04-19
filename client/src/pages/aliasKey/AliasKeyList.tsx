@@ -609,190 +609,180 @@ function AliasKeyList() {
           {/* Modal */}
           <div
             ref={showDetailRef}
-            className="relative w-full max-w-4xl max-h-[90vh] flex flex-col transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+            className="relative w-full max-w-4xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
           >
+            {/* Close Icon */}
             <button
               onClick={() => setShowDetailModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
+              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 group"
             >
               <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>
 
             {/* Header - Kept as requested */}
-
-            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
               <h2 className="text-lg font-semibold text-slate-800">
                 Key Details
               </h2>
             </div>
 
-            <div className="flex-1 px-6 py-4 overflow-y-auto">
-              {/* Key Information Section */}
-              <div className="mb-6 overflow-hidden border border-gray-200 rounded-xl">
-                <div className="px-5 py-3 border-b border-gray-200 bg-gray-50">
-                  <h4 className="text-sm font-semibold tracking-wider text-gray-700 uppercase">
-                    Key Information
-                  </h4>
-                </div>
-                <div className="p-5 space-y-5">
-                  {/* Key */}
-                  <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-500">
-                      Key
-                    </label>
-                    <p className="p-3 font-mono text-sm font-semibold text-gray-900 break-all rounded-lg bg-gray-50">
-                      {selectedRow?.alias_key || "-"}
-                    </p>
-                  </div>
+            {/* Content - Improved Layout */}
+            <div className="flex-1 px-6 py-5 overflow-y-auto max-h-[55vh] custom-scrollbar">
+              {/* Two Column Grid for better layout */}
+              <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
+                {/* Left Column */}
+                <div className="space-y-4">
+                  {selectedRow?.user_id && (
+                    <div className="group">
+                      <label className="block mb-1 text-xs font-medium uppercase">
+                        Requested By
+                      </label>
+                      <p className="text-sm font-medium text-gray-500">
+                        {selectedRow.user?.first_name ||
+                          selectedRow.user?.name ||
+                          "-"}
+                      </p>
+                    </div>
+                  )}
 
-                  {/* Project Name */}
-                  <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-500">
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
                       Project Name
                     </label>
-                    <p className="p-3 text-sm text-gray-900 break-words rounded-lg bg-gray-50">
+                    <p className="text-sm text-gray-500">
                       {selectedRow?.project_name || "-"}
                     </p>
                   </div>
 
-                  {/* Domain Name */}
-                  <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-500">
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Total Quota
+                    </label>
+                    <p className="text-base font-semibold text-green-600">
+                      {selectedRow?.total_quota?.toLocaleString() || "-"}
+                    </p>
+                  </div>
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Created Date
+                    </label>
+                    <p className="text-sm text-gray-500">
+                      {selectedRow?.createdAt
+                        ? new Date(selectedRow.createdAt).toLocaleDateString(
+                            undefined,
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            },
+                          )
+                        : "-"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="mt-4 space-y-4 md:mt-0">
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
                       Domain Name
                     </label>
-                    <p className="p-3 text-sm text-gray-900 break-words rounded-lg bg-gray-50">
+                    <p className="text-sm text-gray-500 break-all">
                       {selectedRow?.domain_name || "-"}
                     </p>
                   </div>
-
-                  {/* Quota Information - 3 columns grid */}
-                  <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-3">
-                    <div className="p-4 text-center rounded-lg bg-blue-50">
-                      <p className="text-sm font-semibold tracking-wider text-blue-600 uppercase">
-                        Total Quota
-                      </p>
-                      <p className="mt-2 text-2xl font-bold text-blue-700">
-                        {selectedRow?.total_quota?.toLocaleString() || "-"}
-                      </p>
-                    </div>
-                    <div className="p-4 text-center rounded-lg bg-green-50">
-                      <p className="text-sm font-semibold tracking-wider text-green-600 uppercase">
-                        Remaining Quota
-                      </p>
-                      <p className="mt-2 text-2xl font-bold text-green-700">
-                        {selectedRow?.remaining_quota?.toLocaleString() || "-"}
-                      </p>
-                    </div>
-                    <div className="p-4 text-center rounded-lg bg-amber-50">
-                      <p className="text-sm font-semibold tracking-wider uppercase text-amber-600">
-                        Total Cost
-                      </p>
-                      <p className="mt-2 text-2xl font-bold text-amber-700">
-                        $
-                        {selectedRow?.total_estimated_cost?.toLocaleString() ||
-                          "-"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Cost Calculation */}
                   <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-500">
-                      Cost Calculation
+                    <label className="block mb-1 text-sm font-medium uppercase">
+                      Proxy Permission Required
                     </label>
-                    <div className="p-3 overflow-y-auto text-sm text-gray-700 break-words whitespace-pre-wrap rounded-lg bg-gray-50 max-h-48">
-                      {selectedRow?.cost_calculation || "-"}
-                    </div>
+                    <p className="text-sm text-gray-500">
+                      {selectedRow?.proxy_permission_required || "-"}
+                    </p>
                   </div>
-
-                  {/* Purpose */}
-                  <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-500">
-                      Purpose
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Total Estimated Cost
                     </label>
-                    <div className="p-3 overflow-y-auto text-sm text-gray-700 break-words whitespace-pre-wrap rounded-lg bg-gray-50 max-h-48">
-                      {selectedRow?.description || "-"}
-                    </div>
-                  </div>
-
-                  {/* Proxy Permission */}
-
-                  {/* Current Status */}
-                  <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-500">
-                      Current Status
-                    </label>
-                    <div>
-                      <span
-                        className={`inline-flex px-3 py-1.5 text-sm font-semibold rounded-full ${
-                          selectedRow?.status === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : selectedRow?.status === "Pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {selectedRow?.status || "-"}
-                      </span>
-                    </div>
+                    <p className="text-base font-semibold text-indigo-600">
+                      $
+                      {selectedRow?.total_estimated_cost?.toLocaleString() ||
+                        "-"}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Proxy Details Section */}
-              {selectedRow?.proxy && (
-                <div className="mb-6 overflow-hidden border border-gray-200 rounded-xl">
-                  <div className="px-5 py-3 border-b border-gray-200 bg-gray-50">
-                    <h4 className="text-sm font-semibold tracking-wider text-gray-700 uppercase">
-                      Proxy Configuration
-                    </h4>
+              {selectedRow?.cost_calculation && (
+                <div className="pt-2 mt-2 border-t">
+                  <label className="block text-xs font-medium uppercase">
+                    Cost Calculation
+                  </label>
+                  <div className="pt-1 overflow-y-auto text-sm text-gray-500 rounded-lg max-h-32">
+                    {selectedRow?.cost_calculation || "-"}
                   </div>
-                  <div className="p-5 space-y-5">
-                    {/* Proxy Name */}
+                </div>
+              )}
+
+              {/* Purpose - Full Width */}
+              {selectedRow?.description && (
+                <div className="pt-2 mt-2 border-t">
+                  <label className="block text-xs font-medium uppercase">
+                    Purpose
+                  </label>
+                  <div className="pt-1 overflow-y-auto text-sm text-gray-500 rounded-lg max-h-32">
+                    {selectedRow?.description || "-"}
+                  </div>
+                </div>
+              )}
+
+              {/* Proxy Configuration Section - Only if proxy exists */}
+              {selectedRow?.proxy && (
+                <div className="pt-2 mt-2 border-t">
+                  <div className="space-y-3 rounded-lg ">
                     <div>
-                      <label className="block mb-1 text-sm font-medium text-gray-500">
+                      <label className="block mb-1 text-xs font-medium uppercase">
                         Proxy Name
                       </label>
-                      <p className="p-3 text-sm font-semibold text-gray-900 break-all rounded-lg bg-gray-50">
+                      <p className="text-sm font-medium text-gray-500">
                         {selectedRow.proxy?.proxy_name || "-"}
                       </p>
                     </div>
 
-                    {/* URL */}
                     {["Active", "Inactive"].includes(selectedRow.status) &&
                       selectedRow.proxy?.query_params &&
                       Object.keys(selectedRow.proxy.query_params).length >
                         0 && (
                         <div>
-                          <div className="overflow-hidden bg-gray-900 rounded-lg">
-                            <div className="p-4 overflow-auto text-sm text-gray-200 whitespace-pre-wrap max-h-96">
+                          <label className="block pt-2 mt-2 text-xs font-medium uppercase border-t ">
+                            Proxy URL
+                          </label>
+                          <div className="overflow-hidden rounded-lg">
+                            <div className="overflow-auto text-sm whitespace-pre-wrap max-h-48">
                               {!liveUrl && "No proxy data"}
-
                               {typeof liveUrl === "string" && liveUrl && (
-                                <div className="mb-3 font-mono text-sm break-all">
-                                  <span className="font-semibold text-blue-400">
+                                <div className="font-mono break-all">
+                                  {/* <span className="font-semibold text-blue-400">
                                     URL:
-                                  </span>{" "}
-                                  <span className="text-gray-300">
+                                  </span>{" "} */}
+                                  <span className="text-gray-500">
                                     {liveUrl}
                                   </span>
                                 </div>
                               )}
-
                               {typeof liveUrl === "object" && liveUrl && (
                                 <>
-                                  <div className="mb-3 font-mono text-sm break-all">
+                                  <div className="mb-2 font-mono text-xs break-all">
                                     <span className="font-semibold text-blue-400">
                                       URL:
                                     </span>{" "}
-                                    <span className="text-gray-300">
+                                    <span className="text-gray-500">
                                       {liveUrl.url}
                                     </span>
                                   </div>
-                                  <div className="mb-2 font-mono text-sm font-semibold text-blue-400">
+                                  <div className="mb-1 font-mono text-xs font-semibold text-blue-400">
                                     Body:
                                   </div>
-                                  <pre className="font-mono text-sm text-gray-300 whitespace-pre-wrap">
+                                  <pre className="font-mono text-xs text-gray-500 whitespace-pre-wrap">
                                     {liveUrl.body}
                                   </pre>
                                 </>
@@ -807,17 +797,19 @@ function AliasKeyList() {
 
               {/* Proxy Deleted Alert */}
               {selectedRow.proxy?.is_deleted === true && (
-                <div className="p-4 border-l-4 border-red-500 rounded-md bg-red-50">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <FiAlertCircle className="w-5 h-5 text-red-500" />
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="text-sm font-medium text-red-800">
-                        Proxy Deleted
-                      </h3>
-                      <div className="mt-1 text-sm text-red-700">
-                        This proxy has been marked as deleted
+                <div className="pt-4 mt-4">
+                  <div className="p-3 border-l-4 border-red-500 rounded-lg bg-red-50">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <FiAlertCircle className="w-4 h-4 text-red-500" />
+                      </div>
+                      <div className="ml-2">
+                        <h3 className="text-sm font-medium text-red-800">
+                          Proxy Deleted
+                        </h3>
+                        <p className="text-xs text-red-700">
+                          This proxy has been marked as deleted
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -826,18 +818,14 @@ function AliasKeyList() {
             </div>
 
             {/* Divider */}
-            <div className="border-t border-slate-200"></div>
-
-            {/* Actions */}
-            <div className="px-6 py-4 border-t border-slate-200">
-              <div className="flex flex-col-reverse gap-3 sm:flex-row">
-                <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200"
-                >
-                  Cancel
-                </button>
-              </div>{" "}
+            <div className="border-t border-gray-100"></div>
+            <div className="flex justify-end px-6 py-4">
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="px-5 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-gray-100 rounded-lg hover:bg-gray-200 hover:shadow-sm active:scale-95"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
@@ -847,7 +835,7 @@ function AliasKeyList() {
           {/* Modal */}
           <div
             ref={showPendingRejectedRef}
-            className="relative w-full max-w-2xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+            className="relative w-full max-w-4xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
           >
             {/* Close Icon */}
             <button
@@ -952,7 +940,7 @@ function AliasKeyList() {
 
               {/* Cost Calculation - Full Width */}
               {selectedRow?.cost_calculation && (
-                <div className="pt-2 mt-2 ">
+                <div className="pt-2 mt-2 border-t">
                   <label className="block text-xs font-medium uppercase">
                     Cost Calculation
                   </label>
@@ -964,7 +952,7 @@ function AliasKeyList() {
 
               {/* Purpose - Full Width */}
               {selectedRow?.description && (
-                <div className="pt-2 mt-2">
+                <div className="pt-2 mt-2 border-t">
                   <label className="block text-xs font-medium uppercase">
                     Purpose
                   </label>
