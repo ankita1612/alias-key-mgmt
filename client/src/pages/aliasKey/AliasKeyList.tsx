@@ -559,7 +559,7 @@ function AliasKeyList() {
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
               <h2 className="text-lg font-semibold text-slate-800">
-                Delete Confirmation
+                Key Delete
               </h2>
             </div>
 
@@ -574,20 +574,19 @@ function AliasKeyList() {
             <div className="px-6 py-2 border-t border-slate-200"></div>
 
             {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 px-6 pb-4 sm:flex-row">
+            <div className="flex justify-end gap-3 px-6 pb-6">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="flex-1 px-4 py-2.5 text-sm font-medium bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200"
+                className="px-4 py-2 text-sm font-medium text-gray-700 transition bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200"
               >
                 Cancel
               </button>
 
               <button
                 onClick={handleConfirmDelete}
-                className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition bg-red-500 rounded-md hover:bg-red-600"
               >
-                <AlertTriangle className="w-4 h-4" />
-                Delete Permanently
+                Delete
               </button>
             </div>
           </div>

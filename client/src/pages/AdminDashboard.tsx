@@ -1,20 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-
+import { FaExchangeAlt, FaHome } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import apiClient from "../services/apiClient";
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
   CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
-  BarChart,
-  Bar,
-  Pie,
-  Cell,
   AreaChart,
   Area,
 } from "recharts";
@@ -24,22 +17,11 @@ import {
   Clock,
   Activity,
   CheckCircle,
-  AlertCircle,
-  TrendingUp,
-  Database,
-  RefreshCw,
   Shield,
-  PieChart,
   Zap,
-  ArrowUpRight,
-  ArrowDownRight,
-  Server,
-  Globe,
-  Cpu,
   XCircle,
   AlertTriangle,
   ServerCrash,
-  BarChart3,
   Filter,
   ChevronDown,
 } from "lucide-react";
@@ -327,7 +309,7 @@ function AdminDashboard() {
               <TopStatCard
                 title="Total Proxy"
                 value={dashboard.totalProxy.toLocaleString()}
-                icon={Server}
+                icon={FaExchangeAlt}
               />
               <TopStatCard
                 title="Total API Requests"
@@ -355,27 +337,6 @@ function AdminDashboard() {
 
               <StatCard
                 title="Pending Keys"
-                value={dashboard.pendingApprovals.toLocaleString()}
-                subtitle="Waiting approval"
-                icon={Clock}
-                color="warning"
-              />
-              <StatCard
-                title="total Quota"
-                value={dashboard.pendingApprovals.toLocaleString()}
-                subtitle="Waiting approval"
-                icon={Clock}
-                color="warning"
-              />
-              <StatCard
-                title="Used Quota"
-                value={dashboard.pendingApprovals.toLocaleString()}
-                subtitle="Waiting approval"
-                icon={Clock}
-                color="warning"
-              />
-              <StatCard
-                title="Remaining Quota"
                 value={dashboard.pendingApprovals.toLocaleString()}
                 subtitle="Waiting approval"
                 icon={Clock}
