@@ -21,13 +21,53 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const schema = yup.object().shape({
   proxy_name: yup.string().required("Proxy Name is required"),
+
   proxy_token: yup.string().required("Proxy Token is required"),
-  curl: yup.string().required("Curl is required"),
-  curl_token: yup
+
+  curl: yup
     .string()
-    .required(
-      "Token variable is required. Please make sure you have entered valid curl URL",
-    ),
+    .required("Curl is required") // ✅ 1) not null
+    .test("valid-curl", function (value) {
+      if (!value) return false;
+
+      const result = parseCurlParams(value);
+
+      // ✅ 2) invalid curl
+      if (result.error) {
+        return this.createError({ message: result.error });
+      }
+
+      // ✅ 3) at least 1 param (token candidate)
+      if (!result.params || result.params.length === 0) {
+        return this.createError({
+          message: "No parameters found in curl URL",
+        });
+      }
+
+      return true;
+    }),
+
+  curl_token: yup.string().test("token-required", function (value) {
+    const { curl } = this.parent;
+
+    if (!curl) return true; // handled by curl validation
+
+    const result = parseCurlParams(curl);
+
+    // if curl invalid → skip (handled above)
+    if (result.error || result.params.length === 0) return true;
+
+    // ✅ 4) token must be selected
+    // if (!value) {
+    //   return this.createError({
+    //     message: "Please select token parameter from curl",
+    //     path: "curl", // 🔥 IMPORTANT: show error under CURL field
+    //   });
+    // }
+
+    return true;
+  }),
+
   domain_name: yup.string().notRequired(),
   project_name: yup.string().notRequired(),
 });
@@ -101,6 +141,7 @@ function ProxyAdd() {
     clearErrors,
     formState: { errors, isDirty },
   } = useForm<ProxyFormValues>({
+    mode: "onChange",
     resolver: yupResolver(schema) as unknown as Resolver<ProxyFormValues>,
     defaultValues: {
       proxy_name: "",
@@ -190,20 +231,20 @@ function ProxyAdd() {
     setValue("curl_token", defaultToken);
   }, [curlValue, selectedCurlToken, setValue]);
 
-  const handleCurlBlur = () => {
-    const trimmed = curlValue?.trim();
-    if (!trimmed) return;
+  // const handleCurlBlur = () => {
+  //   const trimmed = curlValue?.trim();
+  //   if (!trimmed) return;
 
-    const result = parseCurlParams(trimmed);
-    if (result.error) {
-      toast.error(result.error);
-      return;
-    }
+  //   const result = parseCurlParams(trimmed);
+  //   if (result.error) {
+  //     toast.error(result.error);
+  //     return;
+  //   }
 
-    if (result.params.length === 0) {
-      toast.error("No parameters found in curl URL");
-    }
-  };
+  //   if (result.params.length === 0) {
+  //     toast.error("No parameters found in curl URL");
+  //   }
+  // };
 
   // useEffect(() => {
   //   if (errors) {
@@ -227,10 +268,10 @@ function ProxyAdd() {
     }
 
     if (!selectedCurlToken) {
-      toast.error("Select the token parameter from the curl command");
+      toast.error("Select the token parameter from the curl");
       return;
     }
-    alert(mode + "===" + isDirty);
+
     if (mode === "edit" && !isDirty) {
       toast.info("No changes detected to update.");
       return;
@@ -270,17 +311,17 @@ function ProxyAdd() {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm">
+    <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
       {/* HEADER */}
       <div className="flex items-center justify-between px-6 py-4 bg-primary">
         {/* LEFT */}
         <div className="flex items-center gap-3">
           {/* Accent line touching left border */}
-          <div className="-ml-6 w-1 h-6 rounded-r-full bg-menuActive" />
+          <div className="w-1 h-6 -ml-6 rounded-r-full bg-menuActive" />
 
           {/* Title */}
           <div>
-            <h5 className=" sm:text-xl  text-white/60">
+            <h5 className=" sm:text-xl text-white/60">
               {" "}
               {mode === "add" ? "Add Proxy" : "Edit Proxy"}
             </h5>
@@ -392,7 +433,6 @@ function ProxyAdd() {
                 type="text"
                 placeholder="Paste full curl command (e.g., curl https://api.example.com ...)"
                 {...register("curl")}
-                onBlur={handleCurlBlur}
                 className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
                   errors.curl
                     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
@@ -409,13 +449,16 @@ function ProxyAdd() {
             {mode == "add" ? (
               <>
                 {curlParams.length > 0 && (
-                  <div className="mt-4 space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <div className="p-4 mt-4 space-y-3 border border-gray-200 rounded-lg bg-gray-50">
                     <p className="text-sm font-medium text-gray-700">
                       Select the token parameter from the curl command
                     </p>
                     <div className="grid gap-2 sm:grid-cols-2">
                       {curlParams.map((param) => (
-                        <label key={param} className="block mb-2 text-sm">
+                        <label
+                          key={param}
+                          className="flex items-center gap-2 text-sm cursor-pointer"
+                        >
                           <input
                             type="radio"
                             name="curl_token"
@@ -425,7 +468,7 @@ function ProxyAdd() {
                               setSelectedCurlToken(param);
                               setValue("curl_token", param);
                             }}
-                            className="h-4 w-4 text-primary focus:ring-primary"
+                            className="w-4 h-4 text-primary focus:ring-primary"
                           />
                           <span>{param}</span>
                         </label>
@@ -435,10 +478,9 @@ function ProxyAdd() {
                 )}
               </>
             ) : (
-              <div>
+              <div className="p-4 mt-4 space-y-3 border border-gray-200 rounded-lg bg-gray-50">
                 <label className="block mb-2 text-sm">
                   Token from curl request{" "}
-                  <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>

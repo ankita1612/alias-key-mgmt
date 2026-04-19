@@ -185,7 +185,7 @@ function AliasKeyList() {
         {/* Loading */}
         {loading ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-10 h-10 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
           </div>
         ) : (
           <>
@@ -389,7 +389,7 @@ function AliasKeyList() {
             {/* Close Icon - Improved */}
             <button
               onClick={() => setShowModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 text-gray-400 transition-all duration-200 bg-white rounded-full shadow-md top-4 right-4 hover:text-gray-600 hover:bg-gray-100 hover:shadow-lg group"
+              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
             >
               <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>

@@ -131,7 +131,7 @@ function AliasKeyRow({
       </div>
 
       {/* Domain */}
-      <div className="text-xs  truncate">{apiData.domain_name || "-"}</div>
+      <div className="text-xs truncate">{apiData.domain_name || "-"}</div>
 
       {/* Status Badge */}
       <div className="text-xs ">
@@ -242,7 +242,7 @@ function AliasKeyRow({
               title="Edit"
             >
               <FiEdit2 className="w-4 h-4" />
-              <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-primary rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+              <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
                 Edit
               </span>
             </button>
@@ -254,7 +254,7 @@ function AliasKeyRow({
                 title="Delete"
               >
                 <FiTrash2 className="w-4 h-4" />
-                <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-primary rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+                <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
                   Delete
                 </span>
               </button>
@@ -283,7 +283,7 @@ function AliasKeyRow({
           className="p-1.5  rounded-md transition-all duration-200 group relative"
         >
           <FiEye className="w-4 h-4" />
-          <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-primary rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+          <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
             View
           </span>
         </button>
@@ -298,7 +298,7 @@ function AliasKeyRow({
             title="View Requests"
           >
             <FiList className="w-4 h-4" />
-            <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-primary rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+            <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
               History
             </span>
           </button>

@@ -138,49 +138,22 @@ function AdminDashboard() {
     };
 
     return (
-      <div className="relative overflow-hidden transition-all duration-300 bg-white border border-gray-100 shadow-sm group rounded-2xl hover:shadow-xl">
-        <div className="absolute inset-0 transition-opacity duration-500 opacity-0 bg-gradient-to-r from-gray-50 to-transparent group-hover:opacity-100" />
-        <div className="relative p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="text-sm font-medium tracking-wider text-gray-500 uppercase">
-                {title}
-              </p>
-              <div className="flex items-baseline mt-2 space-x-2">
-                <p className="text-3xl font-bold text-gray-900">{value}</p>
-                {trend !== undefined && (
-                  <div
-                    className={`flex items-center ${trend >= 0 ? "text-emerald-600" : "text-rose-600"}`}
-                  >
-                    {/* {trend >= 0 ? (
-                      <ArrowUpRight className="w-4 h-4" />
-                    ) : (
-                      <ArrowDownRight className="w-4 h-4" />
-                    )}
-                    <span className="text-sm font-semibold">
-                      {Math.abs(trend)}%
-                    </span> */}
-                  </div>
-                )}
-              </div>
-              <p className="mt-1 text-xs text-gray-500">{subtitle}</p>
-            </div>
-            <div
-              className={`p-3 rounded-xl bg-gradient-to-br ${gradientColors[color as keyof typeof gradientColors]} shadow-lg`}
-            >
-              <Icon className="w-6 h-6 text-white" />
-            </div>
-          </div>
-          {/* {trend !== undefined && (
-            <div className="mt-4">
-              <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-700 ${trend >= 0 ? "bg-emerald-500" : "bg-rose-500"}`}
-                  style={{ width: `${Math.min(Math.abs(trend), 100)}%` }}
-                />
-              </div>
-            </div>
-          )} */}
+      <div className="flex items-center gap-3 px-4 py-4 transition bg-white border rounded-lg shadow-sm hover:shadow-md">
+        {/* Icon */}
+        <div
+          className={`flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br ${
+            gradientColors[color as keyof typeof gradientColors]
+          }`}
+        >
+          <Icon className="w-4 h-4 text-white" />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1">
+          <p className="text-sm font-bold leading-tight text-gray-900">
+            {value}
+          </p>
+          <p className="text-[10px] text-gray-500  tracking-wide">{title}</p>
         </div>
       </div>
     );
@@ -229,11 +202,18 @@ function AdminDashboard() {
         { name: "Rejected", value: dashboard.aliasStatusCounts.Rejected },
       ].filter((item) => item.value > 0)
     : [];
-
+  const TopStatCard = ({ title, value }: any) => {
+    return (
+      <div className="px-4 py-3 transition bg-white border border-t-4 rounded-lg shadow-sm border-primary hover:shadow">
+        <p className="text-[11px] text-gray-500 uppercase">{title}</p>
+        <p className="mt-1 text-lg font-semibold">{value}</p>
+      </div>
+    );
+  };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen ">
       {/* Background Pattern */}
-      <div className="fixed inset-0 pointer-events-none opacity-5">
+      {/* <div className="fixed inset-0 pointer-events-none opacity-5">
         <div
           className="absolute inset-0"
           style={{
@@ -242,24 +222,16 @@ function AdminDashboard() {
             backgroundSize: "40px 40px",
           }}
         />
-      </div>
+      </div> */}
 
       <div className="">
         {/* Header */}
-        <div className="mb-10">
+        <div className="mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="flex items-center space-x-3">
-                <div className="p-2 shadow-lg rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600">
-                  <Shield className="text-white w-7 h-7" />
-                </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">
-                    Admin Dashboard
-                  </h1>
-                  <p className="mt-1 text-gray-500">
-                    Monitor platform performance and system health
-                  </p>
+                  <h5 className="sm:text-xl ">Key managment Overview</h5>
                 </div>
               </div>
             </div>
@@ -269,22 +241,26 @@ function AdminDashboard() {
         {/* Stats Grid */}
         {dashboard && (
           <>
-            <div className="grid gap-6 mb-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              <StatCard
+            <div className="grid gap-4 mb-6 sm:grid-cols-2">
+              <TopStatCard
                 title="Total Users"
                 value={dashboard.totalUsers.toLocaleString()}
-                subtitle="Registered accounts"
-                icon={Users}
-                trend={dashboard.userGrowthPercent}
-                color="primary"
               />
+              <TopStatCard
+                title="Total Requests"
+                value={dashboard.totalRequests.toLocaleString()}
+              />
+            </div>
+            <h6 className="pb-2">Key Monitoring</h6>
+            <div className="grid gap-4 mb-8 sm:grid-cols-2 lg:grid-cols-3">
               <StatCard
                 title="Total Keys"
                 value={dashboard.totalAliasKeys.toLocaleString()}
-                subtitle="Total keys"
+                subtitle="All keys"
                 icon={Key}
                 color="primary"
               />
+
               <StatCard
                 title="Active Keys"
                 value={dashboard.approvedAliasKeys.toLocaleString()}
@@ -292,122 +268,36 @@ function AdminDashboard() {
                 icon={CheckCircle}
                 color="success"
               />
+
               <StatCard
                 title="Pending Keys"
                 value={dashboard.pendingApprovals.toLocaleString()}
-                subtitle="Keys awaiting approval"
+                subtitle="Waiting approval"
                 icon={Clock}
                 color="warning"
               />
-              <StatCard
-                title="Total Requests"
-                value={dashboard.totalRequests.toLocaleString()}
-                subtitle="API calls processed"
-                icon={Activity}
-                color="info"
-              />
-              {/* <StatCard
-                title="Success Rate"
-                value={`${dashboard.requestSuccessRate}%`}
-                subtitle="Request success rate"
-                icon={CheckCircle}
-                color="success"
-              /> */}
             </div>
-
             {/* Charts Grid */}
-            <div className="grid gap-8 mb-10 lg:grid-cols-2">
-              {/* <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
-                <div className="p-6 border-b border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Aliad Key Status Distribution
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Breakdown of all keys by status
-                      </p>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50">
-                      <BarChart3 className="w-5 h-5 text-indigo-600" />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="w-full h-[320px] min-h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart
-                        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                      >
-                        <Pie
-                          data={
-                            aliasStatusData.length
-                              ? aliasStatusData
-                              : [{ name: "No Data", value: 1 }]
-                          }
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, percent }) =>
-                            percent > 0
-                              ? `${name} ${(percent * 100).toFixed(0)}%`
-                              : null
-                          }
-                          outerRadius={90}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {dashboard.aliasStatusCounts &&
-                            Object.values(dashboard.aliasStatusCounts).map(
-                              (_, index) => (
-                                <Cell
-                                  key={`cell-${index}`}
-                                  fill={PIE_COLORS[index % PIE_COLORS.length]}
-                                />
-                              ),
-                            )}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </div> */}
-              <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
-                <div className="p-6 border-b border-gray-100">
-                  <div className="p-6 border-b border-gray-100">
-                    <div className="flex items-center justify-between">
+            <div className="grid gap-5 mb-6 lg:grid-cols-2">
+              <div className="overflow-hidden duration-300 bg-white border border-gray-100 rounded-md shadow-sm hover:shadow-lg">
+                <div className="">
+                  <div className="flex items-center justify-between px-6 py-2 bg-primary">
+                    {/* LEFT */}
+                    <div className="flex items-center gap-3">
+                      {/* Accent line touching left border */}
+                      <div className="w-1 h-6 -ml-6 rounded-r-full bg-menuActive" />
+
+                      {/* Title */}
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Distribution of API response types
-                        </h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                          API response distribution
-                        </p>
-                      </div>
-                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50">
-                        <PieChart className="w-5 h-5 text-blue-600" />
+                        <h6 className=" sm:text-xl text-white/60">
+                          Response Overview
+                        </h6>
                       </div>
                     </div>
                   </div>
-                  <div className="p-6">
-                    <div className="mb-4">
-                      <p className="text-sm font-medium text-gray-700">
-                        Total responses tracked
-                      </p>
-                      <p className="text-3xl font-bold text-gray-900">
-                        {(
-                          dashboard.apiStatusCounts.SUCCESS +
-                          dashboard.apiStatusCounts.KEY_NOT_ACTIVE +
-                          dashboard.apiStatusCounts.LIMIT_EXCEED +
-                          dashboard.apiStatusCounts.PARAM_MISSING +
-                          dashboard.apiStatusCounts.EXTERNAL_ERROR +
-                          dashboard.apiStatusCounts.INVALID_PROXY +
-                          dashboard.apiStatusCounts.INTERNAL_SERVER
-                        ).toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="space-y-5">
+
+                  <div className="p-5">
+                    <div className="space-y-4">
                       {[
                         {
                           label: "Success",
@@ -513,23 +403,21 @@ function AdminDashboard() {
                 </div>
               </div>
               {/* API Requests Trend */}
-              <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
-                <div className="p-6 border-b border-gray-100">
+              <div className="overflow-hidden duration-300 bg-white border border-gray-100 shadow-sm hover:shadow-md rounded-xl">
+                <div className="p-4 border-b border-gray-100">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-sm font-semibold text-gray-900">
                         Request Activity
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        API requests over the last 7 days
-                      </p>
+                      <p className="text-xs text-gray-500">Last 7 days</p>
                     </div>
                     <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50">
                       <TrendingUp className="w-5 h-5 text-indigo-600" />
                     </div>
                   </div>
                 </div>
-                <div className="p-6">
+                <div className="p-5">
                   <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={dashboard.requestsLast7Days}>
@@ -573,182 +461,6 @@ function AdminDashboard() {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Additional Metrics */}
-            <div className="grid gap-8 md:grid-cols-2">
-              {/* API Status Breakdown */}
-              {/* <div className="transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md">
-                <div className="p-6 border-b border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        API Response Status
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Distribution of API response types
-                      </p>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50">
-                      <Zap className="w-5 h-5 text-indigo-600" />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="space-y-5">
-                    {[
-                      {
-                        label: "Success",
-                        value: dashboard?.apiStatusCounts?.SUCCESS,
-                        color: COLORS.success,
-                        icon: CheckCircle,
-                      },
-                      {
-                        label: "Key Not Active",
-                        value: dashboard?.apiStatusCounts?.KEY_NOT_ACTIVE,
-                        color: COLORS.neutral,
-                        icon: Key,
-                      },
-                      {
-                        label: "Limit Exceeded",
-                        value: dashboard?.apiStatusCounts?.LIMIT_EXCEED,
-                        color: COLORS.warning,
-                        icon: Clock,
-                      },
-                      {
-                        label: "Internal Server Error",
-                        value: dashboard?.apiStatusCounts?.INTERNAL_SERVER,
-                        color: COLORS.error,
-                        icon: AlertCircle,
-                      },
-                    ].map((status) => {
-                      const total = dashboard?.totalRequests || 0;
-                      const value = status?.value || 0;
-
-                      // ✅ Safe percentage
-                      const percentage = total > 0 ? (value / total) * 100 : 0;
-
-                      // ✅ Better display
-                      const formattedPercentage =
-                        percentage > 0 && percentage < 0.01
-                          ? "< 0.01%"
-                          : `${percentage.toFixed(1)}%`;
-
-                      // ✅ Ensure bar is visible
-                      const progressWidth =
-                        percentage > 0 && percentage < 1 ? 1 : percentage;
-
-                      return (
-                        <div key={status.label} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <status.icon className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm font-medium text-gray-700">
-                                {status.label}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center space-x-2">
-                              <span className="text-sm font-semibold text-gray-900">
-                                {(value || 0).toLocaleString()}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                {formattedPercentage}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="w-full h-2 overflow-hidden bg-gray-100 rounded-full">
-                            <div
-                              className="h-full transition-all duration-700 rounded-full"
-                              style={{
-                                width: `${progressWidth}%`,
-                                minWidth: percentage > 0 ? "4px" : "0px", // 👈 ensures visibility
-                                backgroundColor: status.color,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div> */}
-
-              {/* Key Metrics Overview */}
-              {/* <div className="overflow-hidden shadow-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl">
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h3 className="text-xl font-semibold text-white">
-                        Platform Health
-                      </h3>
-                      <p className="mt-1 text-sm text-indigo-200">
-                        Key performance indicators
-                      </p>
-                    </div>
-                    <div className="p-3 rounded-xl bg-white/10 backdrop-blur-sm">
-                      <Server className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-indigo-200">System Uptime</p>
-                        <p className="text-sm font-semibold text-white">
-                          99.95%
-                        </p>
-                      </div>
-                      <div className="w-full h-2 overflow-hidden rounded-full bg-white/20">
-                        <div
-                          className="h-full bg-white rounded-full"
-                          style={{ width: "99.95%" }}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <Cpu className="w-4 h-4 text-indigo-200" />
-                          <p className="text-sm text-indigo-200">
-                            Avg Response Time
-                          </p>
-                        </div>
-                        <p className="mt-2 text-2xl font-bold text-white">
-                          247ms
-                        </p>
-                      </div>
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <AlertCircle className="w-4 h-4 text-indigo-200" />
-                          <p className="text-sm text-indigo-200">Error Rate</p>
-                        </div>
-                        <p className="mt-2 text-2xl font-bold text-white">
-                          {(
-                            (dashboard.apiStatusCounts.INTERNAL_SERVER /
-                              dashboard.totalRequests) *
-                            100
-                          ).toFixed(2)}
-                          %
-                        </p>
-                      </div>
-                    </div>
-                    <div className="pt-4 mt-2 border-t border-white/20">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Activity className="w-4 h-4 text-indigo-200" />
-                          <p className="text-sm text-indigo-200">
-                            Active Monitoring
-                          </p>
-                        </div>
-                        <span className="px-2 py-1 text-xs font-medium text-green-400 rounded-full bg-green-400/10">
-                          Healthy
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div> */}
             </div>
           </>
         )}

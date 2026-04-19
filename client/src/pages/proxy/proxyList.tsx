@@ -20,7 +20,18 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import apiClient from "../../services/apiClient";
-
+const Row = ({ label, value, mono = false }: any) => (
+  <div className="flex justify-between gap-4 py-2 border-b last:border-0">
+    <span className="text-xs text-gray-500 uppercase">{label}</span>
+    <span
+      className={`text-sm text-gray-900 break-all ${
+        mono ? "font-mono text-xs" : ""
+      }`}
+    >
+      {value || "-"}
+    </span>
+  </div>
+);
 import {
   AlertTriangle,
   X,
@@ -410,69 +421,45 @@ function ProxyList() {
           {/* Modal */}
           <div
             ref={deleteModalRef}
-            className="relative w-full max-w-2xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+            className="relative w-full max-w-lg overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
           >
             {/* Close Icon */}
             <button
               onClick={() => setShowDeleteModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
+              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 group"
             >
               <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>
 
-            {/* Header */}
-            <div className="px-6 pt-8 pb-4 text-left bg-gradient-to-b from-white to-gray-50">
-              <div className="flex items-center gap-3">
-                {/* Left Thick Line */}
-                <div className="w-1 h-6 rounded-full bg-primary"></div>
-
-                {/* Title */}
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Confirm Delete
-                </h3>
-              </div>
-
-              <p className="pl-4 mt-1 text-sm text-gray-500">
-                This action cannot be undone
-              </p>
+            {/* Header - Kept as requested */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-800">
+                Proxy Delete
+              </h2>
             </div>
 
             {/* Warning Content */}
-            <div className="px-6 mt-4">
-              {/* Warning Card */}
-              <div className="p-4 rounded-xl">
-                <div className="flex items-start gap-3">
-                  <div className="space-y-1">
-                    <p className="text-lg ">
-                      Are you sure you want to delete this proxy?
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Key Details (if available) */}
-
-              {/* Danger Info Box */}
+            <div className="flex-1 px-6 py-4 overflow-y-auto">
+              <p className="text-sm ">Are you sure you want to delete proxy?</p>
             </div>
 
             {/* Divider */}
-            <div className="my-6 border-t border-gray-100"></div>
+            <div className="px-6 py-2 border-t border-slate-200"></div>
 
             {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 px-6 pb-8 sm:flex-row">
+            <div className="flex justify-end gap-3 px-6 pb-6">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="flex-1 px-4 py-2.5 text-sm font-medium bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200"
+                className="px-4 py-2 text-sm font-medium text-gray-700 transition bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200"
               >
                 Cancel
               </button>
 
               <button
                 onClick={handleConfirmDelete}
-                className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition bg-red-500 rounded-md hover:bg-red-600"
               >
-                <AlertTriangle className="w-4 h-4" />
-                Delete Permanently
+                Delete
               </button>
             </div>
           </div>
@@ -484,191 +471,151 @@ function ProxyList() {
           {/* Modal */}
           <div
             ref={actionModalRef}
-            className="relative w-full max-w-3xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+            className="relative w-full max-w-2xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
           >
             {/* Close Icon */}
             <button
               onClick={() => setShowModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
+              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 group"
             >
-              <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
+              <MdClose className="w-4 h-4 transition-transform group-hover:scale-110" />
             </button>
 
             {/* Header - Kept as requested */}
-            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
               <h2 className="text-lg font-semibold text-slate-800">
                 Proxy Details
               </h2>
             </div>
 
-            {/* Proxy Details Grid */}
-            <div className="flex-1 px-6 py-4 overflow-y-auto">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {/* Proxy Name */}
-                <div className="p-4 transition-all duration-200 border border-gray-100 rounded-lg bg-gray-50 hover:shadow-md hover:border-gray-200">
-                  <label className="block text-xs font-medium tracking-wider text-gray-500 uppercase">
-                    Proxy Name
-                  </label>
-                  <p className="mt-2 text-xs font-semibold text-gray-900 break-all">
-                    {selectedRow?.proxy_name || "-"}
-                  </p>
-                </div>
-
-                {/* Proxy Token */}
-                <div className="p-4 transition-all duration-200 border border-gray-100 rounded-lg bg-gray-50 hover:shadow-md hover:border-gray-200">
-                  <label className="block text-xs font-medium tracking-wider text-gray-500 uppercase">
-                    Proxy Token
-                  </label>
-                  <p className="mt-2 font-mono text-xs font-semibold text-gray-900 break-all">
-                    {selectedRow?.proxy_token || "-"}
-                  </p>
-                </div>
-
-                {/* Domain Name */}
-                <div className="p-4 transition-all duration-200 border border-gray-100 rounded-lg bg-gray-50 hover:shadow-md hover:border-gray-200">
-                  <label className="block text-xs font-medium tracking-wider text-gray-500 uppercase">
-                    Domain Name
-                  </label>
-                  <p className="mt-2 text-xs font-semibold text-gray-900 break-all">
-                    {selectedRow?.domain_name || "-"}
-                  </p>
-                </div>
-
-                {/* Project Name */}
-                <div className="p-4 transition-all duration-200 border border-gray-100 rounded-lg bg-gray-50 hover:shadow-md hover:border-gray-200">
-                  <label className="block text-xs font-medium tracking-wider text-gray-500 uppercase">
-                    Project Name
-                  </label>
-                  <p className="mt-2 text-xs font-semibold text-gray-900">
-                    {selectedRow?.project_name || "-"}
-                  </p>
-                </div>
-
-                {/* Credit */}
-                <div className="p-4 transition-all duration-200 border border-gray-100 rounded-lg bg-gray-50 hover:shadow-md hover:border-gray-200">
-                  <label className="block text-xs font-medium tracking-wider text-gray-500 uppercase">
-                    Credit
-                  </label>
-                  <p className="mt-2 text-2xl font-bold text-blue-600">
-                    {selectedRow?.credit || "0"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Curl Section - Full Width */}
-              {selectedRow?.curl && selectedRow.curl !== "-" && (
-                <div className="mt-4 overflow-hidden border border-gray-100 rounded-lg bg-gray-50">
-                  <div className="px-4 py-3 bg-gray-100 border-b border-gray-100">
-                    <label className="text-xs font-medium tracking-wider text-gray-600 uppercase">
-                      CURL Command
+            {/* Proxy Details - Improved Layout */}
+            <div className="flex-1 px-6 py-5 overflow-y-auto max-h-[55vh] custom-scrollbar">
+              {/* Two Column Grid for better layout */}
+              <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
+                {/* Left Column */}
+                <div className="space-y-4">
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Proxy Name
                     </label>
+                    <p className="text-sm font-medium text-gray-500">
+                      {selectedRow?.proxy_name || "-"}
+                    </p>
                   </div>
-                  <div className="p-4">
-                    <pre className="p-3 overflow-x-auto font-mono text-xs text-gray-700 break-all whitespace-pre-wrap bg-gray-100 rounded-lg">
-                      {selectedRow?.curl}
-                    </pre>
+
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Project Name
+                    </label>
+                    <p className="text-sm text-gray-500">
+                      {selectedRow?.project_name || "-"}
+                    </p>
+                  </div>
+
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Credit
+                    </label>
+                    <p className="text-base font-semibold text-indigo-600">
+                      {selectedRow?.credit || "0"}
+                    </p>
+                  </div>
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Created date
+                    </label>
+                    <p className="text-sm text-gray-500">
+                      {selectedRow?.createdAt
+                        ? new Date(selectedRow.createdAt).toLocaleDateString(
+                            undefined,
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            },
+                          )
+                        : "-"}
+                    </p>
                   </div>
                 </div>
-              )}
-            </div>
 
-            {/* Divider */}
-            <div className="my-6 border-t border-gray-100"></div>
+                {/* Right Column */}
+                <div className="mt-4 space-y-4 md:mt-0">
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Domain Name
+                    </label>
+                    <p className="text-sm text-gray-500 break-all">
+                      {selectedRow?.domain_name || "-"}
+                    </p>
+                  </div>
 
-            {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 px-6 pb-8 sm:flex-row">
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2.5 text-sm font-medium transition-all duration-200 bg-gray-100 rounded-xl text-gray-700 hover:bg-gray-200 hover:shadow-md active:scale-95"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {showActiveInactiveModal && selectedRow && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
-          {/* Modal */}
-          <div
-            ref={actionModalRef}
-            className="relative w-full max-w-2xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
-          >
-            {/* Close Icon */}
-            <button
-              onClick={() => setShowActiveInactiveModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
-            >
-              <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
-            </button>
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Proxy Token
+                    </label>
+                    <p className="p-2 font-mono text-xs text-gray-500 break-all rounded-md bg-gray-50">
+                      {selectedRow?.proxy_token || "-"}
+                    </p>
+                  </div>
 
-            {/* Header - Kept as requested */}
-            <div className="px-6 pt-8 pb-4 text-left bg-gradient-to-b from-white to-gray-50">
-              <div className="flex items-center gap-3">
-                {/* Left Thick Line */}
-                <div className="w-1 h-6 rounded-full bg-primary"></div>
-
-                {/* Title */}
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Change Status
-                </h3>
-              </div>
-
-              <p className="pl-4 mt-1 text-sm text-gray-500">
-                Please review the details before change status request
-              </p>
-            </div>
-            <div className="px-6 mt-4">
-              {/* Warning Card */}
-              <div className="p-4 rounded-xl">
-                <div className="flex items-start gap-3">
-                  <div className="space-y-1">
-                    <p className="text-lg ">
-                      Are you sure you want to change the status from{" "}
-                      <span className="font-bold">
-                        {selectedRow.status === "Active"
-                          ? "Active"
-                          : "Inactive"}
-                      </span>{" "}
-                      to <span className="font-bold">{newStatus}</span>?
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Token for Curl
+                    </label>
+                    <p className="p-2 font-mono text-xs font-semibold text-indigo-600 rounded-md bg-indigo-50">
+                      {selectedRow?.curl_token || "-"}
                     </p>
                   </div>
                 </div>
               </div>
+
+              {/* Curl Command - Full Width */}
+              <div className="pt-4 mt-6 border-t border-gray-100">
+                <label className="block mb-2 text-xs font-medium uppercase">
+                  Curl Command
+                </label>
+                <div className="relative group">
+                  <pre className="p-3 overflow-x-auto font-mono text-xs text-gray-500 border border-gray-100 rounded-lg bg-gray-50">
+                    <code>{selectedRow?.curl || "-"}</code>
+                  </pre>
+                  {selectedRow?.curl && (
+                    <button
+                      onClick={() =>
+                        navigator.clipboard.writeText(selectedRow?.curl)
+                      }
+                      className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-gray-600 transition-colors bg-white rounded-md shadow-sm"
+                      title="Copy to clipboard"
+                    >
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                        />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
-            {/* Confirmation Card */}
 
-            {/* Warning Box for Inactive Status */}
+            {/* Divider - Simplified */}
+            <div className="border-t border-gray-100"></div>
 
-            {/* Divider */}
-            <div className="my-6 border-t border-gray-100"></div>
-
-            {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 px-6 pb-8 sm:flex-row">
+            {/* Actions - Kept as requested but improved button */}
+            <div className="flex justify-end px-6 py-4">
               <button
-                onClick={() => setShowActiveInactiveModal(false)}
-                className="flex-1 px-4 py-2.5 text-sm font-medium transition-all duration-200 bg-gray-100 rounded-xl text-gray-700 hover:bg-gray-200 hover:shadow-md active:scale-95"
+                onClick={() => setShowModal(false)}
+                className="px-5 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-gray-100 rounded-lg hover:bg-gray-200 hover:shadow-sm active:scale-95"
               >
-                Cancel
-              </button>
-
-              <button
-                onClick={() => handleActiveInactive(newStatus)}
-                disabled={loading}
-                className={`flex-1 px-4 py-2.5 text-sm font-medium text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 ${
-                  newStatus === "Active"
-                    ? "bg-green-500 hover:bg-green-600"
-                    : "bg-red-500 hover:bg-red-600"
-                }`}
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
-                    <span>Processing...</span>
-                  </div>
-                ) : (
-                  <span>Confirm {newStatus}</span>
-                )}
+                Close
               </button>
             </div>
           </div>

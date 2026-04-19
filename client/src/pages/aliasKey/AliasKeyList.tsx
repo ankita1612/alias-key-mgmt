@@ -131,16 +131,21 @@ function AliasKeyList() {
   const [sortField, setSortField] = useState("_id");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [selectedRow, setSelectedRow] = useState<IAliasKey | null>(null);
-  const [showModal, setShowModal] = useState(false);
+  const [showPendingRejectedModal, setShowPendingRejectedModal] =
+    useState(false);
+  const showPendingRejectedRef = useRef<HTMLInputElement>(null);
+
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const showDetailRef = useRef<HTMLDivElement>(null);
 
   const [showActiveInactiveModal, setShowActiveInactiveModal] = useState(false);
+  const showActiveInactiveModalRef = useRef<HTMLDivElement>(null);
+
   const [newStatus, setNewStatus] = useState(false);
 
   const [mobileView, setMobileView] = useState(false);
   const deleteModalRef = useRef<HTMLDivElement>(null);
-  const actionModalRef = useRef<HTMLDivElement>(null);
-  const actionDetailRef = useRef<HTMLDivElement>(null);
+
   const [liveUrl, setLiveUrl] = useState("");
   const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLimit(Number(e.target.value));
@@ -166,13 +171,21 @@ function AliasKeyList() {
         setShowDeleteModal(false);
       }
 
-      // Action modal
       if (
-        showModal &&
-        actionModalRef.current &&
-        !actionModalRef.current.contains(event.target as Node)
+        showPendingRejectedModal &&
+        showPendingRejectedRef.current &&
+        !showPendingRejectedRef.current.contains(event.target as Node)
       ) {
-        setShowModal(false);
+        setShowPendingRejectedModal(false);
+      }
+
+      //
+      if (
+        showActiveInactiveModal &&
+        showActiveInactiveModalRef.current &&
+        !showActiveInactiveModalRef.current.contains(event.target as Node)
+      ) {
+        setShowActiveInactiveModal(false);
       }
     };
 
@@ -181,10 +194,10 @@ function AliasKeyList() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showDeleteModal, showModal]);
+  }, [showDeleteModal, showPendingRejectedModal, showActiveInactiveModal]);
   const handleActionClick = (row: IAliasKey) => {
     setSelectedRow(row);
-    setShowModal(true);
+    setShowPendingRejectedModal(true);
   };
   const handleshowKeyDetail = (row: IAliasKey) => {
     setSelectedRow(row);
@@ -214,7 +227,7 @@ function AliasKeyList() {
       );
       toast.success(response?.data?.message);
       fetchData();
-      setShowModal(false);
+      setShowPendingRejectedModal(false);
     } catch (err) {
       toast.error("Something went wrong");
     } finally {
@@ -394,13 +407,15 @@ function AliasKeyList() {
                 )}
               </div>
               {/* Button */}
-              <Link
-                to="/alias-key/add"
-                className="whitespace-nowrap inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm"
-              >
-                <FiPlus className="w-4 h-4" />
-                Create Key
-              </Link>
+              {user?.role == "User" && (
+                <Link
+                  to="/alias-key/add"
+                  className="whitespace-nowrap inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm"
+                >
+                  <FiPlus className="w-4 h-4" />
+                  Create Key
+                </Link>
+              )}
             </div>
             {/* Table - Responsive with Card View on Mobile */}
             <div className="overflow-hidden ">
@@ -584,8 +599,8 @@ function AliasKeyList() {
           className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md"
           onClick={(e) => {
             if (
-              actionDetailRef.current &&
-              !actionDetailRef.current.contains(e.target)
+              showDetailRef.current &&
+              !showDetailRef.current.contains(e.target)
             ) {
               setShowDetailModal(false);
             }
@@ -593,7 +608,7 @@ function AliasKeyList() {
         >
           {/* Modal */}
           <div
-            ref={actionDetailRef}
+            ref={showDetailRef}
             className="relative w-full max-w-4xl max-h-[90vh] flex flex-col transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
           >
             <button
@@ -701,14 +716,6 @@ function AliasKeyList() {
                   </div>
 
                   {/* Proxy Permission */}
-                  <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-500">
-                      Proxy Permission Required
-                    </label>
-                    <p className="p-3 text-sm font-semibold text-gray-900 rounded-lg bg-gray-50">
-                      {selectedRow?.proxy_permission_required || "-"}
-                    </p>
-                  </div>
 
                   {/* Current Status */}
                   <div>
@@ -835,162 +842,162 @@ function AliasKeyList() {
           </div>
         </div>
       )}
-      {showModal && selectedRow && (
+      {showPendingRejectedModal && selectedRow && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
           {/* Modal */}
           <div
-            ref={actionModalRef}
-            className="relative w-full max-w-4xl overflow-y-auto max-h-[90vh] transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+            ref={showPendingRejectedRef}
+            className="relative w-full max-w-2xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
           >
             {/* Close Icon */}
             <button
-              onClick={() => setShowModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
+              onClick={() => setShowPendingRejectedModal(false)}
+              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 group"
             >
-              <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
+              <MdClose className="w-4 h-4 transition-transform group-hover:scale-110" />
             </button>
 
-            {/* Header */}
-
-            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
+            {/* Header - Kept as requested */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
               <h2 className="text-lg font-semibold text-slate-800">
-                Review Key Activation Request
+                Approve/Reject Request
               </h2>
             </div>
-            {/* Key Details Card */}
-            <div className="flex-1 px-6 py-4 overflow-y-auto">
-              <h4 className="mb-3 text-sm font-semibold tracking-wider text-gray-500 uppercase">
-                Request Details
-              </h4>
 
-              <div className="space-y-4">
-                {/* Requested By - Short field */}
-                {selectedRow?.user_id && (
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex items-center gap-2 min-w-[160px]">
-                      <User className="flex-shrink-0 w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">
+            {/* Content - Improved Layout */}
+            <div className="flex-1 px-6 py-5 overflow-y-auto max-h-[55vh] custom-scrollbar">
+              {/* Two Column Grid for better layout */}
+              <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
+                {/* Left Column */}
+                <div className="space-y-4">
+                  {selectedRow?.user_id && (
+                    <div className="group">
+                      <label className="block mb-1 text-xs font-medium uppercase">
                         Requested By
-                      </span>
+                      </label>
+                      <p className="text-sm font-medium text-gray-500">
+                        {selectedRow.user?.first_name ||
+                          selectedRow.user?.name ||
+                          "-"}
+                      </p>
                     </div>
-                    <span className="flex-1 text-sm font-medium text-gray-800 break-words">
-                      {selectedRow.user?.first_name ||
-                        selectedRow.user?.name ||
-                        "-"}
-                    </span>
-                  </div>
-                )}
+                  )}
 
-                {/* Project Name */}
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex items-center gap-2 min-w-[160px]">
-                    <FolderOpen className="flex-shrink-0 w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Project Name</span>
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Project Name
+                    </label>
+                    <p className="text-sm text-gray-500">
+                      {selectedRow?.project_name || "-"}
+                    </p>
                   </div>
-                  <span className="flex-1 text-sm font-medium text-gray-800 break-words">
-                    {selectedRow?.project_name || "-"}
-                  </span>
-                </div>
 
-                {/* Domain Name */}
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex items-center gap-2 min-w-[160px]">
-                    <Globe className="flex-shrink-0 w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Domain Name</span>
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Total Quota
+                    </label>
+                    <p className="text-base font-semibold text-green-600">
+                      {selectedRow?.total_quota?.toLocaleString() || "-"}
+                    </p>
                   </div>
-                  <span className="flex-1 text-sm font-medium text-gray-800 break-words">
-                    {selectedRow?.domain_name || "-"}
-                  </span>
-                </div>
-
-                {/* Total Quota */}
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex items-center gap-2 min-w-[160px]">
-                    <TrendingUp className="flex-shrink-0 w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Total Quota</span>
-                  </div>
-                  <span className="flex-1 text-sm font-medium text-green-600 break-words">
-                    {selectedRow?.total_quota?.toLocaleString() || "-"}
-                  </span>
-                </div>
-
-                {/* Cost Calculation - Long text area */}
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-                  <div className="flex items-center gap-2 min-w-[160px]">
-                    <Calculator className="flex-shrink-0 w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">
-                      Cost Calculation
-                    </span>
-                  </div>
-                  <div className="flex-1 overflow-y-auto text-sm font-medium text-gray-800 break-words rounded-lg max-h-48">
-                    {selectedRow?.cost_calculation || "-"}
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Created Date
+                    </label>
+                    <p className="text-sm text-gray-500">
+                      {selectedRow?.createdAt
+                        ? new Date(selectedRow.createdAt).toLocaleDateString(
+                            undefined,
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            },
+                          )
+                        : "-"}
+                    </p>
                   </div>
                 </div>
 
-                {/* Total Estimated Cost */}
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex items-center gap-2 min-w-[160px]">
-                    <DollarSign className="flex-shrink-0 w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">
-                      Total Estimated Cost
-                    </span>
+                {/* Right Column */}
+                <div className="mt-4 space-y-4 md:mt-0">
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Domain Name
+                    </label>
+                    <p className="text-sm text-gray-500 break-all">
+                      {selectedRow?.domain_name || "-"}
+                    </p>
                   </div>
-                  <span className="flex-1 text-sm font-semibold break-words">
-                    $
-                    {selectedRow?.total_estimated_cost?.toLocaleString() || "-"}
-                  </span>
-                </div>
-
-                {/* Proxy Permission Required */}
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex items-center gap-2 min-w-[160px]">
-                    <Shield className="flex-shrink-0 w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">
+                  <div>
+                    <label className="block mb-1 text-sm font-medium uppercase">
                       Proxy Permission Required
-                    </span>
+                    </label>
+                    <p className="text-sm text-gray-500">
+                      {selectedRow?.proxy_permission_required || "-"}
+                    </p>
                   </div>
-                  <span className="flex-1 text-sm font-medium text-gray-800 break-words">
-                    {selectedRow?.proxy_permission_required || "-"}
-                  </span>
-                </div>
-
-                {/* Purpose - Long text area */}
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-                  <div className="flex items-center gap-2 min-w-[160px]">
-                    <FileText className="flex-shrink-0 w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Purpose</span>
-                  </div>
-                  <div className="overflow-y-auto text-sm text-gray-700 break-words whitespace-pre-wrap rounded-lg flex-1p-3 max-h-48">
-                    {selectedRow?.description || "-"}
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Total Estimated Cost
+                    </label>
+                    <p className="text-base font-semibold text-indigo-600">
+                      $
+                      {selectedRow?.total_estimated_cost?.toLocaleString() ||
+                        "-"}
+                    </p>
                   </div>
                 </div>
               </div>
+
+              {/* Cost Calculation - Full Width */}
+              {selectedRow?.cost_calculation && (
+                <div className="pt-2 mt-2 ">
+                  <label className="block text-xs font-medium uppercase">
+                    Cost Calculation
+                  </label>
+                  <div className="pt-1 overflow-y-auto text-sm text-gray-500 rounded-lg max-h-32">
+                    {selectedRow?.cost_calculation || "-"}
+                  </div>
+                </div>
+              )}
+
+              {/* Purpose - Full Width */}
+              {selectedRow?.description && (
+                <div className="pt-2 mt-2">
+                  <label className="block text-xs font-medium uppercase">
+                    Purpose
+                  </label>
+                  <div className="pt-1 overflow-y-auto text-sm text-gray-500 rounded-lg max-h-32">
+                    {selectedRow?.description || "-"}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Divider */}
-            <div className="px-6 py-2 border-t border-slate-200"></div>
+            <div className="border-t border-gray-100"></div>
 
-            {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 px-6 pb-4 sm:flex-row">
+            {/* Actions - Kept as requested but improved */}
+            <div className="flex justify-end gap-3 px-6 py-4">
               <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2.5 text-sm font-medium bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200"
+                onClick={() => setShowPendingRejectedModal(false)}
+                className="px-5 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-gray-100 rounded-lg hover:bg-gray-200 hover:shadow-sm active:scale-95"
               >
                 Cancel
               </button>
 
               <button
                 onClick={() => handleApprove("Rejected")}
-                className="flex-1 px-4 py-2.5 text-sm font-medium bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                className="px-5 py-2 text-sm font-medium text-white transition-all duration-200 rounded-lg bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 hover:shadow-sm active:scale-95"
               >
-                <XCircle className="w-4 h-4" />
                 Reject
               </button>
 
               <button
                 onClick={() => handleApprove("Active")}
                 disabled={loading}
-                className="flex-1 px-4 py-2.5 text-sm font-medium bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white transition-all duration-200 rounded-lg bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 hover:shadow-sm active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -998,10 +1005,7 @@ function AliasKeyList() {
                     Processing...
                   </>
                 ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    Approve
-                  </>
+                  "Approve"
                 )}
               </button>
             </div>
@@ -1012,13 +1016,13 @@ function AliasKeyList() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
           {/* Modal */}
           <div
-            ref={actionModalRef}
+            ref={showActiveInactiveModalRef}
             className="relative w-full max-w-lg overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
           >
             {/* Close Icon */}
             <button
               onClick={() => setShowActiveInactiveModal(false)}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
+              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 group"
             >
               <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>
@@ -1043,10 +1047,10 @@ function AliasKeyList() {
             <div className="px-6 py-2 border-t border-slate-200"></div>
 
             {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 px-6 pb-4 sm:flex-row">
+            <div className="flex justify-end gap-3 px-6 pb-6">
               <button
                 onClick={() => setShowActiveInactiveModal(false)}
-                className="flex-1 px-4 py-2.5 text-sm font-medium transition-all duration-200 bg-gray-100 rounded-xl text-gray-700 hover:bg-gray-200 hover:shadow-md active:scale-95"
+                className="px-4 py-2 text-sm font-medium text-gray-700 transition bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200"
               >
                 Cancel
               </button>
@@ -1054,7 +1058,7 @@ function AliasKeyList() {
               <button
                 onClick={() => handleActiveInactive(newStatus)}
                 disabled={loading}
-                className={`flex-1 px-4 py-2.5 text-sm font-medium text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 ${
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition rounded-md ${
                   newStatus === "Active"
                     ? "bg-green-500 hover:bg-green-600"
                     : "bg-red-500 hover:bg-red-600"

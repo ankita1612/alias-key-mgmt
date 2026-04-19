@@ -28,7 +28,7 @@
 
 @layer utilities {
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-slate-100;
+    @apply bg-white border shadow-sm rounded-2xl border-slate-100;
   }
   .card-hover {
     @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-[#3F4D67]/20;
@@ -40,7 +40,7 @@
     @apply inline-flex items-center gap-2 bg-white hover:bg-[#3F4D67]/5 text-[#3F4D67] border border-[#3F4D67]/25 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-95;
   }
   .btn-danger {
-    @apply inline-flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-200;
+    @apply inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold text-red-600 transition-all duration-200 border border-red-200 rounded-lg bg-red-50 hover:bg-red-100;
   }
   .badge-pass {
     @apply inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs font-semibold;
@@ -112,4 +112,12 @@
   background: linear-gradient(90deg, #3f4d67 0%, #5a6d87 40%, #3f4d67 100%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
 }
