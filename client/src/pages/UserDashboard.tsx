@@ -295,16 +295,8 @@ function UserDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto border-4 border-gray-200 rounded-full animate-spin border-t-blue-600" />
-          <p className="mt-6 text-lg font-semibold text-gray-900">
-            Loading Dashboard
-          </p>
-          <p className="mt-2 text-sm text-gray-500">
-            Fetching your latest analytics...
-          </p>
-        </div>
+      <div className="flex justify-center py-10">
+        <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
       </div>
     );
   }

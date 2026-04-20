@@ -153,7 +153,7 @@ class ProxyController {
           req.method,
           startTime,
           "fail",
-          "Quota exceeded",
+          "Limit exceeded",
           429,
           "LIMIT_EXCEED",
           allRequestParams,

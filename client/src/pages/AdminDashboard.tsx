@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FaExchangeAlt, FaHome } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import apiClient from "../services/apiClient";
+
 import {
   ResponsiveContainer,
   CartesianGrid,
@@ -24,6 +25,7 @@ import {
   ServerCrash,
   Filter,
   ChevronDown,
+  AlertCircle,
 } from "lucide-react";
 
 interface AdminDashboardData {
@@ -239,18 +241,8 @@ function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 animate-pulse">
-            <Shield className="w-10 h-10 text-white" />
-          </div>
-          <p className="mt-6 text-xl font-semibold text-gray-900">
-            Loading Dashboard
-          </p>
-          <p className="mt-2 text-sm text-gray-500">
-            Fetching latest analytics data...
-          </p>
-        </div>
+      <div className="flex justify-center py-10">
+        <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
       </div>
     );
   }
@@ -415,12 +407,12 @@ function AdminDashboard() {
                           color: COLORS.error,
                           icon: ServerCrash,
                         },
-                        // {
-                        //   label: "Internal Server Error",
-                        //   value: dashboard?.apiStatusCounts?.INTERNAL_SERVER,
-                        //   color: COLORS.error,
-                        //   icon: AlertCircle,
-                        // },
+                        {
+                          label: "Internal Server Error",
+                          value: dashboard?.apiStatusCounts?.INTERNAL_SERVER,
+                          color: COLORS.error,
+                          icon: AlertCircle,
+                        },
                       ].map((status) => {
                         const total =
                           (dashboard?.responseOverviewTotal ??
