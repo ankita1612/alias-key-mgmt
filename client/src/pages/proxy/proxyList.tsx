@@ -1,86 +1,87 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { MdFirstPage, MdLastPage } from "react-icons/md";
+import { useState, useEffect, useCallback, useRef } from "react";
+import DataTable, { type TableColumn } from "react-data-table-component";
 
-import {
-  FiChevronLeft,
-  FiChevronRight,
-  FiChevronsLeft,
-  FiChevronsRight,
-  FiSearch,
-  FiPlus,
-  FiArrowUp,
-  FiArrowDown,
-} from "react-icons/fi";
-import { Copy } from "lucide-react";
+import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiEye } from "react-icons/fi";
 
-import { Link, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { IProxy } from "../../interface/proxy.interface";
-import ProxyRow from "./proxyRow";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import apiClient from "../../services/apiClient";
-const Row = ({ label, value, mono = false }: any) => (
-  <div className="flex justify-between gap-4 py-2 border-b last:border-0">
-    <span className="text-xs text-gray-500 uppercase">{label}</span>
-    <span
-      className={`text-sm text-gray-900 break-all ${
-        mono ? "font-mono text-xs" : ""
-      }`}
-    >
-      {value || "-"}
-    </span>
-  </div>
-);
-import {
-  AlertTriangle,
-  X,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Mail,
-  Globe,
-  Database,
-  FileText,
-  User,
-} from "lucide-react";
+import "./ProxyList.css";
+
+// Custom styles for react-data-table-component
+const customTableStyles = {
+  headRow: {
+    style: {
+      backgroundColor: "#ffffff",
+      color: "#000000",
+      fontWeight: 600,
+      fontSize: "14px",
+      height: "50px",
+    },
+  },
+  rows: {
+    style: {
+      fontSize: "15px",
+      minHeight: "52px", // 👈 slightly taller (default ~48)
+
+      backgroundColor: "#ffffff",
+      "&:hover": {
+        backgroundColor: "#f3f4f6",
+        cursor: "pointer",
+      },
+    },
+    stripedStyle: {
+      backgroundColor: "#ffffff",
+    },
+  },
+  cells: {
+    style: {
+      fontSize: "14.5px", // 👈 subtle increase (best sweet spot)
+      lineHeight: "1.5", // 👈 improves readability
+      paddingTop: "10px",
+      paddingBottom: "10px",
+    },
+  },
+  pagination: {
+    style: {
+      minHeight: "56px",
+    },
+  },
+  noData: {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "#ffffff",
+      minHeight: "300px",
+    },
+  },
+};
 import { MdClose } from "react-icons/md";
 
 function ProxyList() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [apiData, setApiData] = useState<IProxy[]>([]);
   const [loading, setLoading] = useState(false);
-  const location = useLocation();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState("_id");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [selectedRow, setSelectedRow] = useState<IProxy | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [showActiveInactiveModal, setShowActiveInactiveModal] = useState(false);
-  const [newStatus, setNewStatus] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1024,
+  );
 
-  const [mobileView, setMobileView] = useState(false);
   const deleteModalRef = useRef<HTMLDivElement>(null);
   const actionModalRef = useRef<HTMLDivElement>(null);
-  const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setLimit(Number(e.target.value));
-    setPage(1); // reset to first page
-  };
-  // Check screen size for mobile view
-  useEffect(() => {
-    const checkMobile = () => {
-      setMobileView(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Delete modal
@@ -108,60 +109,25 @@ function ProxyList() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showDeleteModal, showModal]);
+
+  // Track window resize for responsive curl column
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const handleActionClick = (row: IProxy) => {
     setSelectedRow(row);
     setShowModal(true);
   };
-  const handleActiveInactiveClick = (row: IProxy, newStatus: string) => {
-    setSelectedRow(row);
-
-    setNewStatus(newStatus);
-    setShowActiveInactiveModal(true);
-  };
-  const handleApprove = async (action: string) => {
-    try {
-      setLoading(true);
-      const userData = {
-        id: selectedRow?._id,
-        action: action,
-      };
-      const response = await apiClient.post(
-        "/api/proxy/perform-action",
-        userData,
-      );
-      toast.success(response?.data?.message);
-      fetchData();
-      setShowModal(false);
-    } catch (err) {
-      toast.error("Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
-  const handleActiveInactive = async (action: string) => {
-    try {
-      setLoading(true);
-      const userData = {
-        id: selectedRow?._id,
-        action: action,
-      };
-      const response = await apiClient.post(
-        "/api/proxy/make-active-inactive",
-        userData,
-      );
-      toast.success(response?.data?.message);
-      fetchData();
-      setShowActiveInactiveModal(false);
-      setNewStatus("");
-    } catch (err) {
-      toast.error("Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
   const fetchData = useCallback(async () => {
     const controller = new AbortController();
     setLoading(true);
+    const sortField = "_id";
     try {
       const { data } = await apiClient.get(BACKEND_URL + "/api/proxy", {
         signal: controller.signal,
@@ -175,19 +141,20 @@ function ProxyList() {
       });
       setApiData(data.data);
       setTotal(data.pagination.total);
-    } catch (error: any) {
-      if (error.name !== "CanceledError") {
+    } catch (error: unknown) {
+      const err = error as Error & {
+        response?: { data?: { message?: string } };
+      };
+      if (err?.name !== "CanceledError") {
         toast.error(
-          error?.response?.data?.message ||
-            error?.message ||
-            "Failed to load data",
+          err?.response?.data?.message || err?.message || "Failed to load data",
         );
       }
     } finally {
       setLoading(false);
     }
     return () => controller.abort();
-  }, [page, limit, search, sortField, sortOrder]);
+  }, [page, limit, search, sortOrder]);
 
   useEffect(() => {
     fetchData();
@@ -207,21 +174,15 @@ function ProxyList() {
         `${BACKEND_URL}/api/proxy/${deleteId}`,
       );
       toast.success(res.data.message);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as Error & {
+        response?: { data?: { message?: string } };
+      };
       setApiData(previousData);
-      toast.error(error.response?.data?.message || "Delete failed");
+      toast.error(err?.response?.data?.message || "Delete failed");
     } finally {
       setShowDeleteModal(false);
       setDeleteId(null);
-    }
-  };
-
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortOrder("asc");
     }
   };
 
@@ -231,17 +192,102 @@ function ProxyList() {
     }
   }, [apiData]);
 
-  const isAdmin = user?.role === "Admin";
+  // Action column component
+  const ActionColumn = (row: IProxy) => (
+    <div className="flex items-center gap-1">
+      <button
+        onClick={() => navigate(`/proxy/add/${row._id}`)}
+        className="flex items-center justify-center p-1.5 text-blue-600 hover:text-white hover:bg-blue-500 rounded-md transition-all duration-200 group relative"
+        title="Edit"
+      >
+        <FiEdit2 className="w-4 h-4" />
+      </button>
 
-  const columns = [
-    { label: "No.", field: "_id", sortable: true },
-    { label: "Proxy Name", field: "proxy_name", sortable: true },
-    // { label: "Proxy Token", field: "proxy_token", sortable: true },
-    { label: "Curl", field: "curl", sortable: true },
-    { label: "Credit", field: "credit", sortable: true },
-    { label: "Created", field: "createdAt", sortable: true },
+      <button
+        onClick={() => handleDeleteClick(row._id)}
+        className="flex items-center justify-center p-1.5 text-red-600 hover:text-white hover:bg-red-500 rounded-md transition-all duration-200 group relative"
+        title="Delete"
+      >
+        <FiTrash2 className="w-4 h-4" />
+      </button>
+
+      <button
+        onClick={() => handleActionClick(row)}
+        className="flex items-center justify-center p-1.5 text-gray-600 hover:text-white hover:bg-gray-500 rounded-md transition-all duration-200 group relative"
+        title="View"
+      >
+        <FiEye className="w-4 h-4" />
+      </button>
+    </div>
+  );
+
+  // Define columns for DataTable
+  // Helper function to get responsive curl text length
+  const getCurlTextLength = () => {
+    if (windowWidth > 1024) return 100;
+    if (windowWidth > 768) return 70;
+    if (windowWidth > 640) return 50;
+    return 30;
+  };
+
+  const columns: TableColumn<IProxy>[] = [
+    {
+      name: "No.",
+      selector: (_row, index) => (page - 1) * limit + (index ?? 0) + 1,
+      width: "60px",
+      sortable: false,
+      center: true,
+    },
+    {
+      name: "Proxy Name",
+      selector: (row) => row.proxy_name,
+      sortable: true,
+      grow: 1,
+      cell: (row) => (
+        <span className="break-words whitespace-normal">
+          {row.proxy_name || "-"}
+        </span>
+      ),
+    },
+    {
+      name: "Curl",
+      selector: (row) => row.curl,
+      sortable: true,
+      grow: 3,
+      wrap: true,
+      cell: (row) => (
+        <span className="break-all whitespace-normal ">{row.curl || "-"}</span>
+      ),
+    },
+    {
+      name: "Credit",
+      selector: (row) => row.credit,
+      sortable: true,
+      width: "100px",
+      center: true,
+    },
+    {
+      name: "Created",
+      selector: (row) => new Date(row.createdAt).toLocaleDateString(),
+      sortable: true,
+      width: "120px",
+      cell: (row) =>
+        row.createdAt
+          ? new Date(row.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
+          : "-",
+    },
+    {
+      name: "Actions",
+      cell: ActionColumn,
+      width: "150px",
+      center: true,
+      sortable: false,
+    },
   ];
-  const gridColsClass = "grid-cols-[40px_1.2fr_2fr_80px_100px_80px]";
 
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
@@ -301,122 +347,59 @@ function ProxyList() {
         </div>
 
         {/* CONTENT (Table / List / etc.) */}
-        <div className="overflow-hidden ">
-          <div className="overflow-hidden bordershadow-sm rounded-xl">
-            {/* Header Row */}
-            <div
-              className={`grid ${gridColsClass} text-base font-semibold text-gray-900  px-4 py-3 border-b border-gray-300`}
-            >
-              {columns.map((col) => (
-                <div
-                  key={col.label}
-                  onClick={() => col.sortable && handleSort(col.field)}
-                  className={`flex items-center  text-sm transition-colors duration-200 
-      ${col.sortable ? "cursor-pointer hover:text-primary" : "cursor-default"}
-    `}
-                >
-                  {col.label}
-
-                  {col.sortable && sortField === col.field && (
-                    <span className="text-sm text-primary">
-                      {sortOrder === "asc" ? <FiArrowUp /> : <FiArrowDown />}
-                    </span>
-                  )}
+        <div className="overflow-hidden">
+          <div className="overflow-x-auto rounded-sm shadow-sm">
+            <DataTable
+              columns={columns}
+              data={apiData}
+              progressPending={loading}
+              pagination
+              paginationServer
+              paginationTotalRows={total}
+              onChangeRowsPerPage={(newPerPage) => {
+                setLimit(newPerPage);
+                setPage(1);
+              }}
+              onChangePage={(newPage) => setPage(newPage)}
+              onSort={(_column, sortDirection) => {
+                // Sorting state is maintained for backend API
+                if (sortDirection === "asc") {
+                  setSortOrder("asc");
+                } else if (sortDirection === "desc") {
+                  setSortOrder("desc");
+                }
+              }}
+              customStyles={customTableStyles}
+              noDataComponent={
+                <div className="flex items-center justify-center w-full py-10">
+                  <p className="text-sm font-semibold text-gray-600">
+                    No proxy found
+                  </p>
                 </div>
-              ))}
-              <div className="text-sm text-center">Actions</div>
-            </div>
-
-            {/* Rows */}
-            {apiData.length === 0 ? (
-              <div className="py-10 text-center text-gray-600">
-                <p className="text-sm font-semibold">No proxy found</p>
-              </div>
-            ) : (
-              apiData.map((item, index) => (
-                <ProxyRow
-                  page={page}
-                  limit={limit}
-                  key={item._id}
-                  index={index}
-                  apiData={item}
-                  handleDelete={handleDeleteClick}
-                  userRole={user?.role}
-                  onActionClick={handleActionClick}
-                  makeActiveInactiveClick={handleActiveInactiveClick}
-                  mobileView={false}
-                  gridColsClass={gridColsClass}
-                />
-              ))
-            )}
+              }
+              responsive
+              dense
+              highlightOnHover
+              pointerOnHover
+              paginationComponentOptions={{
+                rowsPerPageText: "Rows per page:",
+                rangeSeparatorText: "of",
+                noRowsPerPage: false,
+                selectAllRowsItem: false,
+                selectAllRowsItemText: "All",
+              }}
+              striped
+              conditionalRowStyles={[
+                {
+                  when: (row) => apiData.indexOf(row) % 2 === 0,
+                  style: {
+                    backgroundColor: "#ffffff",
+                  },
+                },
+              ]}
+            />
           </div>
         </div>
-        {total > limit && (
-          <div className="flex justify-end mt-8">
-            <div className="flex items-center gap-4">
-              {/* 1️⃣ LIMIT DROPDOWN */}
-              <div className="flex items-center gap-0 pr-4 text-xs text-gray-500">
-                <span>Rows Per Page :</span>
-                <select
-                  value={limit}
-                  onChange={handleLimitChange}
-                  className="px-1 py-1 text-gray-500 rounded-md focus:outline-none focus:ring-2"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-              </div>
-              {/* Page info */}
-              <div className="pr-4 text-xs text-gray-500 whitespace-nowrap">
-                <span>{Math.min((page - 1) * limit + 1, total)}</span>-
-                <span>{Math.min(page * limit, total)}</span> of{" "}
-                <span>{total}</span>{" "}
-              </div>
-
-              {/* Pagination controls */}
-              <div className="flex items-center gap-3 text-xs">
-                {/* First */}
-                <button
-                  onClick={() => setPage(1)}
-                  disabled={page === 1}
-                  className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                >
-                  <MdFirstPage size={25} />
-                </button>
-
-                {/* Previous */}
-                <button
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
-                  className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                >
-                  <FiChevronLeft size={22} />
-                </button>
-
-                {/* Next */}
-                <button
-                  onClick={() => setPage(page + 1)}
-                  disabled={page === Math.ceil(total / limit)}
-                  className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                >
-                  <FiChevronRight size={22} />
-                </button>
-
-                {/* Last */}
-                <button
-                  onClick={() => setPage(Math.ceil(total / limit))}
-                  disabled={page === Math.ceil(total / limit)}
-                  className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                >
-                  <MdLastPage size={25} />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
@@ -500,7 +483,7 @@ function ProxyList() {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Proxy Name
                     </label>
-                    <p className="text-sm text-gray-800 font-medium">
+                    <p className="text-sm font-medium text-gray-800">
                       {selectedRow?.proxy_name || "-"}
                     </p>
                   </div>
@@ -558,7 +541,7 @@ function ProxyList() {
                       Proxy Token
                     </label>
                     <div className="flex items-center gap-2">
-                      <p className="flex-1 text-sm font-mono text-gray-700 break-all bg-gray-50 p-2 rounded-md border border-gray-200">
+                      <p className="flex-1 p-2 font-mono text-sm text-gray-700 break-all border border-gray-200 rounded-md bg-gray-50">
                         {selectedRow?.proxy_token || "-"}
                       </p>
                     </div>
@@ -569,7 +552,7 @@ function ProxyList() {
                       Token for Curl
                     </label>
                     <div className="flex items-center gap-2">
-                      <p className="flex-1 text-sm font-mono text-gray-700 break-all bg-indigo-50 p-2 rounded-md border border-indigo-200">
+                      <p className="flex-1 p-2 font-mono text-sm text-gray-700 break-all border border-indigo-200 rounded-md bg-indigo-50">
                         {selectedRow?.curl_token || "-"}
                       </p>
                     </div>
@@ -578,13 +561,13 @@ function ProxyList() {
               </div>
 
               {/* Curl Command - Full Width with Copy */}
-              <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="pt-4 mt-6 border-t border-gray-200">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <label className="text-xs font-semibold tracking-wider text-gray-500 uppercase">
                     Curl Command
                   </label>
                 </div>
-                <pre className=" text-xs text-black break-words bg-gray-100 rounded-lg whitespace-pre-wrap font-mono">
+                <pre className="font-mono text-xs text-black break-words whitespace-pre-wrap bg-gray-100 rounded-lg ">
                   <code className="">{selectedRow?.curl || "-"}</code>
                 </pre>
               </div>

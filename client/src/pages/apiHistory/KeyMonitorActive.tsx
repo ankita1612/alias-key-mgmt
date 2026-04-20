@@ -1,39 +1,22 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { MdFirstPage, MdLastPage } from "react-icons/md";
+import DataTable from "react-data-table-component";
 
 import {
-  User,
-  FolderOpen,
-  Globe,
-  TrendingUp,
-  Calculator,
-  DollarSign,
-  Shield,
-  FileText,
-  XCircle,
-  CheckCircle,
-} from "lucide-react";
-import {
-  FiChevronLeft,
-  FiChevronRight,
-  FiChevronsLeft,
-  FiChevronsRight,
   FiSearch,
   FiPlus,
-  FiArrowUp,
-  FiArrowDown,
+  FiEdit2,
+  FiTrash2,
+  FiEye,
   FiAlertCircle,
 } from "react-icons/fi";
 
 import { Link, useLocation } from "react-router-dom";
 import type { IAliasKey } from "../../interface/aliasKey.interface";
-import KeyMonitorRow from "./KeyMonitorRow";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import apiClient from "../../services/apiClient";
 
-import { AlertTriangle } from "lucide-react";
 import { MdClose } from "react-icons/md";
 const getStatusStyle = (status?: string) => {
   switch (status?.toLowerCase()) {
@@ -154,15 +137,24 @@ function KeyMonitorActive() {
   const [showActiveInactiveModal, setShowActiveInactiveModal] = useState(false);
   const showActiveInactiveModalRef = useRef<HTMLDivElement>(null);
 
-  const [newStatus, setNewStatus] = useState(false);
+  const [newStatus, setNewStatus] = useState<string>("");
 
   const [mobileView, setMobileView] = useState(false);
   const deleteModalRef = useRef<HTMLDivElement>(null);
 
-  const [liveUrl, setLiveUrl] = useState("");
-  const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setLimit(Number(e.target.value));
+  const [liveUrl, setLiveUrl] = useState<
+    string | { url: string; body: string } | null
+  >(null);
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
     setPage(1); // reset to first page
+  };
+
+  const handleTableSort = (column: any, sortDirection: string) => {
+    if (column.sortable) {
+      setSortField(column.selector?.name || "_id");
+      setSortOrder(sortDirection as "asc" | "desc");
+    }
   };
   // Check screen size for mobile view
   useEffect(() => {
@@ -345,33 +337,194 @@ function KeyMonitorActive() {
 
   const isAdmin = user?.role === "Admin";
 
-  const columns = [
-    { label: "No.", field: "_id", sortable: true },
-    // ...(isAdmin
-    //   ? [
-    //       { label: "User", field: "user.first_name", sortable: true },
-    //       { label: "Email", field: "user.email", sortable: true },
-    //     ]
-    //   : []),
-    { label: "Key", field: "alias_key", sortable: true },
-    { label: "Domain Name", field: "domain_name", sortable: true },
-    { label: "Status", field: "status", sortable: true },
-    { label: "Total Quota", field: "total_quota", sortable: true },
-    { label: "Available", field: "remaining_quota", sortable: true },
-    { label: "Total Hits", field: "", sortable: false },
-    { label: "Created", field: "createdAt", sortable: true },
+  // DataTable columns configuration
+  const datatableColumns = [
+    {
+      name: "No.",
+      selector: (row: IAliasKey, index: number | undefined) =>
+        ((page - 1) * limit + (index || 0) + 1).toString(),
+      sortable: false,
+      width: "60px",
+    },
+    {
+      name: "Key",
+      selector: (row: IAliasKey) => row.alias_key,
+      sortable: true,
+      cell: (row: IAliasKey) => (
+        <span className="font-mono text-sm text-gray-700">{row.alias_key}</span>
+      ),
+      width: "220px",
+      grow: 1,
+      maxWidth: "300px",
+    },
+    {
+      name: "Domain Name",
+      selector: (row: IAliasKey) => row.domain_name,
+      sortable: true,
+      cell: (row: IAliasKey) => (
+        <span className="text-sm text-gray-600">{row.domain_name}</span>
+      ),
+      width: "250px",
+      grow: 1,
+      maxWidth: "400px",
+    },
+    {
+      name: "Status",
+      selector: (row: IAliasKey) => row.status,
+      sortable: true,
+      cell: (row: IAliasKey) => (
+        <span
+          className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getStatusStyle(
+            row.status,
+          )}`}
+        >
+          {row.status?.charAt(0).toUpperCase() +
+            row.status?.slice(1).toLowerCase()}
+        </span>
+      ),
+      width: "100px",
+      grow: 0,
+    },
+    {
+      name: "Total Quota",
+      selector: (row: IAliasKey) => row.total_quota,
+      sortable: true,
+      cell: (row: IAliasKey) => (
+        <span className="text-sm font-medium text-green-600">
+          {row.total_quota?.toLocaleString()}
+        </span>
+      ),
+      width: "100px",
+      grow: 0,
+    },
+    {
+      name: "Available",
+      selector: (row: IAliasKey) => row.remaining_quota,
+      sortable: true,
+      cell: (row: IAliasKey) => (
+        <span className="text-sm text-gray-600">
+          {row.remaining_quota?.toLocaleString()}
+        </span>
+      ),
+      width: "100px",
+      grow: 0,
+    },
+    {
+      name: "Created",
+      selector: (row: IAliasKey) => row.createdAt,
+      sortable: true,
+      cell: (row: IAliasKey) => (
+        <span className="text-sm text-gray-600">
+          {row.createdAt
+            ? new Date(row.createdAt).toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
+            : "-"}
+        </span>
+      ),
+      width: "140px",
+      grow: 0,
+    },
+    {
+      name: "Actions",
+      cell: (row: IAliasKey, index: number | undefined) => (
+        <div className="flex items-center gap-0">
+          <button
+            onClick={() => handleshowKeyDetail(row)}
+            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            title="View Details"
+          >
+            <FiEye size={16} />
+          </button>
+          {row.status === "Pending" && (
+            <button
+              onClick={() => handleActionClick(row)}
+              className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+              title="Approve/Reject"
+            >
+              <FiEdit2 size={16} />
+            </button>
+          )}
+          {["Active", "Inactive"].includes(row.status) && (
+            <button
+              onClick={() =>
+                handleActiveInactiveClick(
+                  row,
+                  row.status === "Active" ? "Inactive" : "Active",
+                )
+              }
+              className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+              title="Change Status"
+            >
+              <FiEdit2 size={16} />
+            </button>
+          )}
+          <button
+            onClick={() => handleDeleteClick(row._id)}
+            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            title="Delete"
+          >
+            <FiTrash2 size={16} />
+          </button>
+        </div>
+      ),
+      sortable: false,
+      width: "140px",
+      grow: 0,
+    },
   ];
 
-  // Responsive grid columns based on screen size and admin status
-  const getGridCols = () => {
-    if (mobileView) return "grid-cols-1"; // Card view on mobile
-    const baseCols = isAdmin ? 10 : 8;
-    return `grid-cols-${baseCols}`;
+  // DataTable custom styles
+  const customTableStyles = {
+    headRow: {
+      style: {
+        backgroundColor: "#ffffff",
+        color: "#000000",
+        fontWeight: 600,
+        fontSize: "14px",
+        height: "50px",
+      },
+    },
+    rows: {
+      style: {
+        fontSize: "15px",
+        minHeight: "52px", // 👈 slightly taller (default ~48)
+
+        backgroundColor: "#ffffff",
+        "&:hover": {
+          backgroundColor: "#f3f4f6",
+          cursor: "pointer",
+        },
+      },
+      stripedStyle: {
+        backgroundColor: "#ffffff",
+      },
+    },
+    cells: {
+      style: {
+        fontSize: "14.5px", // 👈 subtle increase (best sweet spot)
+        lineHeight: "1.5", // 👈 improves readability
+        paddingTop: "10px",
+        paddingBottom: "10px",
+      },
+    },
+    pagination: {
+      style: {
+        minHeight: "56px",
+      },
+    },
+    noData: {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#ffffff",
+        minHeight: "300px",
+      },
+    },
   };
-  const gridColsClass =
-    user?.role === "Admin"
-      ? "grid-cols-[40px_2fr_1.5fr_100px_100px_100px_100px_100px_60px]"
-      : "grid-cols-[40px_2fr_1.5fr_100px_100px_100px_100px_100px_60px]";
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
       {/* HEADER */}
@@ -388,176 +541,81 @@ function KeyMonitorActive() {
         </div>
       </div>
       <div className="p-5 sm:p-6">
-        {/* Loading */}
-        {loading ? (
-          <div className="flex justify-center py-10">
-            <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
-          </div>
-        ) : (
-          <>
-            <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between">
-              {/* Search - Responsive */}
-              <div className="relative w-full sm:w-80">
-                <input
-                  ref={searchRef}
-                  type="text"
-                  placeholder="Search by request method, time, status..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
-                />
+        <>
+          <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between">
+            {/* Search - Responsive */}
+            <div className="relative w-full sm:w-80">
+              <input
+                ref={searchRef}
+                type="text"
+                placeholder="Search by request method, time, status..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
+              />
 
-                <FiSearch className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
+              <FiSearch className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
 
-                {search && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearch("");
-                      searchRef.current?.focus();
-                    }}
-                    className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2 hover:text-gray-600"
-                  >
-                    <MdClose size={18} />
-                  </button>
-                )}
-              </div>
-              {/* Button */}
-              {user?.role == "User" && (
-                <Link
-                  to="/alias-key/add"
-                  className="whitespace-nowrap inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm"
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch("");
+                    searchRef.current?.focus();
+                  }}
+                  className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2 hover:text-gray-600"
                 >
-                  <FiPlus className="w-4 h-4" />
-                  Create Key
-                </Link>
+                  <MdClose size={18} />
+                </button>
               )}
             </div>
-            {/* Table - Responsive with Card View on Mobile */}
-            <div className="overflow-hidden ">
-              <div className="overflow-hidden bordershadow-sm rounded-xl">
-                {/* Header Row */}
-                <div
-                  className={`grid ${gridColsClass} text-sm font-semibold text-gray-900  px-4 py-3 border-b border-gray-300`}
-                >
-                  {columns.map((col) => (
-                    <div
-                      key={col.label}
-                      onClick={() => col.sortable && handleSort(col.field)}
-                      className={`flex items-center  text-sm transition-colors duration-200 
-      ${col.sortable ? "cursor-pointer hover:text-primary" : "cursor-default"}
-    `}
-                    >
-                      {col.label}
-
-                      {col.sortable && sortField === col.field && (
-                        <span className="text-sm text-primary">
-                          {sortOrder === "asc" ? (
-                            <FiArrowUp />
-                          ) : (
-                            <FiArrowDown />
-                          )}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                  <div className="text-sm text-center">Actions</div>
-                </div>
-
-                {/* Rows */}
-                {apiData.length === 0 ? (
+            {/* Button */}
+            {user?.role == "User" && (
+              <Link
+                to="/alias-key/add"
+                className="whitespace-nowrap inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm"
+              >
+                <FiPlus className="w-4 h-4" />
+                Create Key
+              </Link>
+            )}
+          </div>
+          {/* Table - React DataTable */}
+          <div className="overflow-hidden">
+            <div className="overflow-x-auto rounded-sm shadow-sm">
+              <DataTable
+                columns={datatableColumns}
+                data={apiData}
+                pagination
+                paginationServer
+                paginationTotalRows={total}
+                onChangeRowsPerPage={handleLimitChange}
+                onChangePage={(page) => setPage(page)}
+                onSort={handleTableSort}
+                progressPending={loading}
+                customStyles={customTableStyles}
+                paginationComponentOptions={{
+                  rowsPerPageText: "Rows Per Page:",
+                  rangeSeparatorText: "of",
+                  selectAllRowsItem: false,
+                  selectAllRowsItemText: "All",
+                }}
+                noDataComponent={
                   <div className="py-10 text-center text-gray-600">
                     <p className="text-sm font-semibold">No data found</p>
                   </div>
-                ) : (
-                  apiData.map((item, index) => (
-                    <KeyMonitorRow
-                      key={item._id}
-                      index={index}
-                      page={page}
-                      limit={limit}
-                      apiData={item}
-                      handleDelete={handleDeleteClick}
-                      userRole={user?.role}
-                      onActionClick={handleActionClick}
-                      makeActiveInactiveClick={handleActiveInactiveClick}
-                      mobileView={false}
-                      gridColsClass={gridColsClass}
-                      showKeyDetail={handleshowKeyDetail}
-                    />
-                  ))
-                )}
-              </div>
+                }
+                progressComponent={
+                  <div className="flex justify-center py-10">
+                    <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
+                  </div>
+                }
+                highlightOnHover
+                pointerOnHover
+              />
             </div>
-
-            {total > limit && (
-              <div className="flex justify-end mt-8">
-                <div className="flex items-center gap-4">
-                  {/* 1️⃣ LIMIT DROPDOWN */}
-                  <div className="flex items-center gap-0 pr-4 text-xs text-gray-500">
-                    <span>Rows Per Page :</span>
-                    <select
-                      value={limit}
-                      onChange={handleLimitChange}
-                      className="px-1 py-1 text-gray-500 rounded-md focus:outline-none focus:ring-2"
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
-                  </div>
-                  {/* Page info */}
-                  <div className="pr-4 text-xs text-gray-500 whitespace-nowrap">
-                    <span>{Math.min((page - 1) * limit + 1, total)}</span>-
-                    <span>{Math.min(page * limit, total)}</span> of{" "}
-                    <span>{total}</span>{" "}
-                  </div>
-
-                  {/* Pagination controls */}
-                  <div className="flex items-center gap-3 text-xs">
-                    {/* First */}
-                    <button
-                      onClick={() => setPage(1)}
-                      disabled={page === 1}
-                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                    >
-                      <MdFirstPage size={25} />
-                    </button>
-
-                    {/* Previous */}
-                    <button
-                      onClick={() => setPage(page - 1)}
-                      disabled={page === 1}
-                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                    >
-                      <FiChevronLeft size={22} />
-                    </button>
-
-                    {/* Next */}
-                    <button
-                      onClick={() => setPage(page + 1)}
-                      disabled={page === Math.ceil(total / limit)}
-                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                    >
-                      <FiChevronRight size={22} />
-                    </button>
-
-                    {/* Last */}
-                    <button
-                      onClick={() => setPage(Math.ceil(total / limit))}
-                      disabled={page === Math.ceil(total / limit)}
-                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                    >
-                      <MdLastPage size={25} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
+          </div>
+        </>
       </div>
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
@@ -654,7 +712,7 @@ function KeyMonitorActive() {
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                         Requested By
                       </label>
-                      <p className="text-sm text-gray-800 font-medium">
+                      <p className="text-sm font-medium text-gray-800">
                         {selectedRow.user?.first_name ||
                           selectedRow.user?.name ||
                           "-"}
@@ -721,7 +779,7 @@ function KeyMonitorActive() {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Key
                     </label>
-                    <p className="text-sm font-mono text-gray-600 break-all bg-gray-50 p-2 rounded-md border border-gray-200">
+                    <p className="p-2 font-mono text-sm text-gray-600 break-all border border-gray-200 rounded-md bg-gray-50">
                       {selectedRow?.alias_key || "-"}
                     </p>
                   </div>
@@ -759,11 +817,11 @@ function KeyMonitorActive() {
 
               {/* Cost Calculation - Full Width */}
               {selectedRow?.cost_calculation && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                <div className="pt-4 mt-6 border-t border-gray-200">
+                  <label className="block mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
                     Cost Calculation
                   </label>
-                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar font-mono">
+                  <div className="p-3 overflow-y-auto font-mono text-sm text-gray-600 rounded-lg bg-gray-50 max-h-32 custom-scrollbar">
                     {selectedRow?.cost_calculation || "-"}
                   </div>
                 </div>
@@ -771,11 +829,11 @@ function KeyMonitorActive() {
 
               {/* Purpose - Full Width */}
               {selectedRow?.description && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                <div className="pt-4 mt-6 border-t border-gray-200">
+                  <label className="block mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
                     Purpose
                   </label>
-                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar">
+                  <div className="p-3 overflow-y-auto text-sm text-gray-600 rounded-lg bg-gray-50 max-h-32 custom-scrollbar">
                     {selectedRow?.description || "-"}
                   </div>
                 </div>
@@ -783,13 +841,13 @@ function KeyMonitorActive() {
 
               {/* Proxy Configuration Section - Only if proxy exists */}
               {selectedRow?.proxy && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
+                <div className="pt-4 mt-6 border-t border-gray-200">
                   <div className="space-y-4">
                     <div>
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                         Proxy Name
                       </label>
-                      <p className="text-sm text-gray-600 font-medium">
+                      <p className="text-sm font-medium text-gray-600">
                         {selectedRow.proxy?.proxy_name || "-"}
                       </p>
                     </div>
@@ -799,13 +857,13 @@ function KeyMonitorActive() {
                       Object.keys(selectedRow.proxy.query_params).length >
                         0 && (
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                          <label className="block mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
                             Proxy URL
                           </label>
-                          <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-48 custom-scrollbar">
+                          <div className="p-3 overflow-y-auto text-sm text-gray-600 rounded-lg bg-gray-50 max-h-48 custom-scrollbar">
                             {!liveUrl && "No proxy data"}
                             {typeof liveUrl === "string" && liveUrl && (
-                              <div className="font-mono break-all text-gray-600">
+                              <div className="font-mono text-gray-600 break-all">
                                 {liveUrl}
                               </div>
                             )}
@@ -836,8 +894,8 @@ function KeyMonitorActive() {
 
               {/* Proxy Deleted Alert */}
               {selectedRow.proxy?.is_deleted === true && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+                <div className="pt-4 mt-6 border-t border-gray-200">
+                  <div className="p-3 border border-red-200 rounded-lg bg-red-50">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
                         <FiAlertCircle className="w-4 h-4 text-red-500" />
