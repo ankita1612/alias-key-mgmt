@@ -8,7 +8,6 @@ import type { loginInterface } from "../interface/login.interface";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
 import apiClient from "../services/apiClient";
-
 interface LoginFormData {
   email: string;
   password: string;
@@ -20,7 +19,7 @@ const schema = yup.object({
     .email("Invalid email address") // replaces your regex
     .required("Email is required"),
   password: yup
-    .string()    
+    .string()
     .required("Password is required")
     .min(6, "Password must be at least 6 characters"),
 });
@@ -46,7 +45,7 @@ const Login = () => {
       const result = await apiClient.post("/api/auth/login", userData);
       const apiUser = result.data.data.user;
       setUserData(apiUser);
-      toast.success("Logged in successfully!"); // ✅ success toast
+      toast.success("Login successfully!"); // ✅ success toast
 
       navigate("/dashboard");
     } catch (error: any) {
@@ -70,25 +69,7 @@ const Login = () => {
       <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl border border-gray-100">
         {/* Title Section */}
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 mb-4 bg-primary/10 rounded-full">
-            <svg
-              className="w-8 h-8 text-primary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-              />
-            </svg>
-          </div>
           <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Please sign in to your account
-          </p>
         </div>
 
         {/* Form */}
@@ -105,16 +86,20 @@ const Login = () => {
             <input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="Enter email"
               autoComplete="email"
-              className={`${textbox_style} ${
-                errors.email
-                  ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                  : ""
-              }`}
+              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
+disabled:text-gray-400 
+disabled:cursor-not-allowed 
+disabled:border-gray-200
+${
+  errors.email
+    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+}`}
               {...register("email")}
             />
-             {errors.email && (
+            {errors.email && (
               <p className="mt-1.5 text-sm text-red-500">
                 {errors.email.message}
               </p>
@@ -132,13 +117,17 @@ const Login = () => {
             <input
               id="password"
               type={showPassword ? "text" : "password"} // 👈 toggle
-              placeholder="••••••••"
+              placeholder="Enter password"
               autoComplete="current-password"
-              className={`${textbox_style} pr-10 ${
-                errors.password
-                  ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                  : ""
-              }`}
+              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
+disabled:text-gray-400 
+disabled:cursor-not-allowed 
+disabled:border-gray-200
+${
+  errors.password
+    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+}`}
               {...register("password")}
             />
 
@@ -153,7 +142,7 @@ const Login = () => {
               ) : (
                 <Eye className="w-5 h-5" />
               )}
-            </button>  
+            </button>
             {errors.password && (
               <p className="mt-1.5 text-sm text-red-500">
                 {errors.password.message}

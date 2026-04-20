@@ -234,7 +234,7 @@ function ProxyList() {
   const isAdmin = user?.role === "Admin";
 
   const columns = [
-    { label: "#", field: "_id", sortable: true },
+    { label: "No.", field: "_id", sortable: true },
     { label: "Proxy Name", field: "proxy_name", sortable: true },
     // { label: "Proxy Token", field: "proxy_token", sortable: true },
     { label: "Curl", field: "curl", sortable: true },
@@ -246,7 +246,7 @@ function ProxyList() {
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
       {/* HEADER */}
-      <div className="flex items-center justify-between px-6 py-4 bg-primary">
+      <div className="flex items-center justify-between px-6 py-3 bg-primary">
         {/* LEFT */}
         <div className="flex items-center gap-3">
           {/* Accent line touching left border */}
@@ -305,13 +305,13 @@ function ProxyList() {
           <div className="overflow-hidden bordershadow-sm rounded-xl">
             {/* Header Row */}
             <div
-              className={`grid ${gridColsClass} text-sm font-semibold text-gray-600  px-4 py-3 border-b border-gray-300`}
+              className={`grid ${gridColsClass} text-base font-semibold text-gray-900  px-4 py-3 border-b border-gray-300`}
             >
               {columns.map((col) => (
                 <div
                   key={col.label}
                   onClick={() => col.sortable && handleSort(col.field)}
-                  className={`flex items-center gap-1 text-sm transition-colors duration-200 
+                  className={`flex items-center  text-sm transition-colors duration-200 
       ${col.sortable ? "cursor-pointer hover:text-primary" : "cursor-default"}
     `}
                 >
@@ -335,6 +335,8 @@ function ProxyList() {
             ) : (
               apiData.map((item, index) => (
                 <ProxyRow
+                  page={page}
+                  limit={limit}
                   key={item._id}
                   index={index}
                   apiData={item}
@@ -488,43 +490,44 @@ function ProxyList() {
               </h2>
             </div>
 
-            {/* Proxy Details - Improved Layout */}
+            {/* Proxy Details - Modern Layout */}
             <div className="flex-1 px-6 py-5 overflow-y-auto max-h-[55vh] custom-scrollbar">
-              {/* Two Column Grid for better layout */}
-              <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
+              {/* Two column grid for better space utilization */}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {/* Left Column */}
                 <div className="space-y-4">
-                  <div className="group">
-                    <label className="block mb-1 text-xs font-medium uppercase">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Proxy Name
                     </label>
-                    <p className="text-sm font-medium text-gray-500">
+                    <p className="text-sm text-gray-800 font-medium">
                       {selectedRow?.proxy_name || "-"}
                     </p>
                   </div>
 
-                  <div className="group">
-                    <label className="block mb-1 text-xs font-medium uppercase">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Project Name
                     </label>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-600">
                       {selectedRow?.project_name || "-"}
                     </p>
                   </div>
 
-                  <div className="group">
-                    <label className="block mb-1 text-xs font-medium uppercase">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Credit
                     </label>
-                    <p className="text-base font-semibold text-indigo-600">
+                    <p className="text-lg font-bold text-indigo-600">
                       {selectedRow?.credit || "0"}
                     </p>
                   </div>
-                  <div className="group">
-                    <label className="block mb-1 text-xs font-medium uppercase">
-                      Created date
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                      Created Date
                     </label>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-600">
                       {selectedRow?.createdAt
                         ? new Date(selectedRow.createdAt).toLocaleDateString(
                             undefined,
@@ -540,46 +543,50 @@ function ProxyList() {
                 </div>
 
                 {/* Right Column */}
-                <div className="mt-4 space-y-4 md:mt-0">
-                  <div className="group">
-                    <label className="block mb-1 text-xs font-medium uppercase">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Domain Name
                     </label>
-                    <p className="text-sm text-gray-500 break-all">
+                    <p className="text-sm text-gray-600 break-all">
                       {selectedRow?.domain_name || "-"}
                     </p>
                   </div>
 
-                  <div className="group">
-                    <label className="block mb-1 text-xs font-medium uppercase">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Proxy Token
                     </label>
-                    <p className="p-2 font-mono text-xs text-gray-500 break-all rounded-md bg-gray-50">
-                      {selectedRow?.proxy_token || "-"}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="flex-1 text-sm font-mono text-gray-700 break-all bg-gray-50 p-2 rounded-md border border-gray-200">
+                        {selectedRow?.proxy_token || "-"}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="group">
-                    <label className="block mb-1 text-xs font-medium uppercase">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Token for Curl
                     </label>
-                    <p className="p-2 font-mono text-xs font-semibold text-indigo-600 rounded-md bg-indigo-50">
-                      {selectedRow?.curl_token || "-"}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="flex-1 text-sm font-mono text-gray-700 break-all bg-indigo-50 p-2 rounded-md border border-indigo-200">
+                        {selectedRow?.curl_token || "-"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Curl Command - Full Width */}
-              <div className="pt-4 mt-6 border-t border-gray-100">
-                <label className="block mb-2 text-xs font-medium uppercase">
-                  Curl Command
-                </label>
-                <div className="relative group">
-                  <pre className="text-sm text-gray-500 break-words whitespace-pre-wrap">
-                    <code>{selectedRow?.curl || "-"}</code>
-                  </pre>
+              {/* Curl Command - Full Width with Copy */}
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Curl Command
+                  </label>
                 </div>
+                <pre className=" text-xs text-black break-words bg-gray-100 rounded-lg whitespace-pre-wrap font-mono">
+                  <code className="">{selectedRow?.curl || "-"}</code>
+                </pre>
               </div>
             </div>
 

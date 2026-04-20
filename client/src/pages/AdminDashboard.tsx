@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import { FaExchangeAlt, FaHome } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import apiClient from "../services/apiClient";
@@ -27,6 +29,7 @@ import {
   ChevronDown,
   AlertCircle,
 } from "lucide-react";
+import { Navigate } from "react-router-dom";
 
 interface AdminDashboardData {
   totalUsers: number;
@@ -78,6 +81,7 @@ const PIE_COLORS = [
 ];
 
 function AdminDashboard() {
+  const navigate = useNavigate();
   const [dashboard, setDashboard] = useState<AdminDashboardData | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
@@ -99,18 +103,18 @@ function AdminDashboard() {
       setDashboard(response.data);
       setLastUpdated(new Date());
     } catch (caughtError) {
-      const error = caughtError as unknown as {
-        name?: string;
-        message?: string;
-        response?: { data?: { message?: string } };
-      };
-      if (error.name !== "CanceledError") {
-        toast.error(
-          error.response?.data?.message ||
-            error.message ||
-            "Failed to load data",
-        );
-      }
+      // const error = caughtError as unknown as {
+      //   name?: string;
+      //   message?: string;
+      //   response?: { data?: { message?: string } };
+      // };
+      // if (error.name !== "CanceledError") {
+      //   toast.error(
+      //     error.response?.data?.message ||
+      //       error.message ||
+      //       "Failed to load data",
+      //   );
+      // }
     } finally {
       setLoading(false);
     }
@@ -149,7 +153,7 @@ function AdminDashboard() {
         {/* Content */}
         <div className="flex-1">
           <div className="flex flex-col">
-            <p className="text-[11px] text-gray-500  leading-none">{title}</p>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">{title}</p>
             <p className="mt-1 text-lg font-semibold text-gray-900">{value}</p>
           </div>
         </div>
@@ -255,18 +259,35 @@ function AdminDashboard() {
         { name: "Rejected", value: dashboard.aliasStatusCounts.Rejected },
       ].filter((item) => item.value > 0)
     : [];
-  const TopStatCard = ({ title, value, icon: Icon }: any) => {
+  const TopStatCard = ({
+    title,
+    value,
+    icon: Icon,
+    iconColor,
+    onClick,
+  }: any) => {
+    // convert text-blue-600 → bg-blue-100
+    const iconBg = iconColor?.replace("text-", "bg-")?.replace("-600", "-100");
+
     return (
-      <div className="flex items-center gap-3 px-4 py-3 transition bg-white border-t-4 rounded-lg shadow-sm border-primary hover:shadow-md">
+      <div
+        onClick={onClick}
+        className={`flex items-center gap-3 px-4 py-3 transition bg-white border-t-4 rounded-lg shadow-sm border-menuActive 
+      ${onClick ? "cursor-pointer hover:shadow-md hover:scale-[1.02]" : ""}`}
+      >
         {/* LEFT ICON */}
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-          <Icon className="w-5 h-5 text-primary" />
+        <div
+          className={`flex items-center justify-center w-10 h-10 rounded-lg ${
+            iconBg || "bg-gray-100"
+          }`}
+        >
+          <Icon className={`w-5 h-5 ${iconColor}`} />
         </div>
 
         {/* RIGHT CONTENT */}
         <div className="flex flex-col">
-          <p className="text-[11px] text-gray-500  leading-none">{title}</p>
-          <p className="mt-1 text-lg font-semibold text-gray-900">{value}</p>
+          <p className="text-xs text-slate-500 font-medium mt-0.5">{title}</p>
+          <p className="mt-1 text-lg font-semibold text-primary">{value}</p>
         </div>
       </div>
     );
@@ -297,16 +318,22 @@ function AdminDashboard() {
                 title="Total Users"
                 value={dashboard.totalUsers.toLocaleString()}
                 icon={Users}
+                iconColor="text-blue-600"
+                onClick={undefined}
               />
               <TopStatCard
                 title="Total Proxy"
                 value={dashboard.totalProxy.toLocaleString()}
                 icon={FaExchangeAlt}
+                iconColor="text-purple-600"
+                onClick={() => navigate("/proxy")}
               />
               <TopStatCard
                 title="Total API Requests"
                 value={dashboard.totalRequests.toLocaleString()}
                 icon={Activity}
+                iconColor="text-green-600"
+                onClick={undefined}
               />
             </div>
             <h6 className="pb-2">Key Monitoring</h6>
@@ -347,9 +374,7 @@ function AdminDashboard() {
 
                       {/* Title */}
                       <div>
-                        <h6 className=" sm:text-xl text-white/60">
-                          Response Overview
-                        </h6>
+                        <h6 className="text-white/60">Response Overview</h6>
                         <p className="mt-1 text-xs text-indigo-100/80">
                           Showing{" "}
                           {(
@@ -487,9 +512,7 @@ function AdminDashboard() {
 
                       {/* Title */}
                       <div>
-                        <h6 className=" sm:text-xl text-white/60">
-                          Last 7 days Activity
-                        </h6>
+                        <h6 className=" text-white/60">Last 7 days Activity</h6>
                       </div>
                     </div>
                   </div>

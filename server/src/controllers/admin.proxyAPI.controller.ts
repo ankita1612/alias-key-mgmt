@@ -144,22 +144,6 @@ class ProxyController {
         );
       }
 
-      // ❌ Quota exceeded
-      if (existingKey.remaining_quota <= 0) {
-        return this.handleResponse(
-          res,
-          existingKey.user_id,
-          existingKey._id,
-          req.method,
-          startTime,
-          "fail",
-          "Limit exceeded",
-          429,
-          "LIMIT_EXCEED",
-          allRequestParams,
-        );
-      }
-
       // ✅ Fetch proxy (use lean for performance)
       const proxy = await ProxyModel.findOne({
         _id: existingKey.proxy_id,
@@ -205,6 +189,27 @@ class ProxyController {
             allRequestParams,
           );
         }
+      }
+
+      // ✅ Atomic quota decrement before API call
+      const quotaUpdate = await AliasKeyModel.updateOne(
+        { alias_key, remaining_quota: { $gt: 0 } },
+        { $inc: { remaining_quota: -1 } },
+      );
+
+      if (quotaUpdate.modifiedCount === 0) {
+        return this.handleResponse(
+          res,
+          existingKey.user_id,
+          existingKey._id,
+          req.method,
+          startTime,
+          "fail",
+          "Limit exceeded",
+          429,
+          "LIMIT_EXCEED",
+          allRequestParams,
+        );
       }
 
       // ✅ Parse curl (IMPORTANT)
@@ -264,12 +269,12 @@ class ProxyController {
       }
 
       let apiResponse;
-      // res.json({
-      //   method: method,
-      //   url: finalUrl,
-      //   headers: finalHeaders,
-      //   data: finalData,
-      // });
+      res.json({
+        method: method,
+        url: finalUrl,
+        headers: finalHeaders,
+        data: finalData,
+      });
       try {
         apiResponse = await axiosInstance.request({
           method,
@@ -287,18 +292,10 @@ class ProxyController {
             { $inc: { credit: creditToAdd } },
           );
         }
-        const aliasKey = await AliasKeyModel.findOneAndUpdate(
-          {
-            alias_key,
-            remaining_quota: { $gt: 0 },
-          },
-          { $inc: { remaining_quota: -1 } },
-          { new: true },
-        ).lean();
-        await ProxyModel.updateOne(
-          { _id: existingKey.proxy_id },
-          { $inc: { counter: 1 } },
-        );
+        // await ProxyModel.updateOne(
+        //   { _id: existingKey.proxy_id },
+        //   { $inc: { counter: 1 } },
+        // );
         return this.handleResponse(
           res,
           existingKey.user_id,
@@ -312,6 +309,12 @@ class ProxyController {
           allRequestParams,
         );
       } catch (error: any) {
+        // ✅ Increment quota back on failure
+        await AliasKeyModel.updateOne(
+          { alias_key },
+          { $inc: { remaining_quota: 1 } },
+        );
+
         // ✅ Axios error handling
         if (error.response) {
           // Server responded with error (4xx, 5xx)

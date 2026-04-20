@@ -32,7 +32,7 @@ import { MdClose, MdFirstPage, MdLastPage } from "react-icons/md";
 const capitalize = (text?: string) =>
   text ? text.charAt(0).toUpperCase() + text.slice(1) : "-";
 function ApiHistory() {
-  const { aliasKeyId } = useParams<{ aliasKeyId: string }>();
+  const { aliasKeyId } = useParams();
   const { user } = useAuth();
   const [apiData, setApiData] = useState<IAliasKey[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,8 +44,6 @@ function ApiHistory() {
   const searchRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState(search);
-  const [status, setStatus] = useState<"" | "success" | "fail">("");
-  const [aliasKeyName, setAliasKeyName] = useState("");
   const [sortField, setSortField] = useState("_id");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [selectedRow, setSelectedRow] = useState<IAliasKey | null>(null);
@@ -96,28 +94,17 @@ function ApiHistory() {
 
   useEffect(() => {
     setPage(1);
-  }, [selectedAliasKey, selectedUser, debouncedSearch, status]);
-
+  }, [selectedAliasKey, selectedUser, debouncedSearch]);
   useEffect(() => {
-    if (aliasKeyId) {
-      setSelectedAliasKey(aliasKeyId);
-    } else {
+    if (!aliasKeyId) {
       setSelectedAliasKey("");
     }
-  }, [aliasKeyId, location.pathname]);
-
+  }, [location.pathname]);
   useEffect(() => {
     const controller = new AbortController();
     let isMounted = true;
 
     const loadHistory = async () => {
-      if (!selectedAliasKey) {
-        setApiData([]);
-        setTotal(0);
-        setLoading(false);
-        return;
-      }
-
       setLoading(true);
 
       try {
@@ -131,7 +118,6 @@ function ApiHistory() {
             sortOrder,
             user: selectedUser,
             alias_key: selectedAliasKey,
-            status,
           },
         });
 
@@ -177,7 +163,7 @@ function ApiHistory() {
     sortOrder,
     selectedUser,
     selectedAliasKey,
-    status,
+    aliasKeyId,
   ]);
 
   const handleSort = (field: string) => {
@@ -190,26 +176,6 @@ function ApiHistory() {
   };
 
   useEffect(() => {
-    const loadAliasKeyName = async () => {
-      if (!aliasKeyId) {
-        setAliasKeyName("");
-        return;
-      }
-
-      try {
-        const { data } = await apiClient.get(
-          `${BACKEND_URL}/api/alias-key/${aliasKeyId}`,
-        );
-        setAliasKeyName(data.data?.alias_key || "");
-      } catch (error) {
-        setAliasKeyName("");
-      }
-    };
-
-    loadAliasKeyName();
-  }, [aliasKeyId]);
-
-  useEffect(() => {
     if (searchRef.current) {
       searchRef.current.focus();
     }
@@ -219,7 +185,7 @@ function ApiHistory() {
 
   const columns = [
     { label: "#", field: "_id", sortable: true },
-
+    { label: "Key", field: "user_alias_key_id.alias_key", sortable: true },
     { label: "Request", field: "request_info", sortable: true },
     { label: "Time", field: "execution_time", sortable: true },
     { label: "Status", field: "response_status", sortable: true },
@@ -232,9 +198,9 @@ function ApiHistory() {
 
   const gridColsClass =
     user?.role === "Admin"
-      ? "grid-cols-[40px_1fr_1fr_1fr_1fr_1fr_1fr_80px]"
-      : "grid-cols-[40px_1fr_1fr_1fr_1fr_1fr_1fr_80px]";
-  const isFilterActive = search || status;
+      ? "grid-cols-[40px_1.2fr_100px_100px_100px_1.2fr_80px_80px_80px]"
+      : "grid-cols-[40px_1.2fr_100px_100px_100px_1.2fr_80px_80px_80px]";
+  const isFilterActive = selectedAliasKey || search;
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
       {/* HEADER */}
@@ -246,9 +212,7 @@ function ApiHistory() {
 
           {/* Title */}
           <div>
-            <h5 className=" sm:text-xl text-white/60">
-              Key Monitor History{aliasKeyName ? ` - ${aliasKeyName}` : ""}
-            </h5>
+            <h5 className=" sm:text-xl text-white/60">Key Monitor</h5>
           </div>
         </div>
       </div>
@@ -258,50 +222,46 @@ function ApiHistory() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
             <div className="w-10 h-10 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
           </div>
-        ) : aliasKeyId ? (
+        ) : (
           <>
-            <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-end sm:gap-4">
-              {/* Search */}
+            <div className="flex flex-col gap-2 mb-5 sm:flex-row sm:items-center sm:gap-3">
+              <select
+                value={selectedAliasKey}
+                onChange={(e) => setSelectedAliasKey(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
+              >
+                <option value="">All Keys</option>
+                {aliasKeys.map((k) => (
+                  <option key={k._id} value={k._id}>
+                    {k.alias_key}
+                  </option>
+                ))}
+              </select>
+              {/* Search - Responsive */}
               <div className="relative w-full sm:w-80">
                 <input
                   ref={searchRef}
                   type="text"
-                  placeholder="Search by request, time, status, message, code"
+                  placeholder="Search by key, request, status, message, code"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
+                  className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all duration-200"
                 />
                 <FiSearch className="absolute w-4 h-4 text-gray-400 left-3 top-3" />
               </div>
-
-              {/* Status */}
-              <select
-                value={status}
-                onChange={(e) => {
-                  setStatus(e.target.value as "" | "success" | "fail");
-                  setPage(1);
-                }}
-                className="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
-              >
-                <option value="">All Status</option>
-                <option value="success">Success</option>
-                <option value="fail">Fail</option>
-              </select>
-
-              {/* Clear Button (NOW NEXT TO DROPDOWN ✅) */}
               <button
                 onClick={() => {
+                  setSelectedAliasKey("");
                   setSearch("");
-                  setStatus("");
                   searchRef.current?.focus();
                 }}
                 disabled={!isFilterActive}
                 className={`px-4 py-2.5 text-sm rounded-lg transition-all duration-200
-      ${
-        isFilterActive
-          ? "bg-gray-100 hover:bg-gray-200 text-gray-700"
-          : "bg-gray-100 text-gray-400 cursor-not-allowed"
-      }`}
+    ${
+      isFilterActive
+        ? "bg-gray-100 hover:bg-gray-200 text-gray-700 cursor-pointer"
+        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+    }`}
               >
                 Clear All
               </button>
@@ -311,7 +271,7 @@ function ApiHistory() {
               <div className="overflow-hidden bordershadow-sm rounded-xl">
                 {/* Header Row */}
                 <div
-                  className={`grid ${gridColsClass} text-sm font-semibold text-gray-900  px-4 py-3 border-b border-gray-300`}
+                  className={`grid ${gridColsClass} text-sm font-semibold text-gray-600  px-4 py-3 border-b border-gray-300`}
                 >
                   {columns.map((col) => (
                     <div
@@ -348,8 +308,6 @@ function ApiHistory() {
                     <ApiHistoryRow
                       key={item._id}
                       index={index}
-                      page={page}
-                      limit={limit}
                       apiData={item}
                       userRole={user?.role}
                       onActionClick={handleActionClick}
@@ -427,12 +385,6 @@ function ApiHistory() {
               </div>
             )}
           </>
-        ) : (
-          <div className="py-10 text-center text-gray-600">
-            <p className="text-sm font-semibold">
-              aliasKeyId is required in the route to view API history.
-            </p>
-          </div>
         )}
       </div>
 

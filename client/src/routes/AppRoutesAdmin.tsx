@@ -13,7 +13,7 @@ import ProxyList from "../pages/proxy/ProxyList";
 import ProxyAdd from "../pages/proxy/ProxyAdd";
 import ApiHistory from "../pages/apiHistory/ApiHistory";
 import ApiHistoryView from "../pages/apiHistory/ApiHistoryView";
-
+import KeyMonitor from "../pages/apiHistory/KeyMonitor";
 import { useAuth } from "../context/AuthContext";
 
 const AppRoutes = () => {
@@ -40,7 +40,7 @@ const AppRoutes = () => {
         <Route path="change_password" element={<ChangePassword />} />
 
         <Route path="dashboard" element={<Dashboard />} />
-
+        <Route path="key-monitor" element={<KeyMonitor />} />
         <Route path="alias-key" element={<AliasKeyList />} />
         <Route path="alias-key/add" element={<AliasKeyAdd />} />
         <Route path="alias-key/add/:id?" element={<AliasKeyAdd />} />
@@ -72,7 +72,8 @@ const AppRoutes = () => {
           path="api-history/view/:apiHistoryId"
           element={<ApiHistoryView />}
         />
-        <Route path="api-history/:aliasKeyId?" element={<ApiHistory />} />
+        <Route path="api-history/:aliasKeyId" element={<ApiHistory />} />
+        <Route path="api-monotor" element={<KeyMonitor />} />
 
         <Route path="*" element={<PageNotFound />} />
       </Route>

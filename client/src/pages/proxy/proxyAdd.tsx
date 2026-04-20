@@ -313,7 +313,7 @@ function ProxyAdd() {
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
       {/* HEADER */}
-      <div className="flex items-center justify-between px-6 py-4 bg-primary">
+      <div className="flex items-center justify-between px-6 py-3 bg-primary">
         {/* LEFT */}
         <div className="flex items-center gap-3">
           {/* Accent line touching left border */}
@@ -340,52 +340,57 @@ function ProxyAdd() {
             loading ? "opacity-50 pointer-events-none" : ""
           }`}
         >
-          <div>
-            <label className="block mb-2 text-sm">
-              Project Name (Optional)
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
-              <input
-                type="text"
-                placeholder="e.g., Ecommerce Scraper / Lead Generation"
-                {...register("project_name")}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
-                  errors.project_name
-                    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
-                }`}
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block mb-2 text-sm">
+                Project Name (Optional)
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
+                <input
+                  type="text"
+                  placeholder="Enter Proxy Name"
+                  {...register("project_name")}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
+                    errors.project_name
+                      ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+                      : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+                  }`}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block mb-2 text-sm">
+                Domain Name (Optional)
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
+                <input
+                  type="text"
+                  placeholder="Enter Domain Name"
+                  {...register("domain_name")}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
+                    errors.domain_name
+                      ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+                      : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+                  }`}
+                />
+              </div>
             </div>
           </div>
-          <div>
-            <label className="block mb-2 text-sm">Domain Name (Optional)</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
-              <input
-                type="text"
-                placeholder="e.g., example.com or api.example.com"
-                {...register("domain_name")}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
-                  errors.domain_name
-                    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
-                }`}
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block mb-2 text-sm">
-              Proxy Name <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
-              <input
-                disabled={mode === "edit"}
-                type="text"
-                placeholder="e.g., BrightData US Proxy"
-                {...register("proxy_name")}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block mb-2 text-sm">
+                Proxy Name <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
+                <input
+                  disabled={mode === "edit"}
+                  type="text"
+                  placeholder="Enter Proxy Name"
+                  {...register("proxy_name")}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
 disabled:text-gray-400 
 disabled:cursor-not-allowed 
 disabled:border-gray-200
@@ -394,26 +399,26 @@ disabled:border-gray-200
      ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
      : "border-gray-300 focus:ring-primary/20 focus:border-primary"
  }`}
-              />
+                />
+              </div>
+              {errors.proxy_name && (
+                <p className="mt-1.5 text-sm text-red-500">
+                  {errors.proxy_name.message}
+                </p>
+              )}
             </div>
-            {errors.proxy_name && (
-              <p className="mt-1.5 text-sm text-red-500">
-                {errors.proxy_name.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <label className="block mb-2 text-sm">
-              Proxy Token <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
-              <input
-                disabled={mode === "edit"}
-                type="text"
-                placeholder="Enter API token or authentication key"
-                {...register("proxy_token")}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
+            <div>
+              <label className="block mb-2 text-sm">
+                Proxy Token <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
+                <input
+                  disabled={mode === "edit"}
+                  type="text"
+                  placeholder="Enter Proxy Token"
+                  {...register("proxy_token")}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
 disabled:text-gray-400 
 disabled:cursor-not-allowed 
 disabled:border-gray-200
@@ -422,13 +427,14 @@ disabled:border-gray-200
      ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
      : "border-gray-300 focus:ring-primary/20 focus:border-primary"
  }`}
-              />
+                />
+              </div>
+              {errors.proxy_token && (
+                <p className="mt-1.5 text-sm text-red-500">
+                  {errors.proxy_token.message}
+                </p>
+              )}
             </div>
-            {errors.proxy_token && (
-              <p className="mt-1.5 text-sm text-red-500">
-                {errors.proxy_token.message}
-              </p>
-            )}
           </div>
           <div>
             <label className="block mb-2 text-sm">

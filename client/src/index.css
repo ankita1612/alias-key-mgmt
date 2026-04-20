@@ -1,58 +1,68 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+/* Tailwind v4 import */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* Google Font */
 
-@layer base {
-  body {
-    font-family:
-      "Inter",
-      system-ui,
-      -apple-system,
-      "Segoe UI",
-      Roboto,
-      "Helvetica Neue",
-      "Noto Sans",
-      "Liberation Sans",
-      Arial,
-      sans-serif,
-      "Apple Color Emoji",
-      "Segoe UI Emoji",
-      "Segoe UI Symbol",
-      "Noto Color Emoji";
-  }
-  * {
-    box-sizing: border-box;
-  }
+/* Theme variables */
+@theme {
+  --color-panel: #3f4d67;
 }
 
+/* Base styles */
+html {
+  scroll-behavior: smooth;
+  line-height: 1.5;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: "Open Sans", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ================= Utilities ================= */
 @layer utilities {
   .card {
     @apply bg-white border shadow-sm rounded-2xl border-slate-100;
   }
+
   .card-hover {
     @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-[#3F4D67]/20;
   }
+
   .btn-primary {
     @apply inline-flex items-center gap-2 bg-[#3F4D67] hover:bg-[#344057] text-white px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-95 shadow-sm shadow-[#3F4D67]/20;
   }
+
   .btn-secondary {
     @apply inline-flex items-center gap-2 bg-white hover:bg-[#3F4D67]/5 text-[#3F4D67] border border-[#3F4D67]/25 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-95;
   }
+
   .btn-danger {
     @apply inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold text-red-600 transition-all duration-200 border border-red-200 rounded-lg bg-red-50 hover:bg-red-100;
   }
+
   .badge-pass {
     @apply inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs font-semibold;
   }
+
   .badge-fail {
     @apply inline-flex items-center gap-1 bg-red-50 text-red-700 border border-red-200 px-2.5 py-0.5 rounded-full text-xs font-semibold;
   }
+
   .badge-warn {
     @apply inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-full text-xs font-semibold;
   }
 }
 
+/* ================= Components ================= */
 @layer components {
   .badge-info {
     display: inline-flex;
@@ -68,28 +78,32 @@
   }
 }
 
-/* Scrollbar */
+/* ================= Scrollbar ================= */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
 }
+
 ::-webkit-scrollbar-track {
   background: #f8fafc;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #a8b8cc;
   border-radius: 99px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #7a95ae;
 }
 
-/* Spinner */
+/* ================= Spinner ================= */
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
+
 .spinner {
   width: 36px;
   height: 36px;
@@ -99,7 +113,7 @@
   animation: spin 0.7s linear infinite;
 }
 
-/* Progress shimmer */
+/* ================= Progress Shimmer ================= */
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -108,15 +122,18 @@
     background-position: 200% 0;
   }
 }
+
 .progress-shimmer {
   background: linear-gradient(90deg, #3f4d67 0%, #5a6d87 40%, #3f4d67 100%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
+/* ================= Custom Scroll ================= */
 .custom-scroll::-webkit-scrollbar {
   width: 6px;
 }
+
 .custom-scroll::-webkit-scrollbar-thumb {
   background: #d1d5db;
   border-radius: 10px;

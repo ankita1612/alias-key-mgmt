@@ -108,18 +108,18 @@ function UserDashboard() {
       setDashboard(response.data);
       setLastUpdated(new Date());
     } catch (caughtError) {
-      const error = caughtError as unknown as {
-        name?: string;
-        message?: string;
-        response?: { data?: { message?: string } };
-      };
-      if (error.name !== "CanceledError") {
-        toast.error(
-          error.response?.data?.message ||
-            error.message ||
-            "Failed to load data",
-        );
-      }
+      // const error = caughtError as unknown as {
+      //   name?: string;
+      //   message?: string;
+      //   response?: { data?: { message?: string } };
+      // };
+      // if (error.name !== "CanceledError") {
+      //   toast.error(
+      //     error.response?.data?.message ||
+      //       error.message ||
+      //       "Failed to load data",
+      //   );
+      // }
     } finally {
       setLoading(false);
     }
@@ -164,7 +164,9 @@ function UserDashboard() {
           </p>
 
           {/* TITLE (below) */}
-          <p className="mt-1 text-xs text-center text-gray-600 ">{title}</p>
+          <p className="mt-1 text-slate-500 font-medium text-center text-xs ">
+            {title}
+          </p>
         </div>
       </div>
     );
@@ -394,9 +396,7 @@ function UserDashboard() {
 
                       {/* Title */}
                       <div>
-                        <h6 className=" sm:text-xl text-white/60">
-                          Response Overview
-                        </h6>
+                        <h6 className="  text-white/60">Response Overview</h6>
                         <p className="mt-1 text-xs text-indigo-100/80">
                           Showing{" "}
                           {(
@@ -457,12 +457,12 @@ function UserDashboard() {
                         color: COLORS.error,
                         icon: ServerCrash,
                       },
-                      // {
-                      //   label: "Internal Server Error",
-                      //   value: dashboard?.apiStatusCounts?.INTERNAL_SERVER,
-                      //   color: COLORS.error,
-                      //   icon: AlertCircle,
-                      // },
+                      {
+                        label: "Internal Server Error",
+                        value: dashboard?.apiStatusCounts?.INTERNAL_SERVER,
+                        color: COLORS.error,
+                        icon: AlertCircle,
+                      },
                     ].map((status) => {
                       const total =
                         (dashboard?.responseOverviewTotal ??
@@ -535,9 +535,7 @@ function UserDashboard() {
 
                       {/* Title */}
                       <div>
-                        <h6 className=" sm:text-xl text-white/60">
-                          Last 7 days Activity
-                        </h6>
+                        <h6 className=" text-white/60">Last 7 days Activity</h6>
                       </div>
                     </div>
                   </div>

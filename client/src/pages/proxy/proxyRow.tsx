@@ -22,6 +22,8 @@ interface ProxyRowProps {
   index: number;
   mobileView?: boolean;
   gridColsClass: string;
+  page: number; // ✅ add
+  limit: number;
 }
 
 function ProxyRow({
@@ -33,6 +35,8 @@ function ProxyRow({
   index,
   mobileView = false,
   gridColsClass,
+  page, // ✅ add
+  limit,
 }: ProxyRowProps) {
   const navigate = useNavigate();
   const [showStats, setShowStats] = useState(false);
@@ -47,20 +51,20 @@ function ProxyRow({
   // Desktop Table View
   return (
     <div
-      className={`grid ${gridColsClass} items-center  text-xs    px-4 py-3 border-b border-gray-200`}
+      className={`grid ${gridColsClass} items-center  text-sm    px-4 py-3 border-b border-gray-200`}
     >
-      <div className="font-medium">{index + 1}</div>
-      <div className="text-xs text-gray-800 truncate ">
+      <div className=""> {(page - 1) * limit + index + 1}</div>
+      <div className=" break-words whitespace-normal font-semibold">
         {apiData.proxy_name || "-"}
       </div>
       {/* <div className="text-xs truncate">{apiData.proxy_token || "-"}</div> */}
-      <div className="text-xs truncate">{apiData.curl || "-"}</div>
-      <div className="text-xs truncate">
-        &nbsp;&nbsp;{apiData.credit || "0"}
+      <div className="text-left  whitespace-pre-wrap break-all">
+        {apiData.curl || "-"}
       </div>
+      <div className=" truncate">&nbsp;&nbsp;{apiData.credit || "0"}</div>
       {/* Status Badge */}
 
-      <div className="text-xs ">
+      <div className=" ">
         {" "}
         {apiData.createdAt
           ? new Date(apiData.createdAt).toLocaleDateString("en-US", {

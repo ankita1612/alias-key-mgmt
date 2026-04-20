@@ -36,7 +36,8 @@ class ApiHistoryController {
         })
         .populate({
           path: "user_alias_key_id",
-          select: "alias_key description proxy_id status project_name domain_name",
+          select:
+            "alias_key description proxy_id status project_name domain_name",
           model: AliasKeyModel,
         })
         .lean();
@@ -69,9 +70,7 @@ class ApiHistoryController {
         proxyData = await ProxyModel.findById(
           apiHistory.user_alias_key_id.proxy_id,
         )
-          .select(
-            "proxy_name proxy_url description curl is_deleted deleted_at",
-          )
+          .select("proxy_name proxy_url description curl is_deleted deleted_at")
           .lean();
       }
 
@@ -103,7 +102,6 @@ class ApiHistoryController {
           status: apiHistory.user_alias_key_id?.status || null,
           project_name: apiHistory.user_alias_key_id?.project_name || null,
           domain_name: apiHistory.user_alias_key_id?.domain_name || null,
-             
         },
 
         // 🌐 Proxy Data
@@ -169,9 +167,18 @@ class ApiHistoryController {
       }
 
       const sortOrder = sortOrderRaw === "asc" ? 1 : -1;
-      const aliasKeyFilter = req.query.alias_key as string;
+      const aliasKeyFilter =
+        (req.query.alias_key as string) || (req.params.aliasKeyId as string);
+      const statusFilter = (req.query.status as string)?.trim().toLowerCase();
       const userFilter = req.query.user as string;
       const skip = (page - 1) * limit;
+
+      if (!aliasKeyFilter) {
+        return res.status(400).json({
+          success: false,
+          message: "alias_key is required",
+        });
+      }
 
       // 🔐 Base match
       const match: any = {};
@@ -184,6 +191,13 @@ class ApiHistoryController {
       // ✅ Alias filter
       if (aliasKeyFilter) {
         match.user_alias_key_id = new Types.ObjectId(aliasKeyFilter);
+      }
+
+      if (statusFilter) {
+        const allowedStatus = ["success", "fail"];
+        if (allowedStatus.includes(statusFilter)) {
+          match.response_status = statusFilter;
+        }
       }
 
       if (

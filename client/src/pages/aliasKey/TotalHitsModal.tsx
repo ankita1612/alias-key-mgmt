@@ -105,14 +105,14 @@ function TotalHitsModal({ data, onClose }: TotalHitsModalProps) {
 
         <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
           <h2 className="text-lg font-semibold text-slate-800">
-            Request Analytics
+            Key Hits Summary
           </h2>
         </div>
 
         {/* Scrollable Content - Includes Success Rate Banner and Stats */}
         <div className="flex-1 px-6 overflow-y-auto custom-scrollbar">
           {/* Success Rate Banner */}
-          <div className="pt-2 pb-2">
+          {/* <div className="pt-2 pb-2">
             <div className="p-2 border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -134,7 +134,7 @@ function TotalHitsModal({ data, onClose }: TotalHitsModalProps) {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Stats Section - 2 Columns */}
           <div className="pb-4">
@@ -171,14 +171,16 @@ function TotalHitsModal({ data, onClose }: TotalHitsModalProps) {
                             className="text-sm font-semibold"
                             style={{ color: item.color }}
                           >
-                            {percentage.toFixed(1)}%
+                            {percentage > 0 && percentage < 0.1
+                              ? "<0.1%"
+                              : `${percentage.toFixed(1)}%`}
                           </span>
                         </div>
                       )}
                     </div>
 
                     {/* Progress Bar */}
-                    {!isTotal && (
+                    {/* {!isTotal && (
                       <div className="mt-2">
                         <div className="w-full h-1.5 overflow-hidden rounded-full bg-gray-100">
                           <div
@@ -190,7 +192,7 @@ function TotalHitsModal({ data, onClose }: TotalHitsModalProps) {
                           />
                         </div>
                       </div>
-                    )}
+                    )} */}
 
                     {/* Total Requests indicator */}
                     {/* {isTotal && (

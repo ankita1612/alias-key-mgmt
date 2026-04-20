@@ -208,7 +208,7 @@ function AliasKeyAdd() {
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
       {/* HEADER */}
-      <div className="flex items-center justify-between px-6 py-4 bg-primary">
+      <div className="flex items-center justify-between px-6 py-3 bg-primary">
         {/* LEFT */}
         <div className="flex items-center gap-3">
           {/* Accent line touching left border */}
@@ -232,19 +232,20 @@ function AliasKeyAdd() {
           }`}
         >
           {/* project_name */}
-          <div>
-            <label className="block mb-2 text-sm">
-              Project Name <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
-              <input
-                disabled={mode === "edit"}
-                autoFocus
-                type="text"
-                placeholder="e.g., Ecommerce Scraper / Lead Generation"
-                {...register("project_name")}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block mb-2 text-sm">
+                Project Name <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
+                <input
+                  disabled={mode === "edit"}
+                  autoFocus
+                  type="text"
+                  placeholder="e.g., Ecommerce Scraper / Lead Generation"
+                  {...register("project_name")}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
 disabled:text-gray-400 
 disabled:cursor-not-allowed 
 disabled:border-gray-200
@@ -253,80 +254,81 @@ disabled:border-gray-200
      ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
      : "border-gray-300 focus:ring-primary/20 focus:border-primary"
  }`}
-              />
-              {errors.project_name && (
+                />
+                {errors.project_name && (
+                  <p className="mt-1.5 text-sm text-red-500">
+                    {errors.project_name.message}
+                  </p>
+                )}
+              </div>
+            </div>
+            {/* Domain Field */}
+            <div>
+              <label className="block mb-2 text-sm">
+                Domain Name <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
+                <input
+                  type="text"
+                  placeholder="e.g., example.com"
+                  {...register("domain_name")}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
+                    errors.domain_name
+                      ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+                      : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+                  }`}
+                />
+              </div>
+              {errors.domain_name && (
                 <p className="mt-1.5 text-sm text-red-500">
-                  {errors.project_name.message}
+                  {errors.domain_name.message}
                 </p>
               )}
             </div>
           </div>
-          {/* Domain Field */}
-          <div>
-            <label className="block mb-2 text-sm">
-              Domain Name <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
-              <input
-                type="text"
-                placeholder="e.g., example.com"
-                {...register("domain_name")}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
-                  errors.domain_name
-                    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
-                }`}
-              />
-            </div>
-            {errors.domain_name && (
-              <p className="mt-1.5 text-sm text-red-500">
-                {errors.domain_name.message}
-              </p>
-            )}
-          </div>
-
           {/* Proxy Select Field */}
-          <div>
-            <label className="block mb-2 text-sm">
-              Proxy Name <span className="text-red-500">*</span>
-            </label>
-
-            <Select
-              options={proxyOptions}
-              isDisabled={mode === "edit"}
-              placeholder="Select Proxy"
-              isSearchable
-              onChange={(selected: any) => {
-                setValue("proxy_id", selected?.value);
-              }}
-              value={proxyOptions.find(
-                (opt) => opt.value === watch("proxy_id"),
-              )}
-              className="text-sm"
-            />
-            {errors.proxy_id && (
-              <p className="mt-1.5 text-sm text-red-500">
-                {errors.proxy_id.message}
-              </p>
-            )}
-          </div>
-          {/* Total Quota Field */}
-          <div>
-            <label className="block mb-2 text-sm">
-              Total Quota <span className="text-red-500">*</span>
-            </label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <input
-                type="text"
-                disabled={mode === "edit"}
-                placeholder="Enter total request quota (e.g., 10,000 requests)"
-                {...register("total_quota", { valueAsNumber: true })}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9]/g, ""); // keep only numbers
-                  setValue("total_quota", val); // ✅ correct usage
+              <label className="block mb-2 text-sm">
+                Proxy Name <span className="text-red-500">*</span>
+              </label>
+
+              <Select
+                options={proxyOptions}
+                isDisabled={mode === "edit"}
+                placeholder="Select Proxy"
+                isSearchable
+                onChange={(selected: any) => {
+                  setValue("proxy_id", selected?.value);
                 }}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
+                value={proxyOptions.find(
+                  (opt) => opt.value === watch("proxy_id"),
+                )}
+                className="text-sm"
+              />
+              {errors.proxy_id && (
+                <p className="mt-1.5 text-sm text-red-500">
+                  {errors.proxy_id.message}
+                </p>
+              )}
+            </div>
+            {/* Total Quota Field */}
+            <div>
+              <label className="block mb-2 text-sm">
+                Total Quota <span className="text-red-500">*</span>
+              </label>
+              <div>
+                <input
+                  type="text"
+                  disabled={mode === "edit"}
+                  placeholder="Enter total request quota (e.g., 10,000 requests)"
+                  {...register("total_quota", { valueAsNumber: true })}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, ""); // keep only numbers
+                    setValue("total_quota", val); // ✅ correct usage
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
 disabled:text-gray-400 
 disabled:cursor-not-allowed 
 disabled:border-gray-200
@@ -335,13 +337,48 @@ disabled:border-gray-200
      ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
      : "border-gray-300 focus:ring-primary/20 focus:border-primary"
  }`}
-              />
+                />
+              </div>
+              {errors.total_quota && (
+                <p className="mt-1.5 text-sm text-red-500">
+                  {errors.total_quota.message}
+                </p>
+              )}
             </div>
-            {errors.total_quota && (
-              <p className="mt-1.5 text-sm text-red-500">
-                {errors.total_quota.message}
-              </p>
-            )}
+            {/* total_estimated_cost */}
+            <div>
+              <label className="block mb-2 text-sm">
+                Total Estimated Cost <span className="text-red-500">*</span>
+              </label>
+              <div>
+                <input
+                  type="text"
+                  disabled={mode === "edit"}
+                  placeholder="Enter Total Estimated Cost"
+                  {...register("total_estimated_cost", {
+                    valueAsNumber: true,
+                  })}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, ""); // keep only numbers
+                    setValue("total_estimated_cost", val); // ✅ correct usage
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
+disabled:text-gray-400 
+disabled:cursor-not-allowed 
+disabled:border-gray-200
+ ${
+   errors.total_estimated_cost
+     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+     : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+ }`}
+                />
+                {errors.total_estimated_cost && (
+                  <p className="mt-1.5 text-sm text-red-500">
+                    {errors.total_estimated_cost.message}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
           {/* cost_calculation */}
           <div>
@@ -366,40 +403,7 @@ disabled:border-gray-200
               </p>
             )}
           </div>
-          {/* total_estimated_cost */}
-          <div>
-            <label className="block mb-2 text-sm">
-              Total Estimated Cost <span className="text-red-500">*</span>
-            </label>
-            <div>
-              <input
-                type="text"
-                disabled={mode === "edit"}
-                placeholder="Enter Total Estimated Cost"
-                {...register("total_estimated_cost", {
-                  valueAsNumber: true,
-                })}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9]/g, ""); // keep only numbers
-                  setValue("total_estimated_cost", val); // ✅ correct usage
-                }}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
-disabled:text-gray-400 
-disabled:cursor-not-allowed 
-disabled:border-gray-200
- ${
-   errors.total_estimated_cost
-     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-     : "border-gray-300 focus:ring-primary/20 focus:border-primary"
- }`}
-              />
-              {errors.total_estimated_cost && (
-                <p className="mt-1.5 text-sm text-red-500">
-                  {errors.total_estimated_cost.message}
-                </p>
-              )}
-            </div>
-          </div>
+
           {/* Description Field */}
           <div>
             <label className="block mb-2 text-sm">

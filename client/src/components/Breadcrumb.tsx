@@ -60,7 +60,11 @@ export default function Breadcrumb() {
           items.push({ label: "Key Edit", clickable: false });
         }
       }
-
+      if (path.startsWith("/key-monitor")) {
+        if (path === "/key-monitor") {
+          items.push({ label: "Key Monitor", clickable: false });
+        }
+      }
       // ✅ API HISTORY
       const isMongoId = (val: string) => /^[0-9a-fA-F]{24}$/.test(val);
 
@@ -75,22 +79,26 @@ export default function Breadcrumb() {
         // ✅ /api-history/:id
         else if (parts.length === 2 && isMongoId(parts[1])) {
           items.push({
-            label: "Key Management",
-            to: "/alias-key", // ✅ redirect here
+            label: "Key Monitor",
+            to: "/key-monitor", // ✅ redirect here
             clickable: true,
           });
 
           items.push({
-            label: "Key Monitor",
+            label: "Key Monitor History",
             clickable: false,
           });
         } else if (parts.length === 3 && isMongoId(parts[2])) {
           items.push({
             label: "Key Monitor",
-            to: "/api-history", // ✅ redirect here
+            to: "/key-monitor", // ✅ redirect here
             clickable: true,
           });
-
+          items.push({
+            label: "Key Monitor History",
+            to: "/api-history", // ✅ redirect here
+            clickable: false,
+          });
           items.push({
             label: "Key Monitor View",
             clickable: false,

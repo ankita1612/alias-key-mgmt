@@ -9,15 +9,13 @@ interface AliasKeyRowProps {
   userRole: string;
   onActionClick: (data: IAliasKey) => void;
   index: number;
-  page: number; // ✅ add
-  limit: number; // ✅ add
+
   gridColsClass: string;
 }
 
 function AliasKeyRow({
   apiData,
-  page, // ✅ add
-  limit,
+
   userRole,
   onActionClick,
   index,
@@ -67,32 +65,32 @@ function AliasKeyRow({
   // Desktop Table View
   return (
     <div
-      className={`grid ${gridColsClass}  text-sm  items-center  px-4 py-3 border-b border-gray-200`}
+      className={`grid ${gridColsClass}  text-xs  items-center  px-4 py-3 border-b border-gray-200`}
     >
       {/* Index */}
-      <div className=""> {(page - 1) * limit + index + 1}</div>
+      <div className="font-medium">{index + 1}</div>
 
       {/* Domain */}
-      <div className="">{apiData.method || "-"}</div>
+      <div className="text-xs truncate">{apiData.method || "-"}</div>
 
       {/* Total Quota */}
-      <div className="">{apiData.execution_time}ms</div>
+      <div className="text-xs font-semibold">{apiData.execution_time}ms</div>
 
       {/* Used Quota */}
       <div>
-        <div className="flex items-center gap-2 ">
+        <div className="flex items-center gap-2 text-xs">
           <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1  font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
           >
             {capitalize(apiData.response_status) || "-"}
           </span>
         </div>
         {/* Mini progress bar */}
       </div>
-      <div className=" ">{apiData.response_msg}</div>
-      <div className=" font-semibold">{apiData.response_code}</div>
+      <div className="text-xs font-semibold">{apiData.response_msg}</div>
+      <div className="text-xs font-semibold">{apiData.response_code}</div>
       {/* Created Date */}
-      <div className="">
+      <div className="text-xs">
         {apiData.createdAt
           ? new Date(apiData.createdAt).toLocaleDateString("en-US", {
               year: "numeric",
@@ -121,7 +119,7 @@ function AliasKeyRow({
             className="p-1.5 rounded-md transition-all duration-200 group relative"
           >
             <FiEye className="w-4 h-4" />
-            <span className="absolute px-2 py-1  text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+            <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
               View
             </span>
           </button>

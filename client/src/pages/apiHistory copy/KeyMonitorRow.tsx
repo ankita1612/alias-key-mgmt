@@ -11,10 +11,10 @@ import { FiTrash2 } from "react-icons/fi";
 import { CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
 import apiClient from "../../services/apiClient";
 import { History } from "lucide-react";
-import TotalHitsModal from "./TotalHitsModal";
+import TotalHitsModal from "../aliasKey/TotalHitsModal";
 import { useState } from "react";
 
-interface AliasKeyRowProps {
+interface KeyMonitorRowProps {
   apiData: IAliasKey;
   handleDelete: (id: string) => void;
   userRole: string;
@@ -24,11 +24,9 @@ interface AliasKeyRowProps {
   mobileView?: boolean;
   gridColsClass: string;
   showKeyDetail: (data: IAliasKey) => void;
-  page: number; // ✅ add
-  limit: number;
 }
 
-function AliasKeyRow({
+function KeyMonitorRow({
   apiData,
   handleDelete,
   userRole,
@@ -38,9 +36,7 @@ function AliasKeyRow({
   mobileView = false,
   gridColsClass,
   showKeyDetail,
-  page, // ✅ add
-  limit,
-}: AliasKeyRowProps) {
+}: KeyMonitorRowProps) {
   const navigate = useNavigate();
   const [showStats, setShowStats] = useState(false);
   const handleEdit = () => {
@@ -113,130 +109,77 @@ function AliasKeyRow({
   return (
     <div
       className={`
-      grid ${gridColsClass}  text-sm items-center    px-4 py-3 border-b border-gray-200 
+      grid ${gridColsClass}  text-xs items-center    px-4 py-3 border-b border-gray-200 
       ${isDeleted ? "bg-red-50  " : "border-gray-200"}
     `}
     >
       {/* Index */}
-      <div className=""> {(page - 1) * limit + index + 1}</div>
+      <div className="font-medium ">{index + 1}</div>
 
       {/* Admin Fields */}
-      {userRole === "Admin" && (
+      {/* {userRole === "Admin" && (
         <>
-          <div className="break-words whitespace-normal ">
+          <div className="text-xs font-medium ">
             {apiData?.user?.first_name || "-"}
           </div>
-          {/* <div className=" truncate">{apiData?.user?.email || "-"}</div> */}
+          <div className="text-xs truncate">{apiData?.user?.email || "-"}</div>
         </>
-      )}
+      )} */}
 
-      <div className="flex items-center gap-2 font-semibold">
-        <span
-          className={`${isDeleted ? "line-through text-gray-400" : "text-gray-800"} break-all`}
-        >
-          {apiData.alias_key || "-"}
-        </span>
-
-        {/* {isDeleted && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-red-700 bg-red-100 border border-red-200 rounded-full">
-            <XCircle className="w-3 h-3" />
-            Deleted
-          </span>
-        )} */}
+      <div className="font-mono text-xs text-gray-800 truncate">
+        {apiData.alias_key || "-"}
       </div>
 
       {/* Domain */}
-      <div className=" break-words whitespace-normal">
-        {apiData.domain_name || "-"}
-      </div>
+      <div className="text-xs truncate">{apiData.domain_name || "-"}</div>
 
       {/* Status Badge */}
-      <div className=" ">
-        {userRole === "Admin" ? (
-          <>
-            {apiData.status === "Pending" ? (
-              <button
-                disabled={isDeleted}
-                onClick={() => onActionClick(apiData)}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1  font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
-                title="Click here to change status"
-              >
-                <Clock className="w-4 h-4" />
-                {apiData.status || "-"}
-              </button>
-            ) : apiData.status === "Active" ? (
-              <button
-                disabled={isDeleted}
-                onClick={() => makeActiveInactiveClick(apiData, "Inactive")}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1  font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
-                title="Click here to change status"
-              >
-                <CheckCircle className="w-4 h-4" />
-                {apiData.status || "-"}
-              </button>
-            ) : apiData.status === "Inactive" ? (
-              <button
-                disabled={isDeleted}
-                onClick={() => makeActiveInactiveClick(apiData, "Active")}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1  font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
-                title="Click here to change status"
-              >
-                <XCircle className="w-4 h-4" />
-                {apiData.status || "-"}
-              </button>
-            ) : (
-              <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1  font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
-              >
-                {apiData.status || "-"}
-              </span>
-            )}
-          </>
-        ) : (
-          <>
-            <span
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1  font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
-            >
-              {apiData.status || "-"}
-            </span>
-          </>
-        )}
+      <div className="text-xs ">
+        <div>
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
+          >
+            {apiData.status || "-"}
+          </span>
+        </div>
       </div>
 
       {/* Total Quota */}
-      <div className=" font-semibold ">{apiData.total_quota || "-"}</div>
+      <div className="text-xs font-semibold ">{apiData.total_quota || "-"}</div>
 
       {/* Used Quota */}
       <div>
-        <div className="flex items-center gap-2 ">
+        <div className="flex items-center gap-2 text-xs">
           <span>
             {["Active", "Inactive"].includes(apiData.status)
               ? (apiData.remaining_quota ?? "-")
               : "-"}
           </span>
+
+          {["Active", "Inactive"].includes(apiData.status) &&
+            apiData.total_quota != null &&
+            apiData.remaining_quota != null && (
+              <span className="text-xs text-gray-400">
+                ({availablePercentage}%)
+              </span>
+            )}
         </div>
         {/* Mini progress bar */}
       </div>
-      <div className=" font-semibold ">
+      <div className="text-xs font-semibold ">
         {["Active", "Inactive"].includes(apiData.status) ? (
-          <>
-            {apiData.total_history_records > 0 ? (
-              <button
-                onClick={() => setShowStats(true)}
-                className="  font-medium text-indigo-600 rounded-md bg-indigo-50 hover:bg-indigo-100"
-              >
-                {apiData.total_history_records}
-              </button>
-            ) : (
-              "0"
-            )}
-          </>
+          <button
+            onClick={() => setShowStats(true)}
+            className="px-2 py-1 text-xs font-medium text-indigo-600 rounded-md bg-indigo-50 hover:bg-indigo-100"
+          >
+            {apiData.total_history_records}
+          </button>
         ) : (
           "-"
         )}
       </div>
       {/* Created Date */}
-      <div className=" ">
+      <div className="text-xs ">
         {apiData.createdAt
           ? new Date(apiData.createdAt).toLocaleDateString("en-US", {
               year: "numeric",
@@ -257,7 +200,7 @@ function AliasKeyRow({
               title="Edit"
             >
               <FiEdit2 className="w-4 h-4" />
-              <span className="absolute px-2 py-1  text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+              <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
                 Edit
               </span>
             </button>
@@ -269,7 +212,7 @@ function AliasKeyRow({
                 title="Delete"
               >
                 <FiTrash2 className="w-4 h-4" />
-                <span className="absolute px-2 py-1  text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+                <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
                   Delete
                 </span>
               </button>
@@ -284,7 +227,7 @@ function AliasKeyRow({
                   title="Test Proxy"
                 >
                   <FiArrowRight className="w-4 h-4" />
-                  <span className="absolute px-2 py-1  text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+                  <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
                     Test Proxy
                   </span>
                 </button>
@@ -298,11 +241,11 @@ function AliasKeyRow({
           className="p-1.5  rounded-md transition-all duration-200 group relative"
         >
           <FiEye className="w-4 h-4" />
-          <span className="absolute px-2 py-1 text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+          <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
             View
           </span>
         </button>
-        {/* {["Active", "Inactive"].includes(apiData.status) && (
+        {["Active", "Inactive"].includes(apiData.status) && (
           <button
             onClick={() =>
               navigate(`/api-history/${apiData._id}`, {
@@ -313,11 +256,11 @@ function AliasKeyRow({
             title="View Requests"
           >
             <FiList className="w-4 h-4" />
-            <span className="absolute px-2 py-1  text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+            <span className="absolute px-2 py-1 text-xs text-white transition-opacity -translate-x-1/2 rounded opacity-0 pointer-events-none bg-primary -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
               History
             </span>
           </button>
-        )} */}
+        )}
       </div>
       {showStats && (
         <TotalHitsModal data={apiData} onClose={() => setShowStats(false)} />
@@ -326,4 +269,4 @@ function AliasKeyRow({
   );
 }
 
-export default AliasKeyRow;
+export default KeyMonitorRow;

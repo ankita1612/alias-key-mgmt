@@ -2,15 +2,30 @@ import { AuthProvider } from "./context/AuthContext";
 import { Toaster, toast } from "react-hot-toast";
 import AppRoutesAdmin from "./routes/AppRoutesAdmin";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { FiInfo } from "react-icons/fi";
 import CustomToast from "./utils/CustomToast";
+import { FiInfo, FiXCircle } from "react-icons/fi";
+import { HiCheckCircle, HiXCircle, HiInformationCircle } from "react-icons/hi";
 
 toast.info = (message: string) =>
   toast(message, {
     duration: 2000,
-    icon: <FiInfo size={18} className="text-blue-500" />,
+    icon: <HiInformationCircle className="text-blue-500  w-7 h-7" />,
+  });
+// Success
+toast.success = (message: string) =>
+  toast(message, {
+    duration: 2000,
+    icon: <HiCheckCircle className="text-green-400 w-7 h-7" />,
+    styleType: "success",
   });
 
+// Error
+toast.error = (message: string) =>
+  toast(message, {
+    duration: 2000,
+    icon: <HiXCircle className="text-red-500 w-7 h-7" />,
+    styleType: "error",
+  });
 function App() {
   return (
     <AuthProvider>

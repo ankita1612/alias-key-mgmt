@@ -268,7 +268,7 @@ const AdminLayout = () => {
           </NavLink>
 
           <NavLink
-            to="/api-history"
+            to="/key-monitor"
             className={({ isActive }) =>
               `flex items-center w-full ${
                 showExpanded ? "justify-start px-4" : "justify-center px-2"
@@ -316,7 +316,7 @@ const AdminLayout = () => {
 
         <div className="flex flex-col flex-1">
           {/* Content */}
-          <main className="flex-1 p-4 overflow-y-auto md:p-6 lg:p-8">
+          <main className="flex-1 p-4 overflow-y-auto md:px-6 md:py-6 lg:px-8 lg:py-2">
             <div className="">
               <Breadcrumb />
               <Outlet />

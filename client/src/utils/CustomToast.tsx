@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-
+import { toast } from "react-hot-toast";
+import { FiX } from "react-icons/fi";
 type ToastType = {
   id: string;
   message: string;
@@ -7,6 +8,7 @@ type ToastType = {
   type?: string;
   duration?: number;
   icon?: React.ReactNode;
+  styleType?: "success" | "error" | "info" | "loading";
 };
 
 const CustomToast = ({ t }: { t: ToastType }) => {
@@ -25,7 +27,8 @@ const CustomToast = ({ t }: { t: ToastType }) => {
     }
   };
 
-  const color = getColor(t.type);
+  //const color = getColor(t.type);
+  const color = getColor(t.styleType);
 
   const [progress, setProgress] = useState(0);
 
@@ -37,25 +40,30 @@ const CustomToast = ({ t }: { t: ToastType }) => {
   return (
     <div
       className={`
-        transform transition-all duration-300 ease-out
-        ${t.visible ? "translate-x-0 opacity-100" : "translate-x-6 opacity-0"}
-        min-w-[280px] max-w-[400px] bg-white/90 backdrop-blur-md
-        shadow-lg rounded-xl border border-gray-200 overflow-hidden
-        hover:shadow-xl
-      `}
+    relative   // ✅ ADD THIS (important)
+    transform transition-all duration-200 ease-out
+${t.visible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"}
+    min-w-[280px] max-w-[400px] bg-white/90 backdrop-blur-md
+    shadow-lg rounded-xl border border-gray-200 overflow-hidden
+    hover:shadow-xl
+  `}
     >
+      <button
+        onClick={() => toast.dismiss(t.id)}
+        className="absolute top-2 right-2 text-gray-400 hover:text-gray-700"
+      >
+        <FiX size={16} />
+      </button>
       {/* Content */}
-      <div className="flex items-center gap-3 px-4 py-3">
-        {/* <div
-          className="w-2 h-2 rounded-full"
-          style={{ backgroundColor: color }}
-        /> */}
+      <div className="flex items-center gap-1 px-4 py-3">
         {t.icon}
-        <p className="flex-1 text-sm font-medium text-gray-800">{t.message}</p>
+        <p className="flex-1 text-[15px] font-medium text-gray-500">
+          {t.message}
+        </p>
       </div>
 
       {/* Progress Bar */}
-      <div className="h-[3px] w-full bg-gray-200 overflow-hidden">
+      <div className="absolute bottom-0 left-0 w-full h-[4px] bg-gray-200">
         <div
           className="h-full origin-left"
           style={{

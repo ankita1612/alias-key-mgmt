@@ -27,7 +27,7 @@ import {
 
 import { Link, useLocation } from "react-router-dom";
 import type { IAliasKey } from "../../interface/aliasKey.interface";
-import AliasKeyRow from "./AliasKeyRow";
+import KeyMonitorRow from "./KeyMonitorRow";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
@@ -128,7 +128,7 @@ function generateProxyUrl(curl: string, curl_token: string) {
   // ✅ Default = GET
   return generateGetProxyUrl(curl, curl_token);
 }
-function AliasKeyList() {
+function KeyMonitorActive() {
   const { user } = useAuth();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -272,16 +272,19 @@ function AliasKeyList() {
     const controller = new AbortController();
     setLoading(true);
     try {
-      const { data } = await apiClient.get(BACKEND_URL + "/api/alias-key", {
-        signal: controller.signal,
-        params: {
-          page,
-          limit,
-          search,
-          sortField,
-          sortOrder,
+      const { data } = await apiClient.get(
+        BACKEND_URL + "/api/alias-key/key-monotor",
+        {
+          signal: controller.signal,
+          params: {
+            page,
+            limit,
+            search,
+            sortField,
+            sortOrder,
+          },
         },
-      });
+      );
       setApiData(data.data);
       setTotal(data.pagination.total);
     } catch (error: any) {
@@ -344,17 +347,17 @@ function AliasKeyList() {
 
   const columns = [
     { label: "No.", field: "_id", sortable: true },
-    ...(isAdmin
-      ? [
-          { label: "User", field: "user.first_name", sortable: true },
-          // { label: "Email", field: "user.email", sortable: true },
-        ]
-      : []),
+    // ...(isAdmin
+    //   ? [
+    //       { label: "User", field: "user.first_name", sortable: true },
+    //       { label: "Email", field: "user.email", sortable: true },
+    //     ]
+    //   : []),
     { label: "Key", field: "alias_key", sortable: true },
     { label: "Domain Name", field: "domain_name", sortable: true },
     { label: "Status", field: "status", sortable: true },
     { label: "Total Quota", field: "total_quota", sortable: true },
-    { label: "Total Available", field: "remaining_quota", sortable: true },
+    { label: "Available", field: "remaining_quota", sortable: true },
     { label: "Total Hits", field: "", sortable: false },
     { label: "Created", field: "createdAt", sortable: true },
   ];
@@ -367,8 +370,8 @@ function AliasKeyList() {
   };
   const gridColsClass =
     user?.role === "Admin"
-      ? "grid-cols-[60px_100px_250px_200px_120px_120px_120px_120px_140px_40px]"
-      : "grid-cols-[60px_250px_200px_120px_120px_120px_120px_140px_40px]";
+      ? "grid-cols-[40px_2fr_1.5fr_100px_100px_100px_100px_100px_60px]"
+      : "grid-cols-[40px_2fr_1.5fr_100px_100px_100px_100px_100px_60px]";
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
       {/* HEADER */}
@@ -380,7 +383,7 @@ function AliasKeyList() {
 
           {/* Title */}
           <div>
-            <h5 className=" sm:text-xl text-white/60"> Key Management</h5>
+            <h5 className=" sm:text-xl text-white/60"> Key Monitor</h5>
           </div>
         </div>
       </div>
@@ -398,7 +401,7 @@ function AliasKeyList() {
                 <input
                   ref={searchRef}
                   type="text"
-                  placeholder="Search by key, domain name, status..."
+                  placeholder="Search by request method, time, status..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
@@ -431,11 +434,11 @@ function AliasKeyList() {
               )}
             </div>
             {/* Table - Responsive with Card View on Mobile */}
-            <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
-              <div className="min-w-max">
+            <div className="overflow-hidden ">
+              <div className="overflow-hidden bordershadow-sm rounded-xl">
                 {/* Header Row */}
                 <div
-                  className={`grid ${gridColsClass} min-w-max text-base font-semibold text-gray-900  px-4 py-3 border-b border-gray-300`}
+                  className={`grid ${gridColsClass} text-sm font-semibold text-gray-900  px-4 py-3 border-b border-gray-300`}
                 >
                   {columns.map((col) => (
                     <div
@@ -464,15 +467,15 @@ function AliasKeyList() {
                 {/* Rows */}
                 {apiData.length === 0 ? (
                   <div className="py-10 text-center text-gray-600">
-                    <p className="text-sm font-semibold">No key found</p>
+                    <p className="text-sm font-semibold">No data found</p>
                   </div>
                 ) : (
                   apiData.map((item, index) => (
-                    <AliasKeyRow
+                    <KeyMonitorRow
                       key={item._id}
+                      index={index}
                       page={page}
                       limit={limit}
-                      index={index}
                       apiData={item}
                       handleDelete={handleDeleteClick}
                       userRole={user?.role}
@@ -890,46 +893,47 @@ function AliasKeyList() {
               </h2>
             </div>
 
-            {/* Content - Simple Layout */}
+            {/* Content - Improved Layout */}
             <div className="flex-1 px-6 py-5 overflow-y-auto max-h-[55vh] custom-scrollbar">
-              {/* Two column grid for better space utilization */}
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {/* Two Column Grid for better layout */}
+              <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
                 {/* Left Column */}
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Requested By
-                    </label>
-                    <p className="text-sm text-gray-800 font-medium">
-                      {selectedRow?.user?.first_name ||
-                        selectedRow?.user?.name ||
-                        "-"}
-                    </p>
-                  </div>
+                  {selectedRow?.user_id && (
+                    <div className="group">
+                      <label className="block mb-1 text-xs font-medium uppercase">
+                        Requested By
+                      </label>
+                      <p className="text-sm font-medium text-gray-500">
+                        {selectedRow.user?.first_name ||
+                          selectedRow.user?.name ||
+                          "-"}
+                      </p>
+                    </div>
+                  )}
 
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
                       Project Name
                     </label>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-500">
                       {selectedRow?.project_name || "-"}
                     </p>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
                       Total Quota
                     </label>
-                    <p className="text-lg font-bold text-green-600">
+                    <p className="text-base font-semibold text-green-600">
                       {selectedRow?.total_quota?.toLocaleString() || "-"}
                     </p>
                   </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
                       Created Date
                     </label>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-500">
                       {selectedRow?.createdAt
                         ? new Date(selectedRow.createdAt).toLocaleDateString(
                             undefined,
@@ -945,30 +949,28 @@ function AliasKeyList() {
                 </div>
 
                 {/* Right Column */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                <div className="mt-4 space-y-4 md:mt-0">
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
                       Domain Name
                     </label>
-                    <p className="text-sm text-gray-600 break-all">
+                    <p className="text-sm text-gray-500 break-all">
                       {selectedRow?.domain_name || "-"}
                     </p>
                   </div>
-
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                    <label className="block mb-1 text-sm font-medium uppercase">
                       Proxy Permission Required
                     </label>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-500">
                       {selectedRow?.proxy_permission_required || "-"}
                     </p>
                   </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
                       Total Estimated Cost
                     </label>
-                    <p className="text-lg font-bold text-indigo-600">
+                    <p className="text-base font-semibold text-indigo-600">
                       $
                       {selectedRow?.total_estimated_cost?.toLocaleString() ||
                         "-"}
@@ -979,11 +981,11 @@ function AliasKeyList() {
 
               {/* Cost Calculation - Full Width */}
               {selectedRow?.cost_calculation && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                <div className="pt-2 mt-2 ">
+                  <label className="block text-xs font-medium uppercase">
                     Cost Calculation
                   </label>
-                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar font-mono">
+                  <div className="pt-1 overflow-y-auto text-sm text-gray-500 rounded-lg max-h-32">
                     {selectedRow?.cost_calculation || "-"}
                   </div>
                 </div>
@@ -991,11 +993,11 @@ function AliasKeyList() {
 
               {/* Purpose - Full Width */}
               {selectedRow?.description && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                <div className="pt-2 mt-2 ">
+                  <label className="block text-xs font-medium uppercase">
                     Purpose
                   </label>
-                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar">
+                  <div className="pt-1 overflow-y-auto text-sm text-gray-500 rounded-lg max-h-32">
                     {selectedRow?.description || "-"}
                   </div>
                 </div>
@@ -1038,7 +1040,7 @@ function AliasKeyList() {
             </div>
           </div>
         </div>
-      )}{" "}
+      )}
       {showActiveInactiveModal && selectedRow && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
           {/* Modal */}
@@ -1108,4 +1110,4 @@ function AliasKeyList() {
   );
 }
 
-export default AliasKeyList;
+export default KeyMonitorActive;
