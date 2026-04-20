@@ -68,17 +68,36 @@ if (cluster.isPrimary) {
   app.use("/api/dashboard", dashboardRouter);
   app.use("/api/proxy", proxyRouter);
  app.get("/api/get-response", (req, res) => {
-  const { token, args1, args2 } = req.query;
-
+  const { myToken, usernae, email ,salary} = req.query;
+  console.log("Received:", { myToken, usernae, email, salary });
   // 🔍 basic validation
-  if (!token || !args1 || !args2) {
+  if (!myToken || !usernae || !email || !salary) {
     return res.status(400).json({
       success: false,
       message: "Missing required parameters",
     });
   }
 
-  console.log("Received:", { token, args1, args2 });
+  console.log("Received:", { usernae, email, salary });
+
+  return res.status(200).json({
+    success: true,
+    message: "API call success",
+  });
+});
+app.post("/api/get-response", (req, res) => {
+  
+  const { validation, method1, method2 ,method4} = req.body;
+  console.log("Received:", { validation, method1, method2 ,method4 });
+  // 🔍 basic validation
+  if (!validation || !method1 || !method2 || !method4) {
+    return res.status(400).json({
+      success: false,
+      message: "Missing required parameters",
+    });
+  }
+
+  console.log("Received:", {  validation, method1, method2 ,method4});
 
   return res.status(200).json({
     success: true,

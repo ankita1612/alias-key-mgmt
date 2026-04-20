@@ -35,7 +35,20 @@ import apiClient from "../../services/apiClient";
 
 import { AlertTriangle } from "lucide-react";
 import { MdClose } from "react-icons/md";
-
+const getStatusStyle = (status?: string) => {
+  switch (status?.toLowerCase()) {
+    case "active":
+      return "bg-green-50 text-green-700";
+    case "inactive":
+      return "bg-gray-100 text-gray-600";
+    case "pending":
+      return "bg-yellow-50 text-yellow-700";
+    case "rejected":
+      return "bg-red-50 text-red-700";
+    default:
+      return "bg-gray-100 text-gray-600";
+  }
+};
 const API_URL = import.meta.env.VITE_BACKEND_URL + "/api/get-proxy-response";
 function generatePostProxyData(curl: string, curl_token: string) {
   try {
@@ -652,7 +665,21 @@ function AliasKeyList() {
                       {selectedRow?.project_name || "-"}
                     </p>
                   </div>
-
+                  <div className="group">
+                    <label className="block mb-1 text-xs font-medium uppercase">
+                      Status
+                    </label>
+                    <p
+                      className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full ${getStatusStyle(
+                        selectedRow?.status,
+                      )}`}
+                    >
+                      {selectedRow?.status
+                        ? selectedRow.status.charAt(0).toUpperCase() +
+                          selectedRow.status.slice(1).toLowerCase()
+                        : "-"}{" "}
+                    </p>
+                  </div>
                   <div className="group">
                     <label className="block mb-1 text-xs font-medium uppercase">
                       Total Quota
@@ -684,9 +711,17 @@ function AliasKeyList() {
                 <div className="mt-4 space-y-4 md:mt-0">
                   <div className="group">
                     <label className="block mb-1 text-xs font-medium uppercase">
-                      Domain Name
+                      Key
                     </label>
                     <p className="text-sm text-gray-500 break-all">
+                      {selectedRow?.alias_key || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block mb-1 text-sm font-medium uppercase">
+                      Domain Name
+                    </label>
+                    <p className="text-sm text-gray-500">
                       {selectedRow?.domain_name || "-"}
                     </p>
                   </div>

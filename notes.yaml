@@ -35,3 +35,8 @@ curl --location --request GET 'http://localhost:5001/api/get-response?usernae=1&
 2)key history design
 3) key history view bread crumb
 4)admin side validation + structure change
+5)scrollbar in listing
+6)when show Aliad detail show alias key
+
+
+curl --location --request POST -H "Content-Type: application/json" --data '{"method1":"test1","validation":"test","method2":"test2","method4":"test2"}' 'http://localhost:5002/get_response'

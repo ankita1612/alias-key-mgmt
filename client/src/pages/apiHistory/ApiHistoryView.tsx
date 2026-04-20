@@ -192,7 +192,7 @@ function ApiHistoryView() {
                   )}
 
                 <InfoRow
-                  label="Created At"
+                  label="Created Date"
                   value={formatDate(data.createdAt)}
                 />
               </div>
