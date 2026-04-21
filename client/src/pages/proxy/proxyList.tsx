@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiEye } from "react-icons/fi";
+import { customTableStyles } from "../datatableDesign";
 
 import DataTable from "react-data-table-component";
 import apiClient from "../../services/apiClient";
@@ -14,54 +15,7 @@ import {
   FiArrowUp,
   FiArrowDown,
 } from "react-icons/fi";
-const customTableStyles = {
-  headRow: {
-    style: {
-      backgroundColor: "#ffffff",
-      color: "#000000",
-      fontWeight: 600,
-      fontSize: "14px",
-      height: "50px",
-    },
-  },
-  rows: {
-    style: {
-      fontSize: "15px",
-      minHeight: "52px", // 👈 slightly taller (default ~48)
 
-      backgroundColor: "#ffffff",
-      "&:hover": {
-        backgroundColor: "#f3f4f6",
-        cursor: "pointer",
-      },
-    },
-    stripedStyle: {
-      backgroundColor: "#ffffff",
-    },
-  },
-  cells: {
-    style: {
-      fontSize: "14.5px", // 👈 subtle increase (best sweet spot)
-      lineHeight: "1.5", // 👈 improves readability
-      paddingTop: "10px",
-      paddingBottom: "10px",
-    },
-  },
-  pagination: {
-    style: {
-      minHeight: "56px",
-    },
-  },
-  noData: {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: "#ffffff",
-      minHeight: "300px",
-    },
-  },
-};
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ProxyList = () => {
@@ -445,16 +399,16 @@ const ProxyList = () => {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Proxy Name
                     </label>
-                    <p className="text-sm font-medium text-gray-800">
+                    <p className="text-sm font-medium text-gray-800 break-words">
                       {selectedRow?.proxy_name || "-"}
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                    <label className="block text-xs font-semibold text-gray-500 uppercase break-words">
                       Project Name
                     </label>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 break-words">
                       {selectedRow?.project_name || "-"}
                     </p>
                   </div>
@@ -493,7 +447,7 @@ const ProxyList = () => {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Domain Name
                     </label>
-                    <p className="text-sm text-gray-600 break-all">
+                    <p className="text-sm text-gray-600 break-words">
                       {selectedRow?.domain_name || "-"}
                     </p>
                   </div>
@@ -503,7 +457,7 @@ const ProxyList = () => {
                       Proxy Token
                     </label>
                     <div className="flex items-center gap-2">
-                      <p className="flex-1 p-2 font-mono text-sm text-gray-700 break-all border border-gray-200 rounded-md bg-gray-50">
+                      <p className="flex-1 p-2 font-mono text-sm text-gray-700 break-all whitespace-pre-wrap border border-gray-200 rounded-md bg-gray-50">
                         {selectedRow?.proxy_token || "-"}
                       </p>
                     </div>

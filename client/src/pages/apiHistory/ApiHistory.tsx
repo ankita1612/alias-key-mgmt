@@ -6,56 +6,8 @@ import { useParams } from "react-router-dom";
 import apiClient from "../../services/apiClient";
 import toast from "react-hot-toast";
 import { FiList } from "react-icons/fi";
-const customTableStyles = {
-  headRow: {
-    style: {
-      backgroundColor: "#ffffff",
-      color: "#000000",
-      fontWeight: 600,
-      fontSize: "14px",
-      height: "50px",
-    },
-  },
-  rows: {
-    style: {
-      fontSize: "15px",
-      minHeight: "52px", // 👈 slightly taller (default ~48)
-
-      backgroundColor: "#ffffff",
-      "&:hover": {
-        backgroundColor: "#f3f4f6",
-        cursor: "pointer",
-      },
-    },
-    stripedStyle: {
-      backgroundColor: "#ffffff",
-    },
-  },
-  cells: {
-    style: {
-      fontSize: "14.5px", // 👈 subtle increase (best sweet spot)
-      lineHeight: "1.5", // 👈 improves readability
-      paddingTop: "10px",
-      paddingBottom: "10px",
-    },
-  },
-  pagination: {
-    style: {
-      minHeight: "56px",
-    },
-  },
-  noData: {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: "#ffffff",
-      minHeight: "300px",
-    },
-  },
-};
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-
+import { customTableStyles } from "../datatableDesign";
 const ApiHistory = () => {
   const navigate = useNavigate();
 

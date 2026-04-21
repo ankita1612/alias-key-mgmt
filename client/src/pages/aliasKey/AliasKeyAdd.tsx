@@ -32,6 +32,7 @@ const schema = yup.object().shape({
     .required("Total Quota is required") // ✅ FIRST
     .typeError("Total Quota must be a number") // ✅ SECOND
     .positive("Total Quota must be greater than 0")
+    .max(10_000_000, "Total Quota must be less then or equal to 10 million")
     .integer("Total Quota must be an integer"),
   cost_calculation: yup.string().required("Cost Calculation is required"),
   total_estimated_cost: yup
@@ -232,7 +233,7 @@ function AliasKeyAdd() {
           }`}
         >
           {/* project_name */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label className="block mb-2 text-sm">
                 Project Name <span className="text-red-500">*</span>
@@ -288,7 +289,7 @@ disabled:border-gray-200
             </div>
           </div>
           {/* Proxy Select Field */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div>
               <label className="block mb-2 text-sm">
                 Proxy Name <span className="text-red-500">*</span>
