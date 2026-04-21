@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { MdFirstPage, MdLastPage } from "react-icons/md";
+import { generateProxyUrl } from "../../utils/CommonFn";
 
 import {
   User,
@@ -49,85 +50,7 @@ const getStatusStyle = (status?: string) => {
       return "bg-gray-100 text-gray-600";
   }
 };
-const API_URL = import.meta.env.VITE_BACKEND_URL + "/api/get-proxy-response";
-function generatePostProxyData(curl: string, curl_token: string) {
-  try {
-    // ✅ Extract ALL quoted parts
-    const matches = curl.match(/'(.*?)'/g);
 
-    if (!matches || matches.length < 2) {
-      return { url: "", body: "" };
-    }
-
-    // ✅ Last match = URL
-    const url = API_URL;
-    // ✅ Second last match = BODY
-    const jsonStr = matches[matches.length - 2].replace(/'/g, "");
-    try {
-      const json = JSON.parse(jsonStr);
-      // ✅ Remove original token
-      if (json.hasOwnProperty(curl_token)) {
-        delete json[curl_token];
-      }
-      // ✅ Add alias_key
-      json["alias_key"] = "Please enter alias key";
-
-      return {
-        url,
-        body: JSON.stringify(json, null, 2),
-      };
-    } catch {
-      return { url, body: jsonStr };
-    }
-  } catch {
-    return { url: "", body: "" };
-  }
-}
-function generateGetProxyUrl(curl: string, curl_token: string) {
-  try {
-    const urlMatch = curl.match(/'(.*?)'/);
-
-    if (!urlMatch || !urlMatch[1]) return "";
-
-    const originalUrl = urlMatch[1];
-    const url = new URL(originalUrl);
-
-    // ✅ Remove original token
-    if (url.searchParams.has(curl_token)) {
-      url.searchParams.delete(curl_token);
-    }
-
-    // ✅ Build new params
-    const newParams = new URLSearchParams();
-
-    // Add alias_key first
-    newParams.set("alias_key", "Please enter alias key");
-
-    // Add remaining params
-    url.searchParams.forEach((value, key) => {
-      newParams.set(key, value);
-    });
-
-    // ✅ Final proxy URL
-    return `${API_URL}?${newParams.toString()}`;
-  } catch (err) {
-    console.error("Error generating proxy URL");
-    return "";
-  }
-}
-function generateProxyUrl(curl: string, curl_token: string) {
-  if (!curl) return "";
-
-  const lowerCurl = curl.toLowerCase();
-
-  // ✅ Detect POST
-  if (lowerCurl.includes("--request post") || lowerCurl.includes("--data")) {
-    return generatePostProxyData(curl, curl_token);
-  }
-
-  // ✅ Default = GET
-  return generateGetProxyUrl(curl, curl_token);
-}
 function AliasKeyList() {
   const { user } = useAuth();
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -651,7 +574,7 @@ function AliasKeyList() {
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                         Requested By
                       </label>
-                      <p className="text-sm text-gray-800 font-medium">
+                      <p className="text-sm font-medium text-gray-800">
                         {selectedRow.user?.first_name ||
                           selectedRow.user?.name ||
                           "-"}
@@ -718,7 +641,7 @@ function AliasKeyList() {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Key
                     </label>
-                    <p className="text-sm font-mono text-gray-600 break-all bg-gray-50 p-2 rounded-md border border-gray-200">
+                    <p className="p-2 font-mono text-sm text-gray-600 break-all border border-gray-200 rounded-md bg-gray-50">
                       {selectedRow?.alias_key || "-"}
                     </p>
                   </div>
@@ -756,11 +679,11 @@ function AliasKeyList() {
 
               {/* Cost Calculation - Full Width */}
               {selectedRow?.cost_calculation && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                <div className="pt-4 mt-6 border-t border-gray-200">
+                  <label className="block mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
                     Cost Calculation
                   </label>
-                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar font-mono">
+                  <div className="p-3 overflow-y-auto font-mono text-sm text-gray-600 rounded-lg bg-gray-50 max-h-32 custom-scrollbar">
                     {selectedRow?.cost_calculation || "-"}
                   </div>
                 </div>
@@ -768,11 +691,11 @@ function AliasKeyList() {
 
               {/* Purpose - Full Width */}
               {selectedRow?.description && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                <div className="pt-4 mt-6 border-t border-gray-200">
+                  <label className="block mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
                     Purpose
                   </label>
-                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar">
+                  <div className="p-3 overflow-y-auto text-sm text-gray-600 rounded-lg bg-gray-50 max-h-32 custom-scrollbar">
                     {selectedRow?.description || "-"}
                   </div>
                 </div>
@@ -780,13 +703,13 @@ function AliasKeyList() {
 
               {/* Proxy Configuration Section - Only if proxy exists */}
               {selectedRow?.proxy && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
+                <div className="pt-4 mt-6 border-t border-gray-200">
                   <div className="space-y-4">
                     <div>
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                         Proxy Name
                       </label>
-                      <p className="text-sm text-gray-600 font-medium">
+                      <p className="text-sm font-medium text-gray-600">
                         {selectedRow.proxy?.proxy_name || "-"}
                       </p>
                     </div>
@@ -796,13 +719,13 @@ function AliasKeyList() {
                       Object.keys(selectedRow.proxy.query_params).length >
                         0 && (
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                          <label className="block mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
                             Proxy URL
                           </label>
-                          <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-48 custom-scrollbar">
+                          <div className="p-3 overflow-y-auto text-sm text-gray-600 rounded-lg bg-gray-50 max-h-48 custom-scrollbar">
                             {!liveUrl && "No proxy data"}
                             {typeof liveUrl === "string" && liveUrl && (
-                              <div className="font-mono break-all text-gray-600">
+                              <div className="font-mono text-gray-600 break-all">
                                 {liveUrl}
                               </div>
                             )}
@@ -833,8 +756,8 @@ function AliasKeyList() {
 
               {/* Proxy Deleted Alert */}
               {selectedRow.proxy?.is_deleted === true && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+                <div className="pt-4 mt-6 border-t border-gray-200">
+                  <div className="p-3 border border-red-200 rounded-lg bg-red-50">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
                         <FiAlertCircle className="w-4 h-4 text-red-500" />
@@ -900,7 +823,7 @@ function AliasKeyList() {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Requested By
                     </label>
-                    <p className="text-sm text-gray-800 font-medium">
+                    <p className="text-sm font-medium text-gray-800">
                       {selectedRow?.user?.first_name ||
                         selectedRow?.user?.name ||
                         "-"}
@@ -979,11 +902,11 @@ function AliasKeyList() {
 
               {/* Cost Calculation - Full Width */}
               {selectedRow?.cost_calculation && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                <div className="pt-4 mt-6 border-t border-gray-200">
+                  <label className="block mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
                     Cost Calculation
                   </label>
-                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar font-mono">
+                  <div className="p-3 overflow-y-auto font-mono text-sm text-gray-600 rounded-lg bg-gray-50 max-h-32 custom-scrollbar">
                     {selectedRow?.cost_calculation || "-"}
                   </div>
                 </div>
@@ -991,11 +914,11 @@ function AliasKeyList() {
 
               {/* Purpose - Full Width */}
               {selectedRow?.description && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                <div className="pt-4 mt-6 border-t border-gray-200">
+                  <label className="block mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
                     Purpose
                   </label>
-                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar">
+                  <div className="p-3 overflow-y-auto text-sm text-gray-600 rounded-lg bg-gray-50 max-h-32 custom-scrollbar">
                     {selectedRow?.description || "-"}
                   </div>
                 </div>
