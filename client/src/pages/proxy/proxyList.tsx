@@ -187,7 +187,9 @@ const ProxyList = () => {
       name: "Proxy Name",
       selector: (row: any) => row.proxy_name,
       sortable: true,
+      width: "250px",
       sortField: "proxy_name",
+
       grow: 1,
       cell: (row) => (
         <span className="break-words whitespace-normal">
@@ -201,6 +203,7 @@ const ProxyList = () => {
       sortable: true,
       sortField: "curl",
       grow: 3,
+      width: "500px",
       wrap: true,
       cell: (row) => (
         <span className="break-all whitespace-normal ">{row.curl || "-"}</span>
@@ -233,7 +236,7 @@ const ProxyList = () => {
       name: "Actions",
       ignoreRowClick: true,
       cell: ActionColumn,
-      width: "150px",
+      width: "120px",
     },
   ];
 
@@ -260,7 +263,7 @@ const ProxyList = () => {
             <input
               ref={searchRef}
               type="text"
-              placeholder="Search ..."
+              placeholder="Search proxy, curl, credit"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"

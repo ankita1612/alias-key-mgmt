@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-
+import { capitalize, getStatusConfig } from "../../utils/CommonFn";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import DataTable from "react-data-table-component";
 import { useParams } from "react-router-dom";
@@ -117,11 +117,18 @@ const ApiHistory = () => {
       selector: (row: any) => row.response_status,
       sortable: true,
       sortField: "response_status",
-      cell: (row: any) => (
-        <span className="px-2 py-1 text-xs bg-gray-100 rounded">
-          {row.response_status}
-        </span>
-      ),
+      cell: (row: any) => {
+        const status = row.response_status?.toLowerCase();
+        const statusConfig = getStatusConfig(status);
+
+        return (
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
+          >
+            {capitalize(row.response_status) || "-"}
+          </span>
+        );
+      },
       width: "120px",
     },
     {

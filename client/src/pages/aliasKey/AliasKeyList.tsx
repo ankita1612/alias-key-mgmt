@@ -917,7 +917,7 @@ const AliasKeyList = () => {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Total Estimated Cost
                     </label>
-                    <p className="text-lg font-bold text-indigo-600">
+                    <p className="text-lg font-bold text-indigo-600 break-words">
                       $
                       {selectedRow?.total_estimated_cost?.toLocaleString() ||
                         "-"}
@@ -1140,7 +1140,7 @@ const AliasKeyList = () => {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Total Estimated Cost
                     </label>
-                    <p className="text-lg font-bold text-indigo-600">
+                    <p className="text-lg font-bold text-indigo-600 break-words">
                       $
                       {selectedRow?.total_estimated_cost?.toLocaleString() ||
                         "-"}

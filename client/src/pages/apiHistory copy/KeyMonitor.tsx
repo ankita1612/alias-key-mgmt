@@ -679,7 +679,7 @@ function KeyMonitor() {
               )}
             </div>
             {/* Table - Using react-data-table-component */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <div className="overflow-hidden border border-gray-200 rounded-lg">
               <DataTable
                 columns={columns}
                 data={apiData}
@@ -883,7 +883,7 @@ function KeyMonitor() {
                     <label className="block mb-1 text-xs font-medium uppercase">
                       Total Estimated Cost
                     </label>
-                    <p className="text-base font-semibold text-indigo-600">
+                    <p className="text-base font-semibold text-indigo-600 break-words">
                       $
                       {selectedRow?.total_estimated_cost?.toLocaleString() ||
                         "-"}
@@ -933,7 +933,7 @@ function KeyMonitor() {
                       Object.keys(selectedRow.proxy.query_params).length >
                         0 && (
                         <div>
-                          <label className="block pt-2 mt-2 text-xs font-medium uppercase  ">
+                          <label className="block pt-2 mt-2 text-xs font-medium uppercase ">
                             Proxy URL
                           </label>
                           <div className="overflow-hidden rounded-lg">
