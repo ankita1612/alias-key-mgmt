@@ -29,7 +29,7 @@ import {
   FiArrowDown,
 } from "react-icons/fi";
 
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { IAliasKey } from "../../interface/aliasKey.interface";
 import AliasKeyRow from "./AliasKeyRow";
 
@@ -609,6 +609,12 @@ const AliasKeyList = () => {
       sortField: "domain_name",
       width: "250px",
       grow: 1,
+      wrap: true,
+      cell: (row) => (
+        <span className="break-all whitespace-normal ">
+          {row.domain_name || "-"}
+        </span>
+      ),
     },
     {
       name: "Status",
@@ -667,7 +673,7 @@ const AliasKeyList = () => {
     {
       name: "Actions",
       selector: () => "",
-      width: "120px",
+      width: "100px",
       sortable: false,
       cell: (row: IAliasKey) => (
         <ActionsCell
