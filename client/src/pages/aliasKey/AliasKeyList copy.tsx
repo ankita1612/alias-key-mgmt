@@ -1,15 +1,6 @@
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { MdFirstPage, MdLastPage } from "react-icons/md";
-import { CheckCircle, XCircle } from "lucide-react";
-import {
-  FiSearch,
-  FiPlus,
-  FiEdit2,
-  FiEye,
-  FiTrash2,
-  FiAlertCircle,
-} from "react-icons/fi";
 
-import TotalHitsModal from "./TotalHitsModal";
 import {
   User,
   FolderOpen,
@@ -19,28 +10,46 @@ import {
   DollarSign,
   Shield,
   FileText,
+  XCircle,
+  CheckCircle,
 } from "lucide-react";
 import {
   FiChevronLeft,
   FiChevronRight,
   FiChevronsLeft,
   FiChevronsRight,
+  FiSearch,
+  FiPlus,
   FiArrowUp,
   FiArrowDown,
+  FiAlertCircle,
 } from "react-icons/fi";
 
 import { Link, useLocation } from "react-router-dom";
 import type { IAliasKey } from "../../interface/aliasKey.interface";
 import AliasKeyRow from "./AliasKeyRow";
-
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import { useAuth } from "../../context/AuthContext";
+import toast from "react-hot-toast";
+import apiClient from "../../services/apiClient";
 
 import { AlertTriangle } from "lucide-react";
 import { MdClose } from "react-icons/md";
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import DataTable from "react-data-table-component";
-import apiClient from "../../services/apiClient";
-import toast from "react-hot-toast";
+const getStatusStyle = (status?: string) => {
+  switch (status?.toLowerCase()) {
+    case "active":
+      return "bg-green-50 text-green-700";
+    case "inactive":
+      return "bg-gray-100 text-gray-600";
+    case "pending":
+      return "bg-yellow-50 text-yellow-700";
+    case "rejected":
+      return "bg-red-50 text-red-700";
+    default:
+      return "bg-gray-100 text-gray-600";
+  }
+};
+const API_URL = import.meta.env.VITE_BACKEND_URL + "/api/get-proxy-response";
 function generatePostProxyData(curl: string, curl_token: string) {
   try {
     // ✅ Extract ALL quoted parts
@@ -57,7 +66,7 @@ function generatePostProxyData(curl: string, curl_token: string) {
     try {
       const json = JSON.parse(jsonStr);
       // ✅ Remove original token
-      if (curl_token in json) {
+      if (json.hasOwnProperty(curl_token)) {
         delete json[curl_token];
       }
       // ✅ Add alias_key
@@ -119,102 +128,51 @@ function generateProxyUrl(curl: string, curl_token: string) {
   // ✅ Default = GET
   return generateGetProxyUrl(curl, curl_token);
 }
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-const getStatusStyle = (status?: string) => {
-  switch (status?.toLowerCase()) {
-    case "active":
-      return "bg-green-50 text-green-700";
-    case "inactive":
-      return "bg-gray-100 text-gray-600";
-    case "pending":
-      return "bg-yellow-50 text-yellow-700";
-    case "rejected":
-      return "bg-red-50 text-red-700";
-    default:
-      return "bg-gray-100 text-gray-600";
-  }
-};
-const customTableStyles = {
-  headRow: {
-    style: {
-      backgroundColor: "#ffffff",
-      color: "#000000",
-      fontWeight: 600,
-      fontSize: "14px",
-      height: "50px",
-    },
-  },
-  rows: {
-    style: {
-      fontSize: "15px",
-      minHeight: "52px", // 👈 slightly taller (default ~48)
-
-      backgroundColor: "#ffffff",
-      "&:hover": {
-        backgroundColor: "#f3f4f6",
-        cursor: "pointer",
-      },
-    },
-    stripedStyle: {
-      backgroundColor: "#ffffff",
-    },
-  },
-  cells: {
-    style: {
-      fontSize: "14.5px", // 👈 subtle increase (best sweet spot)
-      lineHeight: "1.5", // 👈 improves readability
-      paddingTop: "10px",
-      paddingBottom: "10px",
-    },
-  },
-  pagination: {
-    style: {
-      minHeight: "56px",
-    },
-  },
-  noData: {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: "#ffffff",
-      minHeight: "300px",
-    },
-  },
-};
-const AliasKeyList = () => {
+function AliasKeyList() {
   const { user } = useAuth();
-  const isAdmin = user?.role === "Admin";
-  const searchRef = useRef<HTMLInputElement>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [apiData, setApiData] = useState<IAliasKey[]>([]);
+  const [loading, setLoading] = useState(false);
+  const location = useLocation();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [total, setTotal] = useState(0);
 
+  const [total, setTotal] = useState(0);
+  const searchRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const deleteModalRef = useRef<HTMLDivElement>(null);
-  const showPendingRejectedRef = useRef<HTMLInputElement>(null);
-  const showDetailRef = useRef<HTMLDivElement>(null);
-  const showActiveInactiveModalRef = useRef<HTMLDivElement>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [sort, setSort] = useState({
-    field: "createdAt",
-    order: "desc" as "asc" | "desc",
-  });
+  const [sortField, setSortField] = useState("_id");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [selectedRow, setSelectedRow] = useState<IAliasKey | null>(null);
   const [showPendingRejectedModal, setShowPendingRejectedModal] =
     useState(false);
+  const showPendingRejectedRef = useRef<HTMLInputElement>(null);
+
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const showDetailRef = useRef<HTMLDivElement>(null);
+
   const [showActiveInactiveModal, setShowActiveInactiveModal] = useState(false);
-  const [newStatus, setNewStatus] = useState<string>("");
-  const [liveUrl, setLiveUrl] = useState<
-    string | { url: string; body: string }
-  >("");
-  const [showStats, setShowStats] = useState(false);
-  const controllerRef = useRef<AbortController | null>(null);
+  const showActiveInactiveModalRef = useRef<HTMLDivElement>(null);
+
+  const [newStatus, setNewStatus] = useState(false);
+
+  const [mobileView, setMobileView] = useState(false);
+  const deleteModalRef = useRef<HTMLDivElement>(null);
+
+  const [liveUrl, setLiveUrl] = useState("");
+  const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setLimit(Number(e.target.value));
+    setPage(1); // reset to first page
+  };
+  // Check screen size for mobile view
+  useEffect(() => {
+    const checkMobile = () => {
+      setMobileView(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Delete modal
@@ -250,28 +208,9 @@ const AliasKeyList = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showDeleteModal, showPendingRejectedModal, showActiveInactiveModal]);
-  const handleDeleteClick = (id: string) => {
-    setDeleteId(id);
-    setShowDeleteModal(true);
-  };
-  const handleConfirmDelete = async () => {
-    if (!deleteId) return;
-
-    const previousData = apiData;
-    setApiData((prev) => prev.filter((p) => p._id !== deleteId));
-
-    try {
-      const res = await apiClient.delete(
-        `${BACKEND_URL}/api/alias-key/${deleteId}`,
-      );
-      toast.success(res.data.message);
-    } catch (error: any) {
-      setApiData(previousData);
-      toast.error(error.response?.data?.message || "Delete failed");
-    } finally {
-      setShowDeleteModal(false);
-      setDeleteId(null);
-    }
+  const handleActionClick = (row: IAliasKey) => {
+    setSelectedRow(row);
+    setShowPendingRejectedModal(true);
   };
   const handleshowKeyDetail = (row: IAliasKey) => {
     setSelectedRow(row);
@@ -279,8 +218,14 @@ const AliasKeyList = () => {
 
     const proxyResult = row?.proxy
       ? generateProxyUrl(row.proxy.curl || "", row.proxy.curl_token || "")
-      : "";
+      : null;
     setLiveUrl(proxyResult);
+  };
+  const handleActiveInactiveClick = (row: IAliasKey, newStatus: string) => {
+    setSelectedRow(row);
+
+    setNewStatus(newStatus);
+    setShowActiveInactiveModal(true);
   };
   const handleApprove = async (action: string) => {
     try {
@@ -323,157 +268,6 @@ const AliasKeyList = () => {
       setLoading(false);
     }
   };
-  // Status Badge Component
-  const StatusBadge = ({
-    row,
-    userRole,
-    onActionClick,
-    onStatusChange,
-    isDeleted,
-  }: any) => {
-    const getStatusConfig = (status: string) => {
-      switch (status) {
-        case "Active":
-          return {
-            bg: "bg-green-50",
-            text: "text-green-700",
-            dot: "bg-green-500",
-            border: "border-green-200",
-            icon: CheckCircle,
-          };
-        case "Inactive":
-          return {
-            bg: "bg-gray-100",
-            text: "text-gray-600",
-            dot: "bg-gray-400",
-            border: "border-gray-300",
-            icon: XCircle,
-          };
-        case "Pending":
-          return {
-            bg: "bg-yellow-50",
-            text: "text-yellow-700",
-            dot: "bg-yellow-500",
-            border: "border-yellow-200",
-            icon: AlertTriangle,
-          };
-        case "Rejected":
-          return {
-            bg: "bg-red-50",
-            text: "text-red-700",
-            dot: "bg-red-500",
-            border: "border-red-200",
-            icon: XCircle,
-          };
-        default:
-          return {
-            bg: "bg-gray-50",
-            text: "text-gray-700",
-            dot: "bg-gray-500",
-            border: "border-gray-200",
-            icon: AlertTriangle,
-          };
-      }
-    };
-
-    const statusConfig = getStatusConfig(row.status);
-    const Icon = statusConfig.icon;
-
-    if (userRole === "Admin") {
-      if (row.status === "Pending") {
-        return (
-          <button
-            disabled={isDeleted}
-            onClick={() => onActionClick(row)}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
-            title="Click to approve/reject"
-          >
-            <Icon className="w-4 h-4" />
-            {row.status}
-          </button>
-        );
-      } else if (row.status === "Active" || row.status === "Inactive") {
-        return (
-          <button
-            disabled={isDeleted}
-            onClick={() =>
-              onStatusChange(
-                row,
-                row.status === "Active" ? "Inactive" : "Active",
-              )
-            }
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
-            title="Click to change status"
-          >
-            <Icon className="w-4 h-4" />
-            {row.status}
-          </button>
-        );
-      }
-    }
-
-    return (
-      <span
-        className={`inline-flex items-center gap-1.5 px-2.5 py-1 font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
-      >
-        <Icon className="w-4 h-4" />
-        {row.status}
-      </span>
-    );
-  };
-  // 🔥 Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1);
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [search]);
-  const handleActiveInactiveClick = (row: IAliasKey, newStatus: string) => {
-    setSelectedRow(row);
-
-    setNewStatus(newStatus);
-    setShowActiveInactiveModal(true);
-  };
-  // 🔥 Fetch Data (SERVER SIDE)
-  useEffect(() => {
-    if (controllerRef.current) {
-      controllerRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    controllerRef.current = controller;
-
-    // const fetchData = async () => {
-    //   setLoading(true);
-    //   try {
-    //     const { data } = await apiClient.get(`${BACKEND_URL}/api/alias-key`, {
-    //       signal: controller.signal,
-    //       params: {
-    //         page,
-    //         limit,
-    //         search: debouncedSearch,
-    //         sortField: sort.field,
-    //         sortOrder: sort.order,
-    //       },
-    //     });
-
-    //     setData(data.data);
-    //     setTotal(data.pagination.total);
-    //   } catch (err: any) {
-    //     if (err.name !== "CanceledError") {
-    //       toast.error(err?.message || "Failed to load data");
-    //     }
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-
-    fetchData();
-
-    return () => controller.abort();
-  }, [page, limit, debouncedSearch, sort.field, sort.order]);
   const fetchData = useCallback(async () => {
     const controller = new AbortController();
     setLoading(true);
@@ -484,8 +278,8 @@ const AliasKeyList = () => {
           page,
           limit,
           search,
-          sortField: sort.field,
-          sortOrder: sort.order,
+          sortField,
+          sortOrder,
         },
       });
       setApiData(data.data);
@@ -502,188 +296,79 @@ const AliasKeyList = () => {
       setLoading(false);
     }
     return () => controller.abort();
-  }, [page, limit, search, sort.field, sort.order]);
+  }, [page, limit, search, sortField, sortOrder]);
 
-  // 🔥 Sorting Handler (NO double call)
-  const handleSort = (column: any, sortDirection: "asc" | "desc") => {
-    if (!column.sortField) return;
-
-    setSort((prev) => {
-      if (prev.field === column.sortField && prev.order === sortDirection) {
-        return prev;
-      }
-
-      return {
-        field: column.sortField,
-        order: sortDirection,
-      };
-    });
-
-    setPage(1);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+  const handleDeleteClick = (id: string) => {
+    setDeleteId(id);
+    setShowDeleteModal(true);
   };
-  const handleActionClick = (row: IAliasKey) => {
-    setSelectedRow(row);
-    setShowPendingRejectedModal(true);
-  };
-  const ActionsCell = ({
-    row,
-    userRole,
-    onEdit,
-    onDelete,
-    onView,
-    isDeleted,
-  }: any) => {
-    return (
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onView}
-          className="text-blue-600 transition hover:text-blue-700"
-          title="View details"
-        >
-          <FiEye className="w-4 h-4" />
-        </button>
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return;
 
-        {!isDeleted && (
-          <>
-            {userRole === "User" && (
-              <button
-                onClick={() => onEdit(row._id)}
-                className="text-orange-600 transition hover:text-orange-700"
-                title="Edit"
-              >
-                <FiEdit2 className="w-4 h-4" />
-              </button>
-            )}
+    const previousData = apiData;
+    setApiData((prev) => prev.filter((p) => p._id !== deleteId));
 
-            {userRole === "Admin" && (
-              <button
-                onClick={() => onDelete(row._id)}
-                className="text-red-600 transition hover:text-red-700"
-                title="Delete"
-              >
-                <FiTrash2 className="w-4 h-4" />
-              </button>
-            )}
-          </>
-        )}
-      </div>
-    );
+    try {
+      const res = await apiClient.delete(
+        `${BACKEND_URL}/api/alias-key/${deleteId}`,
+      );
+      toast.success(res.data.message);
+    } catch (error: any) {
+      setApiData(previousData);
+      toast.error(error.response?.data?.message || "Delete failed");
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteId(null);
+    }
   };
-  // 🔥 Columns
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  };
+
+  useEffect(() => {
+    if (searchRef.current) {
+      searchRef.current.focus();
+    }
+  }, [apiData]);
+
+  const isAdmin = user?.role === "Admin";
+
   const columns = [
-    {
-      name: "No.",
-      cell: (_: any, index: number) => (page - 1) * limit + index + 1,
-      width: "70px",
-    },
+    { label: "No.", field: "_id", sortable: true },
     ...(isAdmin
       ? [
-          {
-            name: "User",
-            selector: (row: IAliasKey) =>
-              row.user?.first_name || row.user?.name || "-",
-            width: "150px",
-            grow: 1,
-            style: {
-              // maxWidth: "300px", // ✅ correct
-            },
-            sortable: true,
-          },
+          { label: "User", field: "user.first_name", sortable: true },
+          // { label: "Email", field: "user.email", sortable: true },
         ]
       : []),
-    {
-      name: "Key",
-      selector: (row: any) => row.alias_key,
-      sortable: true,
-      sortField: "alias_key",
-      width: "250px",
-      grow: 1,
-      cell: (row: IAliasKey) => (
-        <span className="font-semibold">{row.alias_key || "-"}</span>
-      ),
-    },
-    {
-      name: "Domain Name",
-      selector: (row: any) => row.domain_name,
-      sortable: true,
-      sortField: "domain_name",
-      width: "250px",
-      grow: 1,
-    },
-    {
-      name: "Status",
-      selector: (row: IAliasKey) => row.status || "-",
-      width: "150px",
-      sortable: true,
-      cell: (row: IAliasKey) => (
-        <StatusBadge
-          row={row}
-          userRole={user?.role}
-          onActionClick={() => handleActionClick(row)}
-          onStatusChange={handleActiveInactiveClick}
-          isDeleted={row.proxy?.is_deleted}
-        />
-      ),
-      sortField: "status", // ✅ ADD
-    },
-    {
-      name: "Total Quota",
-      selector: (row: any) => row.total_quota,
-      sortable: true,
-      sortField: "total_quota",
-      width: "120px",
-      cell: (row: IAliasKey) => (
-        <span>{row.total_quota?.toLocaleString() || "0"}</span>
-      ),
-    },
-    {
-      name: "Total Available",
-      selector: (row: any) => row.remaining_quota,
-      sortable: true,
-      sortField: "remaining_quota",
-      width: "120px",
-      cell: (row: IAliasKey) => (
-        <span>{row.remaining_quota?.toLocaleString() || "0"}</span>
-      ),
-    },
-    {
-      name: "Created",
-      selector: (row: any) => row.createdAt,
-      sortable: true,
-      sortField: "createdAt",
-      cell: (row: IAliasKey) => (
-        <span className="text-sm">
-          {row.createdAt
-            ? new Date(row.createdAt).toLocaleDateString(undefined, {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
-            : "-"}
-        </span>
-      ),
-      width: "140px",
-    },
-    {
-      name: "Actions",
-      selector: () => "",
-      width: "120px",
-      sortable: false,
-      cell: (row: IAliasKey) => (
-        <ActionsCell
-          row={row}
-          userRole={user?.role}
-          onEdit={(id: string) => {
-            navigate(`/alias-key/add/${id}`);
-          }}
-          onDelete={(id: string) => handleDeleteClick(id)}
-          onView={() => handleshowKeyDetail(row)}
-          isDeleted={row.proxy?.is_deleted}
-        />
-      ),
-    },
+    { label: "Key", field: "alias_key", sortable: true },
+    { label: "Domain Name", field: "domain_name", sortable: true },
+    { label: "Status", field: "status", sortable: true },
+    { label: "Total Quota", field: "total_quota", sortable: true },
+    { label: "Total Available", field: "remaining_quota", sortable: true },
+    { label: "Total Hits", field: "", sortable: false },
+    { label: "Created", field: "createdAt", sortable: true },
   ];
 
+  // Responsive grid columns based on screen size and admin status
+  const getGridCols = () => {
+    if (mobileView) return "grid-cols-1"; // Card view on mobile
+    const baseCols = isAdmin ? 10 : 8;
+    return `grid-cols-${baseCols}`;
+  };
+  const gridColsClass =
+    user?.role === "Admin"
+      ? "grid-cols-[60px_100px_250px_200px_120px_120px_120px_120px_140px_40px]"
+      : "grid-cols-[60px_250px_200px_120px_120px_120px_120px_140px_40px]";
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
       {/* HEADER */}
@@ -701,72 +386,175 @@ const AliasKeyList = () => {
       </div>
       <div className="p-5 sm:p-6">
         {/* Loading */}
+        {loading ? (
+          <div className="flex justify-center py-10">
+            <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between">
+              {/* Search - Responsive */}
+              <div className="relative w-full sm:w-80">
+                <input
+                  ref={searchRef}
+                  type="text"
+                  placeholder="Search by key, domain name, status..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
+                />
 
-        <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between">
-          {/* Search - Responsive */}
-          <div className="relative w-full sm:w-80">
-            <input
-              ref={searchRef}
-              type="text"
-              placeholder="Search by key, domain name, status..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
-            />
+                <FiSearch className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
 
-            <FiSearch className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearch("");
+                      searchRef.current?.focus();
+                    }}
+                    className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2 hover:text-gray-600"
+                  >
+                    <MdClose size={18} />
+                  </button>
+                )}
+              </div>
+              {/* Button */}
+              {user?.role == "User" && (
+                <Link
+                  to="/alias-key/add"
+                  className="whitespace-nowrap inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm"
+                >
+                  <FiPlus className="w-4 h-4" />
+                  Create Key
+                </Link>
+              )}
+            </div>
+            {/* Table - Responsive with Card View on Mobile */}
+            <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
+              <div className="min-w-max">
+                {/* Header Row */}
+                <div
+                  className={`grid ${gridColsClass} min-w-max text-base font-semibold text-gray-900  px-4 py-3 border-b border-gray-300`}
+                >
+                  {columns.map((col) => (
+                    <div
+                      key={col.label}
+                      onClick={() => col.sortable && handleSort(col.field)}
+                      className={`flex items-center  text-sm transition-colors duration-200 
+      ${col.sortable ? "cursor-pointer hover:text-primary" : "cursor-default"}
+    `}
+                    >
+                      {col.label}
 
-            {search && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearch("");
-                  searchRef.current?.focus();
-                }}
-                className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2 hover:text-gray-600"
-              >
-                <MdClose size={18} />
-              </button>
+                      {col.sortable && sortField === col.field && (
+                        <span className="text-sm text-primary">
+                          {sortOrder === "asc" ? (
+                            <FiArrowUp />
+                          ) : (
+                            <FiArrowDown />
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                  <div className="text-sm text-center">Actions</div>
+                </div>
+
+                {/* Rows */}
+                {apiData.length === 0 ? (
+                  <div className="py-10 text-center text-gray-600">
+                    <p className="text-sm font-semibold">No key found</p>
+                  </div>
+                ) : (
+                  apiData.map((item, index) => (
+                    <AliasKeyRow
+                      key={item._id}
+                      page={page}
+                      limit={limit}
+                      index={index}
+                      apiData={item}
+                      handleDelete={handleDeleteClick}
+                      userRole={user?.role}
+                      onActionClick={handleActionClick}
+                      makeActiveInactiveClick={handleActiveInactiveClick}
+                      mobileView={false}
+                      gridColsClass={gridColsClass}
+                      showKeyDetail={handleshowKeyDetail}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+
+            {total > limit && (
+              <div className="flex justify-end mt-8">
+                <div className="flex items-center gap-4">
+                  {/* 1️⃣ LIMIT DROPDOWN */}
+                  <div className="flex items-center gap-0 pr-4 text-xs text-gray-500">
+                    <span>Rows Per Page :</span>
+                    <select
+                      value={limit}
+                      onChange={handleLimitChange}
+                      className="px-1 py-1 text-gray-500 rounded-md focus:outline-none focus:ring-2"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
+                  {/* Page info */}
+                  <div className="pr-4 text-xs text-gray-500 whitespace-nowrap">
+                    <span>{Math.min((page - 1) * limit + 1, total)}</span>-
+                    <span>{Math.min(page * limit, total)}</span> of{" "}
+                    <span>{total}</span>{" "}
+                  </div>
+
+                  {/* Pagination controls */}
+                  <div className="flex items-center gap-3 text-xs">
+                    {/* First */}
+                    <button
+                      onClick={() => setPage(1)}
+                      disabled={page === 1}
+                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
+                    >
+                      <MdFirstPage size={25} />
+                    </button>
+
+                    {/* Previous */}
+                    <button
+                      onClick={() => setPage(page - 1)}
+                      disabled={page === 1}
+                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
+                    >
+                      <FiChevronLeft size={22} />
+                    </button>
+
+                    {/* Next */}
+                    <button
+                      onClick={() => setPage(page + 1)}
+                      disabled={page === Math.ceil(total / limit)}
+                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
+                    >
+                      <FiChevronRight size={22} />
+                    </button>
+
+                    {/* Last */}
+                    <button
+                      onClick={() => setPage(Math.ceil(total / limit))}
+                      disabled={page === Math.ceil(total / limit)}
+                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
+                    >
+                      <MdLastPage size={25} />
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
-          </div>
-          {/* Button */}
-          {user?.role == "User" && (
-            <Link
-              to="/alias-key/add"
-              className="whitespace-nowrap inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm"
-            >
-              <FiPlus className="w-4 h-4" />
-              Create Key
-            </Link>
-          )}
-        </div>
-
-        <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
-          <div className="min-w-max">
-            {/* 🔍 Search */}
-
-            {/* 📊 Table */}
-            <DataTable
-              columns={columns}
-              data={apiData}
-              progressPending={loading}
-              pagination
-              paginationServer
-              paginationTotalRows={total}
-              paginationPerPage={limit}
-              onChangePage={(p) => setPage(p)}
-              onChangeRowsPerPage={(newLimit) => {
-                setLimit(newLimit);
-                setPage(1);
-              }}
-              sortServer
-              onSort={handleSort}
-              highlightOnHover
-              pointerOnHover
-              customStyles={customTableStyles}
-            />
-          </div>
-        </div>
+          </>
+        )}
       </div>
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
@@ -819,13 +607,14 @@ const AliasKeyList = () => {
           </div>
         </div>
       )}
+      {/* Modal - Responsive */}
       {showDetailModal && selectedRow && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md"
           onClick={(e) => {
             if (
               showDetailRef.current &&
-              !showDetailRef.current.contains(e.target as Node)
+              !showDetailRef.current.contains(e.target)
             ) {
               setShowDetailModal(false);
             }
@@ -862,7 +651,7 @@ const AliasKeyList = () => {
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                         Requested By
                       </label>
-                      <p className="text-sm font-medium text-gray-800">
+                      <p className="text-sm text-gray-800 font-medium">
                         {selectedRow.user?.first_name ||
                           selectedRow.user?.name ||
                           "-"}
@@ -929,7 +718,7 @@ const AliasKeyList = () => {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Key
                     </label>
-                    <p className="p-2 font-mono text-sm text-gray-600 break-all border border-gray-200 rounded-md bg-gray-50">
+                    <p className="text-sm font-mono text-gray-600 break-all bg-gray-50 p-2 rounded-md border border-gray-200">
                       {selectedRow?.alias_key || "-"}
                     </p>
                   </div>
@@ -967,11 +756,11 @@ const AliasKeyList = () => {
 
               {/* Cost Calculation - Full Width */}
               {selectedRow?.cost_calculation && (
-                <div className="pt-4 mt-6 border-t border-gray-200">
-                  <label className="block mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                     Cost Calculation
                   </label>
-                  <div className="p-3 overflow-y-auto font-mono text-sm text-gray-600 rounded-lg bg-gray-50 max-h-32 custom-scrollbar">
+                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar font-mono">
                     {selectedRow?.cost_calculation || "-"}
                   </div>
                 </div>
@@ -979,11 +768,11 @@ const AliasKeyList = () => {
 
               {/* Purpose - Full Width */}
               {selectedRow?.description && (
-                <div className="pt-4 mt-6 border-t border-gray-200">
-                  <label className="block mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                     Purpose
                   </label>
-                  <div className="p-3 overflow-y-auto text-sm text-gray-600 rounded-lg bg-gray-50 max-h-32 custom-scrollbar">
+                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar">
                     {selectedRow?.description || "-"}
                   </div>
                 </div>
@@ -991,13 +780,13 @@ const AliasKeyList = () => {
 
               {/* Proxy Configuration Section - Only if proxy exists */}
               {selectedRow?.proxy && (
-                <div className="pt-4 mt-6 border-t border-gray-200">
+                <div className="mt-6 pt-4 border-t border-gray-200">
                   <div className="space-y-4">
                     <div>
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                         Proxy Name
                       </label>
-                      <p className="text-sm font-medium text-gray-600">
+                      <p className="text-sm text-gray-600 font-medium">
                         {selectedRow.proxy?.proxy_name || "-"}
                       </p>
                     </div>
@@ -1007,13 +796,13 @@ const AliasKeyList = () => {
                       Object.keys(selectedRow.proxy.query_params).length >
                         0 && (
                         <div>
-                          <label className="block mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                             Proxy URL
                           </label>
-                          <div className="p-3 overflow-y-auto text-sm text-gray-600 rounded-lg bg-gray-50 max-h-48 custom-scrollbar">
+                          <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-48 custom-scrollbar">
                             {!liveUrl && "No proxy data"}
                             {typeof liveUrl === "string" && liveUrl && (
-                              <div className="font-mono text-gray-600 break-all">
+                              <div className="font-mono break-all text-gray-600">
                                 {liveUrl}
                               </div>
                             )}
@@ -1044,8 +833,8 @@ const AliasKeyList = () => {
 
               {/* Proxy Deleted Alert */}
               {selectedRow.proxy?.is_deleted === true && (
-                <div className="pt-4 mt-6 border-t border-gray-200">
-                  <div className="p-3 border border-red-200 rounded-lg bg-red-50">
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <div className="p-3 rounded-lg bg-red-50 border border-red-200">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
                         <FiAlertCircle className="w-4 h-4 text-red-500" />
@@ -1111,7 +900,7 @@ const AliasKeyList = () => {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Requested By
                     </label>
-                    <p className="text-sm font-medium text-gray-800">
+                    <p className="text-sm text-gray-800 font-medium">
                       {selectedRow?.user?.first_name ||
                         selectedRow?.user?.name ||
                         "-"}
@@ -1190,11 +979,11 @@ const AliasKeyList = () => {
 
               {/* Cost Calculation - Full Width */}
               {selectedRow?.cost_calculation && (
-                <div className="pt-4 mt-6 border-t border-gray-200">
-                  <label className="block mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                     Cost Calculation
                   </label>
-                  <div className="p-3 overflow-y-auto font-mono text-sm text-gray-600 rounded-lg bg-gray-50 max-h-32 custom-scrollbar">
+                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar font-mono">
                     {selectedRow?.cost_calculation || "-"}
                   </div>
                 </div>
@@ -1202,11 +991,11 @@ const AliasKeyList = () => {
 
               {/* Purpose - Full Width */}
               {selectedRow?.description && (
-                <div className="pt-4 mt-6 border-t border-gray-200">
-                  <label className="block mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                     Purpose
                   </label>
-                  <div className="p-3 overflow-y-auto text-sm text-gray-600 rounded-lg bg-gray-50 max-h-32 custom-scrollbar">
+                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar">
                     {selectedRow?.description || "-"}
                   </div>
                 </div>
@@ -1315,20 +1104,8 @@ const AliasKeyList = () => {
           </div>
         </div>
       )}
-      {/* Total Hits Modal */}
-      {showStats && selectedRow && (
-        <TotalHitsModal
-          data={selectedRow}
-          onClose={() => setShowStats(false)}
-        />
-      )}
-      {loading && (
-        <div className="flex justify-center py-10">
-          <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
-        </div>
-      )}
     </div>
   );
-};
+}
 
 export default AliasKeyList;
