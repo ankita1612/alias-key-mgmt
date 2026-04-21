@@ -27,6 +27,7 @@ const ApiHistory = () => {
 
   const [status, setStatus] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
+  const [keyData, setKeyData] = useState("");
 
   const [sort, setSort] = useState({
     field: "createdAt",
@@ -70,6 +71,8 @@ const ApiHistory = () => {
       });
 
       setData(data.data);
+      setKeyData(data.aliasKeysList);
+      console.log(data);
       setTotal(data.pagination.total);
     } catch (err: any) {
       if (err.name !== "CanceledError") {
@@ -187,7 +190,7 @@ const ApiHistory = () => {
           {/* Title */}
           <div>
             <h5 className=" sm:text-xl text-white/60">
-              Key Monitoring History
+              Key Monitoring History for
             </h5>
           </div>
         </div>
