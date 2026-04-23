@@ -1,3 +1,11 @@
+import StatusBadge, { getStatusConfig } from "../../utils/StatusBadge";
+import {
+  heading_label_style,
+  label_style,
+  label_style_bold,
+  input_style,
+  input_style_with_gray_border,
+} from "../../utils/CommonFn";
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import apiClient from "../../services/apiClient";
@@ -70,32 +78,32 @@ function ApiHistoryView() {
     isCode?: boolean;
   }) => (
     <div className="py-1 ">
-      <label className="block text-xs font-medium uppercase mb-1.5">
-        {label}
-      </label>
+      <label className={label_style_bold}>{label}</label>
       {isCode ? (
         <pre className="p-2 font-mono text-xs text-gray-500 break-words whitespace-pre-wrap rounded-lg">
           {value || "-"}
         </pre>
       ) : type === "status" ? (
-        <StatusBadge status={value}></StatusBadge>
+        <p className="block px-3 py-1 text-sm">
+          <StatusBadge status={value}></StatusBadge>
+        </p>
       ) : (
-        <p className="text-sm text-gray-500">{value || "-"}</p>
+        <p className={input_style}>{value || "-"}</p>
       )}
     </div>
   );
 
-  const StatusBadge = ({ status }: { status: string }) => {
-    const { color, icon: Icon } = getStatusBadge(status);
-    return (
-      <span
-        className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${color}`}
-      >
-        <Icon className="w-3 h-3" />
-        {status ? status.charAt(0).toUpperCase() + status.slice(1) : "-"}
-      </span>
-    );
-  };
+  // const StatusBadge = ({ status }: { status: string }) => {
+  //   const { color, icon: Icon } = getStatusBadge(status);
+  //   return (
+  //     <span
+  //       className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${color}`}
+  //     >
+  //       <Icon className="w-3 h-3" />
+  //       {status ? status.charAt(0).toUpperCase() + status.slice(1) : "-"}
+  //     </span>
+  //   );
+  // };
 
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
@@ -142,7 +150,7 @@ function ApiHistoryView() {
               {/* Card Header - No Border, Just Background */}
               <div className="px-6 py-2 bg-slate-50">
                 <div className="flex items-center gap-2">
-                  <h6 className="font-semibold ">API Request</h6>
+                  <h5 className="font-semibold ">API Request</h5>
                 </div>
               </div>
 
@@ -167,7 +175,7 @@ function ApiHistoryView() {
                   <div>
                     <InfoRow
                       label="Execution Time"
-                      value={data.execution_time + "ms" || 0 + "ms"}
+                      value={data.execution_time}
                     />
                   </div>
                 </div>
@@ -210,11 +218,20 @@ function ApiHistoryView() {
 
                 <div className="p-6 space-y-4">
                   <InfoRow label="Alias Key" value={data.alias?.alias_key} />
+
                   <div>
-                    <label className="block text-xs font-medium uppercase mb-1.5">
-                      Status
-                    </label>
-                    <StatusBadge status={data.alias?.status} />
+                    <InfoRow
+                      label="Key Status"
+                      type="status"
+                      value={data.alias?.key_status}
+                    />
+                  </div>
+                  <div>
+                    <InfoRow
+                      label="Approval Status"
+                      type="status"
+                      value={data.alias?.approval_status}
+                    />
                   </div>
                   <InfoRow
                     label="Project Name"
@@ -252,11 +269,11 @@ function ApiHistoryView() {
 
                   <InfoRow label="Proxy Name" value={data.proxy?.proxy_name} />
 
-                  <InfoRow
+                  {/* <InfoRow
                     label="cURL Command"
                     value={data.proxy?.curl}
                     isCode
-                  />
+                  /> */}
 
                   {data.proxy?.description && (
                     <InfoRow

@@ -1,178 +1,117 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { MdFirstPage, MdLastPage } from "react-icons/md";
+import StatusBadge, { getStatusConfig } from "../../utils/StatusBadge";
+import { customTableStyles } from "../datatableDesign";
+import { showToast } from "../../utils/CustomToast";
+import {
+  model_divider,
+  model_botton_container,
+  close_cancel_button,
+  getStatusStyle,
+  char_max_len_listing,
+  generateProxyUrl,
+  handleCopy,
+  fallbackCopy,
+  heading_label_style,
+  label_style,
+  input_style,
+  input_style_with_gray_border,
+} from "../../utils/CommonFn";
 
+import { Check, CheckCircle, XCircle } from "lucide-react";
 import {
-  User,
-  FolderOpen,
-  Globe,
-  TrendingUp,
-  Calculator,
-  DollarSign,
-  Shield,
-  FileText,
-  XCircle,
-  CheckCircle,
-} from "lucide-react";
-import {
-  FiChevronLeft,
-  FiChevronRight,
-  FiChevronsLeft,
-  FiChevronsRight,
   FiSearch,
   FiPlus,
-  FiArrowUp,
-  FiArrowDown,
+  FiEdit2,
+  FiEye,
+  FiTrash2,
   FiAlertCircle,
+  FiCopy,
 } from "react-icons/fi";
 
-import { Link, useLocation } from "react-router-dom";
+import TotalHitsModal from "./TotalHitsModal";
+
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { IAliasKey } from "../../interface/aliasKey.interface";
-import AliasKeyRow from "./AliasKeyRow";
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 import { useAuth } from "../../context/AuthContext";
-import toast from "react-hot-toast";
-import apiClient from "../../services/apiClient";
 
 import { AlertTriangle } from "lucide-react";
 import { MdClose } from "react-icons/md";
-const getStatusStyle = (status?: string) => {
-  switch (status?.toLowerCase()) {
-    case "active":
-      return "bg-green-50 text-green-700";
-    case "inactive":
-      return "bg-gray-100 text-gray-600";
-    case "pending":
-      return "bg-yellow-50 text-yellow-700";
-    case "rejected":
-      return "bg-red-50 text-red-700";
-    default:
-      return "bg-gray-100 text-gray-600";
-  }
-};
-const API_URL = import.meta.env.VITE_BACKEND_URL + "/api/get-proxy-response";
-function generatePostProxyData(curl: string, curl_token: string) {
-  try {
-    // ✅ Extract ALL quoted parts
-    const matches = curl.match(/'(.*?)'/g);
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import DataTable from "react-data-table-component";
+import apiClient from "../../services/apiClient";
+import toast from "react-hot-toast";
+// const showToast = (
+//   message: string,
+//   type: "success" | "error" | "info" | "loading" = "info",
+// ) => {
+//   toast.dismiss("global-toast"); // 👈 remove existing toast
 
-    if (!matches || matches.length < 2) {
-      return { url: "", body: "" };
-    }
+//   toast.custom((t) => <CustomToast t={{ ...t, message, styleType: type }} />, {
+//     id: "global-toast",
+//     duration: 4000,
+//   });
+// };
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+// const getStatusStyle = (status?: string) => {
+//   switch (status?.toLowerCase()) {
+//     case "active":
+//       return "bg-green-50 text-green-700";
+//     case "inactive":
+//       return "bg-gray-100 text-gray-600";
+//     case "pending":
+//       return "bg-yellow-50 text-yellow-700";
+//     case "rejected":
+//       return "bg-red-50 text-red-700";
+//     default:
+//       return "bg-gray-100 text-gray-600";
+//   }
+// };
 
-    // ✅ Last match = URL
-    const url = API_URL;
-    // ✅ Second last match = BODY
-    const jsonStr = matches[matches.length - 2].replace(/'/g, "");
-    try {
-      const json = JSON.parse(jsonStr);
-      // ✅ Remove original token
-      if (json.hasOwnProperty(curl_token)) {
-        delete json[curl_token];
-      }
-      // ✅ Add alias_key
-      json["alias_key"] = "Please enter alias key";
+const AliasKeyList = () => {
+  const navigate = useNavigate();
 
-      return {
-        url,
-        body: JSON.stringify(json, null, 2),
-      };
-    } catch {
-      return { url, body: jsonStr };
-    }
-  } catch {
-    return { url: "", body: "" };
-  }
-}
-function generateGetProxyUrl(curl: string, curl_token: string) {
-  try {
-    const urlMatch = curl.match(/'(.*?)'/);
-
-    if (!urlMatch || !urlMatch[1]) return "";
-
-    const originalUrl = urlMatch[1];
-    const url = new URL(originalUrl);
-
-    // ✅ Remove original token
-    if (url.searchParams.has(curl_token)) {
-      url.searchParams.delete(curl_token);
-    }
-
-    // ✅ Build new params
-    const newParams = new URLSearchParams();
-
-    // Add alias_key first
-    newParams.set("alias_key", "Please enter alias key");
-
-    // Add remaining params
-    url.searchParams.forEach((value, key) => {
-      newParams.set(key, value);
-    });
-
-    // ✅ Final proxy URL
-    return `${API_URL}?${newParams.toString()}`;
-  } catch (err) {
-    console.error("Error generating proxy URL");
-    return "";
-  }
-}
-function generateProxyUrl(curl: string, curl_token: string) {
-  if (!curl) return "";
-
-  const lowerCurl = curl.toLowerCase();
-
-  // ✅ Detect POST
-  if (lowerCurl.includes("--request post") || lowerCurl.includes("--data")) {
-    return generatePostProxyData(curl, curl_token);
-  }
-
-  // ✅ Default = GET
-  return generateGetProxyUrl(curl, curl_token);
-}
-function AliasKeyList() {
   const { user } = useAuth();
+  const isAdmin = user?.role === "Admin";
+  const [appliedStartDate, setAppliedStartDate] = useState("");
+  const [appliedEndDate, setAppliedEndDate] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [apiData, setApiData] = useState<IAliasKey[]>([]);
   const [loading, setLoading] = useState(false);
-  const location = useLocation();
+  const [apiData, setApiData] = useState<IAliasKey[]>([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-
   const [total, setTotal] = useState(0);
-  const searchRef = useRef<HTMLInputElement>(null);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
   const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState("_id");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const deleteModalRef = useRef<HTMLDivElement>(null);
+  const showPendingRejectedRef = useRef<HTMLInputElement>(null);
+  const showRejectedRef = useRef<HTMLInputElement>(null);
+  const showDetailRef = useRef<HTMLDivElement>(null);
+  const showActiveInactiveModalRef = useRef<HTMLDivElement>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [sort, setSort] = useState({
+    field: "createdAt",
+    order: "desc" as "asc" | "desc",
+  });
+  const [keyStatusFilter, setKeyStatusFilter] = useState("");
+  const [approvalStatusFilter, setApprovalStatusFilter] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [selectedRow, setSelectedRow] = useState<IAliasKey | null>(null);
   const [showPendingRejectedModal, setShowPendingRejectedModal] =
     useState(false);
-  const showPendingRejectedRef = useRef<HTMLInputElement>(null);
+  const [showRejectedModal, setShowRejectedModal] = useState(false);
 
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const showDetailRef = useRef<HTMLDivElement>(null);
-
   const [showActiveInactiveModal, setShowActiveInactiveModal] = useState(false);
-  const showActiveInactiveModalRef = useRef<HTMLDivElement>(null);
-
-  const [newStatus, setNewStatus] = useState(false);
-
-  const [mobileView, setMobileView] = useState(false);
-  const deleteModalRef = useRef<HTMLDivElement>(null);
-
-  const [liveUrl, setLiveUrl] = useState("");
-  const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setLimit(Number(e.target.value));
-    setPage(1); // reset to first page
-  };
-  // Check screen size for mobile view
-  useEffect(() => {
-    const checkMobile = () => {
-      setMobileView(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const [newStatus, setNewStatus] = useState<string>("");
+  const [liveUrl, setLiveUrl] = useState<
+    string | { url: string; body: string; curlCommand: string }
+  >("");
+  const [showStats, setShowStats] = useState(false);
+  const controllerRef = useRef<AbortController | null>(null);
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Delete modal
@@ -192,6 +131,14 @@ function AliasKeyList() {
         setShowPendingRejectedModal(false);
       }
 
+      if (
+        showRejectModal &&
+        showRejectedRef.current &&
+        !showRejectedRef.current.contains(event.target as Node)
+      ) {
+        setShowRejectModal(false);
+      }
+
       //
       if (
         showActiveInactiveModal &&
@@ -207,10 +154,34 @@ function AliasKeyList() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showDeleteModal, showPendingRejectedModal, showActiveInactiveModal]);
-  const handleActionClick = (row: IAliasKey) => {
-    setSelectedRow(row);
-    setShowPendingRejectedModal(true);
+  }, [
+    showDeleteModal,
+    showPendingRejectedModal,
+    showActiveInactiveModal,
+    showRejectedModal,
+  ]);
+  const handleDeleteClick = (id: string) => {
+    setDeleteId(id);
+    setShowDeleteModal(true);
+  };
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return;
+
+    const previousData = apiData;
+    setApiData((prev) => prev.filter((p) => p._id !== deleteId));
+
+    try {
+      const res = await apiClient.delete(
+        `${BACKEND_URL}/api/alias-key/${deleteId}`,
+      );
+      toast.success(res.data.message);
+    } catch (error: any) {
+      setApiData(previousData);
+      toast.error(error.response?.data?.message || "Delete failed");
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteId(null);
+    }
   };
   const handleshowKeyDetail = (row: IAliasKey) => {
     setSelectedRow(row);
@@ -218,21 +189,16 @@ function AliasKeyList() {
 
     const proxyResult = row?.proxy
       ? generateProxyUrl(row.proxy.curl || "", row.proxy.curl_token || "")
-      : null;
+      : "";
     setLiveUrl(proxyResult);
   };
-  const handleActiveInactiveClick = (row: IAliasKey, newStatus: string) => {
-    setSelectedRow(row);
-
-    setNewStatus(newStatus);
-    setShowActiveInactiveModal(true);
-  };
-  const handleApprove = async (action: string) => {
+  const handleApprove = async (action: string, reason?: string) => {
     try {
       setLoading(true);
       const userData = {
         id: selectedRow?._id,
         action: action,
+        rejection_reason: reason,
       };
       const response = await apiClient.post(
         "/api/alias-key/perform-action",
@@ -268,18 +234,208 @@ function AliasKeyList() {
       setLoading(false);
     }
   };
-  const fetchData = useCallback(async () => {
+  const KeyStatusBadge = ({
+    type,
+    row,
+    userRole,
+    onActionClick,
+    onStatusChange,
+    isDeleted,
+  }: any) => {
+    // const getStatusConfig = (status: string) => {
+    //   switch (status) {
+    //     case "Active":
+    //       return {
+    //         bg: "bg-green-50",
+    //         text: "text-green-700",
+    //         dot: "bg-green-500",
+    //         border: "border-green-200",
+    //         icon: CheckCircle,
+    //       };
+    //     case "Inactive":
+    //       return {
+    //         bg: "bg-gray-100",
+    //         text: "text-gray-600",
+    //         dot: "bg-gray-400",
+    //         border: "border-gray-300",
+    //         icon: XCircle,
+    //       };
+    //   }
+    // };
+
+    const statusConfig = getStatusConfig(row.key_status);
+    const Icon = statusConfig.icon;
+
+    const commonClass = `inline-flex items-center gap-1.5 px-2.5 py-1 font-medium rounded-full border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`;
+
+    if (userRole === "Admin") {
+      return (
+        <button
+          disabled={isDeleted}
+          onClick={() =>
+            onStatusChange(
+              row,
+              row.key_status === "Active" ? "Inactive" : "Active",
+            )
+          }
+          className={commonClass}
+          title="Click to change status"
+        >
+          <Icon className="w-4 h-4" />
+          {statusConfig.label}
+        </button>
+      );
+    }
+
+    return (
+      <span className={commonClass}>
+        <Icon className="w-4 h-4" />
+        {statusConfig.label}
+      </span>
+    );
+  };
+  // Status Badge Component
+  const ApprovalStatusBadge = ({
+    row,
+    userRole,
+    onActionClick,
+    isDeleted,
+  }: any) => {
+    const approvalConfig = getStatusConfig(row.approval_status);
+    const keyConfig = getStatusConfig(row.key_status);
+
+    const Icon = approvalConfig.icon;
+
+    const isActive = row.key_status?.toLowerCase() === "active";
+    const isPending = row.approval_status?.toLowerCase() === "pending";
+
+    const isClickable =
+      isActive && isPending && userRole === "Admin" && !isDeleted;
+
+    const baseClass = `inline-flex items-center gap-1.5 px-2.5 py-1 font-medium rounded-full border
+    ${approvalConfig.bg} ${approvalConfig.text} ${approvalConfig.border}`;
+
+    // ✅ CLICKABLE (Active + Pending)
+    // if (isClickable) {
+    //   return (
+    //     <button
+    //       onClick={() => onActionClick(row)}
+    //       className={`${baseClass} cursor-pointer hover:opacity-90 transition`}
+    //       title="Click to approve/reject"
+    //     >
+    //       <Icon className="w-4 h-4" />
+    //       {approvalConfig.label}
+    //     </button>
+    //   );
+    // }
+
+    // ✅ NON-CLICKABLE
+    return (
+      <span
+        className={`${baseClass} ${
+          isActive ? "cursor-default" : "opacity-50 cursor-not-allowed"
+        }`}
+        title={
+          !isActive
+            ? "Inactive key"
+            : isPending
+              ? "Action not allowed"
+              : row.approval_status?.toLowerCase() === "approved"
+                ? "Already approved"
+                : row.approval_status?.toLowerCase() === "rejected"
+                  ? "Already rejected"
+                  : ""
+        }
+      >
+        <Icon className="w-4 h-4" />
+        {approvalConfig.label}
+      </span>
+    );
+  };
+  // 🔥 Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+  const handleActiveInactiveClick = (row: IAliasKey, newStatus: string) => {
+    setSelectedRow(row);
+
+    setNewStatus(newStatus);
+    setShowActiveInactiveModal(true);
+  };
+  // 🔥 Fetch Data (SERVER SIDE)
+  useEffect(() => {
+    if (controllerRef.current) {
+      controllerRef.current.abort();
+    }
+
     const controller = new AbortController();
+    controllerRef.current = controller;
+
+    // const fetchData = async () => {
+    //   setLoading(true);
+    //   try {
+    //     const { data } = await apiClient.get(`${BACKEND_URL}/api/alias-key`, {
+    //       signal: controller.signal,
+    //       params: {
+    //         page,
+    //         limit,
+    //         search: debouncedSearch,
+    //         sortField: sort.field,
+    //         sortOrder: sort.order,
+    //       },
+    //     });
+
+    //     setData(data.data);
+    //     setTotal(data.pagination.total);
+    //   } catch (err: any) {
+    //     if (err.name !== "CanceledError") {
+    //       toast.error(err?.message || "Failed to load data");
+    //     }
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
+
+    fetchData();
+
+    return () => controller.abort();
+  }, [
+    page,
+    limit,
+    debouncedSearch,
+    sort.field,
+    sort.order,
+    keyStatusFilter,
+    approvalStatusFilter,
+    appliedStartDate, // ✅ ADD THIS
+    appliedEndDate,
+  ]);
+  const fetchData = useCallback(async () => {
+    //const controller = new AbortController();
     setLoading(true);
     try {
       const { data } = await apiClient.get(BACKEND_URL + "/api/alias-key", {
-        signal: controller.signal,
+        // signal: controller.signal,
         params: {
           page,
           limit,
-          search,
-          sortField,
-          sortOrder,
+          search: debouncedSearch,
+          sortField: sort.field,
+          sortOrder: sort.order,
+          ...(keyStatusFilter && { key_status: keyStatusFilter }),
+          ...(approvalStatusFilter && {
+            approval_status: approvalStatusFilter,
+          }),
+          ...(appliedStartDate &&
+            appliedEndDate && {
+              startDate: appliedStartDate,
+              endDate: appliedEndDate,
+            }),
         },
       });
       setApiData(data.data);
@@ -296,79 +452,267 @@ function AliasKeyList() {
       setLoading(false);
     }
     return () => controller.abort();
-  }, [page, limit, search, sortField, sortOrder]);
+  }, [
+    page,
+    limit,
+    debouncedSearch,
+    sort.field,
+    sort.order,
+    keyStatusFilter,
+    approvalStatusFilter,
+    appliedStartDate, // ✅ ADD
+    appliedEndDate,
+  ]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-  const handleDeleteClick = (id: string) => {
-    setDeleteId(id);
-    setShowDeleteModal(true);
+  // 🔥 Sorting Handler (NO double call)
+  const handleSort = (column: any, sortDirection: "asc" | "desc") => {
+    if (!column.sortField) return;
+
+    setSort((prev) => {
+      if (prev.field === column.sortField && prev.order === sortDirection) {
+        return prev;
+      }
+
+      return {
+        field: column.sortField,
+        order: sortDirection,
+      };
+    });
+
+    setPage(1);
   };
-  const handleConfirmDelete = async () => {
-    if (!deleteId) return;
-
-    const previousData = apiData;
-    setApiData((prev) => prev.filter((p) => p._id !== deleteId));
-
-    try {
-      const res = await apiClient.delete(
-        `${BACKEND_URL}/api/alias-key/${deleteId}`,
-      );
-      toast.success(res.data.message);
-    } catch (error: any) {
-      setApiData(previousData);
-      toast.error(error.response?.data?.message || "Delete failed");
-    } finally {
-      setShowDeleteModal(false);
-      setDeleteId(null);
-    }
+  const handleActionClick = (row: IAliasKey) => {
+    setSelectedRow(row);
+    setShowPendingRejectedModal(true);
   };
+  const ActionsCell = ({
+    row,
+    userRole,
+    onEdit,
+    onDelete,
+    onView,
+    isDeleted,
+  }: any) => {
+    return (
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onView}
+          className="flex items-center justify-center p-1.5 text-blue-600 hover:text-white hover:bg-blue-500 rounded-md transition-all duration-200 group relative"
+          title="View details"
+        >
+          <FiEye className="w-4 h-4" />
+        </button>
 
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortOrder("asc");
-    }
+        {!isDeleted && (
+          <>
+            <button
+              onClick={() => onEdit(row._id)}
+              className="flex items-center justify-center p-1.5 text-amber-500 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-all duration-200"
+              title="Edit"
+            >
+              <FiEdit2 className="w-4 h-4" />
+            </button>
+
+            {row.approval_status == "Pending" && (
+              <button
+                onClick={() => onDelete(row._id)}
+                className="flex items-center justify-center p-1.5 text-red-600 hover:text-white hover:bg-red-500 rounded-md transition-all duration-200 group relative"
+                title="Delete"
+              >
+                <FiTrash2 className="w-4 h-4" />
+              </button>
+            )}
+            {userRole === "Admin" &&
+              row.approval_status == "Pending" &&
+              row.key_status == "Active" && (
+                <button
+                  onClick={() => handleActionClick(row)}
+                  className="text-red-600 transition hover:text-red-700"
+                  title="Approve"
+                >
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                </button>
+              )}
+          </>
+        )}
+      </div>
+    );
   };
-
-  useEffect(() => {
-    if (searchRef.current) {
-      searchRef.current.focus();
-    }
-  }, [apiData]);
-
-  const isAdmin = user?.role === "Admin";
-
+  // 🔥 Columns
   const columns = [
-    { label: "No.", field: "_id", sortable: true },
+    {
+      name: "No.",
+      cell: (_: any, index: number) => (page - 1) * limit + index + 1,
+      width: "70px",
+    },
     ...(isAdmin
       ? [
-          { label: "User", field: "user.first_name", sortable: true },
-          // { label: "Email", field: "user.email", sortable: true },
+          {
+            name: "User",
+            selector: (row: IAliasKey) =>
+              row.user?.first_name || row.user?.name || "-",
+
+            minWidth: "150px", // Change from width to minWidth
+            grow: 1,
+            sortable: true,
+          },
         ]
       : []),
-    { label: "Key", field: "alias_key", sortable: true },
-    { label: "Domain Name", field: "domain_name", sortable: true },
-    { label: "Status", field: "status", sortable: true },
-    { label: "Total Quota", field: "total_quota", sortable: true },
-    { label: "Total Available", field: "remaining_quota", sortable: true },
-    { label: "Total Hits", field: "", sortable: false },
-    { label: "Created", field: "createdAt", sortable: true },
+    {
+      name: "Key",
+      selector: (row: any) => row.alias_key,
+      sortable: true,
+      sortField: "alias_key",
+
+      minWidth: "250px",
+      grow: 2, // Give more space to Key column
+      cell: (row: IAliasKey) => (
+        <span className={`font-semibold text-gray-900 break-all}`}>
+          {row.alias_key || "-"}
+        </span>
+      ),
+    },
+    {
+      name: "Domain Name",
+      selector: (row: any) => row.domain_name,
+      sortable: true,
+      sortField: "domain_name",
+      minWidth: "180px",
+      grow: 1.5,
+      wrap: true,
+      cell: (row, index) => {
+        const name = row.domain_name || "-";
+        const maxLength = char_max_len_listing;
+
+        const isTopRow = index === 0;
+        const isLastRow = index === apiData.length - 1;
+
+        const truncateText = (text, length) => {
+          if (text.length <= length) return text;
+          return text.substring(0, length) + "...";
+        };
+
+        return (
+          <div className="group relative">
+            <span>{truncateText(name, maxLength)}</span>
+
+            {name.length > maxLength && (
+              <div
+                className={`invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 absolute z-10 bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-normal break-words max-w-md left-0 ${
+                  isTopRow
+                    ? "top-full mt-1"
+                    : isLastRow
+                      ? "bottom-full mb-1"
+                      : "bottom-full mb-1"
+                }`}
+              >
+                {name}
+              </div>
+            )}
+          </div>
+        );
+      },
+      // cell: (row) => (
+      //   <span
+      //     className={`break-all whitespace-normal ${
+      //       row.proxy?.is_deleted ? "line-through text-gray-400" : ""
+      //     }`}
+      //   >
+      //     {row.domain_name || "-"}
+      //   </span>
+      // ),
+    },
+
+    {
+      name: "Total Quota",
+      selector: (row: any) => row.total_quota,
+      sortable: true,
+      sortField: "total_quota",
+      width: "150px",
+      cell: (row: IAliasKey) => <span>{row.total_quota || "0"}</span>,
+    },
+    {
+      name: "Total Available",
+      selector: (row: any) => row.remaining_quota,
+      sortable: true,
+      sortField: "remaining_quota",
+      width: "120px",
+      cell: (row: IAliasKey) => <span>{row.remaining_quota || "0"}</span>,
+    },
+    {
+      name: "Created",
+      selector: (row: any) => row.createdAt,
+      sortable: true,
+      sortField: "createdAt",
+      cell: (row: IAliasKey) => (
+        <span className="text-sm">
+          {row.createdAt
+            ? new Date(row.createdAt).toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
+            : "-"}
+        </span>
+      ),
+      width: "140px",
+      minWidth: "140px",
+    },
+    {
+      name: "Status",
+      selector: (row: IAliasKey) => row.key_status || "-",
+      width: "150px",
+      sortable: true,
+      cell: (row: IAliasKey) => (
+        <KeyStatusBadge
+          type="key_status"
+          row={row}
+          userRole={user?.role}
+          onActionClick={() => handleActionClick(row)}
+          onStatusChange={handleActiveInactiveClick}
+          isDeleted={row.proxy?.is_deleted}
+        />
+      ),
+      sortField: "key_status", // ✅ ADD
+    },
+    {
+      name: "Approval Status",
+      selector: (row: IAliasKey) => row.approval_status || "-",
+      width: "150px",
+      sortable: true,
+      cell: (row: IAliasKey) => (
+        <ApprovalStatusBadge
+          type="key"
+          row={row}
+          userRole={user?.role}
+          onActionClick={() => handleActionClick(row)}
+          onStatusChange={handleActiveInactiveClick}
+          isDeleted={row.proxy?.is_deleted}
+        />
+      ),
+      sortField: "approval_status", // ✅ ADD
+    },
+    {
+      name: "Actions",
+      selector: () => "",
+      width: "180px",
+      minWidth: "180px",
+      sortable: false,
+      cell: (row: IAliasKey) => (
+        <ActionsCell
+          row={row}
+          userRole={user?.role}
+          onEdit={(id: string) => {
+            navigate(`/alias-key/add/${id}`);
+          }}
+          onDelete={(id: string) => handleDeleteClick(id)}
+          onView={() => handleshowKeyDetail(row)}
+          isDeleted={row.proxy?.is_deleted}
+        />
+      ),
+    },
   ];
 
-  // Responsive grid columns based on screen size and admin status
-  const getGridCols = () => {
-    if (mobileView) return "grid-cols-1"; // Card view on mobile
-    const baseCols = isAdmin ? 10 : 8;
-    return `grid-cols-${baseCols}`;
-  };
-  const gridColsClass =
-    user?.role === "Admin"
-      ? "grid-cols-[60px_100px_250px_200px_120px_120px_120px_120px_140px_40px]"
-      : "grid-cols-[60px_250px_200px_120px_120px_120px_120px_140px_40px]";
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
       {/* HEADER */}
@@ -386,175 +730,183 @@ function AliasKeyList() {
       </div>
       <div className="p-5 sm:p-6">
         {/* Loading */}
-        {loading ? (
-          <div className="flex justify-center py-10">
-            <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
-          </div>
-        ) : (
-          <>
-            <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between">
-              {/* Search - Responsive */}
-              <div className="relative w-full sm:w-80">
-                <input
-                  ref={searchRef}
-                  type="text"
-                  placeholder="Search by key, domain name, status..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
-                />
 
-                <FiSearch className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          {/* LEFT */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            {/* Search */}
+            <div className="relative w-full sm:w-60 md:w-56">
+              <input
+                ref={searchRef}
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg pl-9 pr-9 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
+              />
 
-                {search && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearch("");
-                      searchRef.current?.focus();
-                    }}
-                    className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2 hover:text-gray-600"
-                  >
-                    <MdClose size={18} />
-                  </button>
-                )}
-              </div>
-              {/* Button */}
-              {user?.role == "User" && (
-                <Link
-                  to="/alias-key/add"
-                  className="whitespace-nowrap inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm"
+              <FiSearch className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
+
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch("");
+                    searchRef.current?.focus();
+                  }}
+                  className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2 hover:text-gray-600"
                 >
-                  <FiPlus className="w-4 h-4" />
-                  Create Key
-                </Link>
+                  <MdClose size={16} />
+                </button>
               )}
             </div>
-            {/* Table - Responsive with Card View on Mobile */}
-            <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
-              <div className="min-w-max">
-                {/* Header Row */}
-                <div
-                  className={`grid ${gridColsClass} min-w-max text-base font-semibold text-gray-900  px-4 py-3 border-b border-gray-300`}
-                >
-                  {columns.map((col) => (
-                    <div
-                      key={col.label}
-                      onClick={() => col.sortable && handleSort(col.field)}
-                      className={`flex items-center  text-sm transition-colors duration-200 
-      ${col.sortable ? "cursor-pointer hover:text-primary" : "cursor-default"}
-    `}
-                    >
-                      {col.label}
 
-                      {col.sortable && sortField === col.field && (
-                        <span className="text-sm text-primary">
-                          {sortOrder === "asc" ? (
-                            <FiArrowUp />
-                          ) : (
-                            <FiArrowDown />
-                          )}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                  <div className="text-sm text-center">Actions</div>
-                </div>
+            {/* Filters */}
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+              <select
+                value={keyStatusFilter}
+                onChange={(e) => {
+                  setKeyStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="border border-gray-300 rounded-lg px-2.5 py-2 text-xs sm:text-sm"
+              >
+                <option value="">All Key Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
 
-                {/* Rows */}
-                {apiData.length === 0 ? (
-                  <div className="py-10 text-center text-gray-600">
-                    <p className="text-sm font-semibold">No key found</p>
-                  </div>
-                ) : (
-                  apiData.map((item, index) => (
-                    <AliasKeyRow
-                      key={item._id}
-                      page={page}
-                      limit={limit}
-                      index={index}
-                      apiData={item}
-                      handleDelete={handleDeleteClick}
-                      userRole={user?.role}
-                      onActionClick={handleActionClick}
-                      makeActiveInactiveClick={handleActiveInactiveClick}
-                      mobileView={false}
-                      gridColsClass={gridColsClass}
-                      showKeyDetail={handleshowKeyDetail}
-                    />
-                  ))
-                )}
-              </div>
+              <select
+                value={approvalStatusFilter}
+                onChange={(e) => {
+                  setApprovalStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="border border-gray-300 rounded-lg px-2.5 py-2 text-xs sm:text-sm"
+              >
+                <option value="">All Approval Status</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+                <option value="Pending">Pending</option>
+              </select>
+
+              <input
+                type="date"
+                value={startDate}
+                max={new Date().toISOString().split("T")[0]}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setPage(1);
+                }}
+                className="border border-gray-300 rounded-lg px-2.5 py-2 text-xs sm:text-sm"
+              />
+
+              <input
+                type="date"
+                value={endDate}
+                min={startDate || undefined}
+                max={new Date().toISOString().split("T")[0]}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setPage(1);
+                }}
+                disabled={!startDate}
+                className={`border border-gray-300 rounded-lg px-2.5 py-2 text-xs sm:text-sm ${
+                  !startDate ? "bg-gray-100 cursor-not-allowed" : ""
+                }`}
+              />
+
+              <button
+                type="button"
+                disabled={!startDate || !endDate}
+                onClick={() => {
+                  setAppliedStartDate(startDate);
+                  setAppliedEndDate(endDate);
+                  setPage(1);
+                }}
+                className={`px-2.5 py-2 text-xs font-medium rounded-lg border ${
+                  startDate && endDate
+                    ? "text-primary border-primary bg-white hover:bg-primary hover:text-white"
+                    : "text-gray-400 bg-gray-200 cursor-not-allowed"
+                }`}
+              >
+                Filter
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setKeyStatusFilter("");
+                  setApprovalStatusFilter("");
+                  setStartDate("");
+                  setEndDate("");
+                  setSearch("");
+                  setAppliedStartDate(""); // ✅ add this
+                  setAppliedEndDate("");
+                  searchRef.current?.focus();
+                  setPage(1);
+                }}
+                className="px-2.5 py-2 text-xs font-medium text-primary border border-primary bg-white hover:bg-primary hover:text-white rounded-lg"
+              >
+                Clear
+              </button>
             </div>
+          </div>
 
-            {total > limit && (
-              <div className="flex justify-end mt-8">
-                <div className="flex items-center gap-4">
-                  {/* 1️⃣ LIMIT DROPDOWN */}
-                  <div className="flex items-center gap-0 pr-4 text-xs text-gray-500">
-                    <span>Rows Per Page :</span>
-                    <select
-                      value={limit}
-                      onChange={handleLimitChange}
-                      className="px-1 py-1 text-gray-500 rounded-md focus:outline-none focus:ring-2"
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
-                  </div>
-                  {/* Page info */}
-                  <div className="pr-4 text-xs text-gray-500 whitespace-nowrap">
-                    <span>{Math.min((page - 1) * limit + 1, total)}</span>-
-                    <span>{Math.min(page * limit, total)}</span> of{" "}
-                    <span>{total}</span>{" "}
-                  </div>
+          {/* RIGHT SIDE */}
+          <Link
+            to="/alias-key/add"
+            className="whitespace-nowrap inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm"
+          >
+            <FiPlus className="w-4 h-4" />
+            Create Key
+          </Link>
+        </div>
 
-                  {/* Pagination controls */}
-                  <div className="flex items-center gap-3 text-xs">
-                    {/* First */}
-                    <button
-                      onClick={() => setPage(1)}
-                      disabled={page === 1}
-                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                    >
-                      <MdFirstPage size={25} />
-                    </button>
-
-                    {/* Previous */}
-                    <button
-                      onClick={() => setPage(page - 1)}
-                      disabled={page === 1}
-                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                    >
-                      <FiChevronLeft size={22} />
-                    </button>
-
-                    {/* Next */}
-                    <button
-                      onClick={() => setPage(page + 1)}
-                      disabled={page === Math.ceil(total / limit)}
-                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                    >
-                      <FiChevronRight size={22} />
-                    </button>
-
-                    {/* Last */}
-                    <button
-                      onClick={() => setPage(Math.ceil(total / limit))}
-                      disabled={page === Math.ceil(total / limit)}
-                      className="text-gray-600 hover:text-gray-500 disabled:opacity-40"
-                    >
-                      <MdLastPage size={25} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
+        <div className="overflow-hidden">
+          <div className="overflow-hidden  shadow-sm rounded-xl">
+            <div className="data-table-responsive w-full">
+              <DataTable
+                columns={columns}
+                data={apiData}
+                progressPending={loading}
+                pagination
+                paginationServer
+                paginationTotalRows={total}
+                paginationPerPage={limit}
+                onChangePage={(p) => setPage(p)}
+                onChangeRowsPerPage={(newLimit) => {
+                  setLimit(newLimit);
+                  setPage(1);
+                }}
+                sortServer
+                onSort={handleSort}
+                highlightOnHover
+                pointerOnHover
+                customStyles={{
+                  ...customTableStyles,
+                  table: {
+                    style: {
+                      width: "100%",
+                    },
+                  },
+                  rows: {
+                    style: {
+                      cursor: "pointer",
+                    },
+                  },
+                  cells: {
+                    style: {
+                      pointerEvents: "auto", // ✅ ensures clicks bubble
+                    },
+                  },
+                }}
+                responsive
+                onRowClicked={(row) => handleshowKeyDetail(row)}
+              />
+            </div>
+          </div>
+        </div>
       </div>
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
@@ -572,7 +924,7 @@ function AliasKeyList() {
             </button>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
               <h2 className="text-lg font-semibold text-slate-800">
                 Key Delete
               </h2>
@@ -586,13 +938,13 @@ function AliasKeyList() {
             </div>
 
             {/* Divider */}
-            <div className="px-6 py-2 border-t border-slate-200"></div>
+            <div className={model_divider}></div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 px-6 pb-6">
+            <div className={model_botton_container}>
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 transition bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200"
+                className={close_cancel_button}
               >
                 Cancel
               </button>
@@ -607,14 +959,13 @@ function AliasKeyList() {
           </div>
         </div>
       )}
-      {/* Modal - Responsive */}
       {showDetailModal && selectedRow && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md"
           onClick={(e) => {
             if (
               showDetailRef.current &&
-              !showDetailRef.current.contains(e.target)
+              !showDetailRef.current.contains(e.target as Node)
             ) {
               setShowDetailModal(false);
             }
@@ -633,71 +984,99 @@ function AliasKeyList() {
               <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>
 
-            {/* Header - Kept as requested */}
+            {/* Header - Unchanged */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
               <h2 className="text-lg font-semibold text-slate-800">
                 Key Details
               </h2>
             </div>
 
-            {/* Content - Simple Layout */}
-            <div className="flex-1 px-6 py-5 overflow-y-auto max-h-[55vh] custom-scrollbar">
-              {/* Two column grid for better space utilization */}
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {/* Left Column */}
-                <div className="space-y-4">
-                  {selectedRow?.user_id && (
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                        Requested By
-                      </label>
-                      <p className="text-sm text-gray-800 font-medium">
-                        {selectedRow.user?.first_name ||
-                          selectedRow.user?.name ||
-                          "-"}
-                      </p>
+            {/* Content - Clean & Readable */}
+            <div className="flex-1 px-8 py-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
+              {/* Key Information Section */}
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <h3 className={heading_label_style}>
+                    Key & User Information
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={label_style}>Key</span>
+                      <button
+                        onClick={() => handleCopy(selectedRow?.alias_key || "")}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <FiCopy className="w-4 h-4" />
+                      </button>
                     </div>
-                  )}
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Project Name
-                    </label>
-                    <p className="text-sm text-gray-600">
-                      {selectedRow?.project_name || "-"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Status
-                    </label>
-                    <p
-                      className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full ${getStatusStyle(
-                        selectedRow?.status,
-                      )}`}
+                    <div
+                      className={`${input_style} bg-gray-50 p-2 rounded border border-gray-100 break-all`}
                     >
-                      {selectedRow?.status
-                        ? selectedRow.status.charAt(0).toUpperCase() +
-                          selectedRow.status.slice(1).toLowerCase()
-                        : "-"}
-                    </p>
+                      {selectedRow?.alias_key || "-"}
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Total Quota
-                    </label>
-                    <p className="text-lg font-bold text-green-600">
-                      {selectedRow?.total_quota?.toLocaleString() || "-"}
-                    </p>
+                    <div className={label_style}>Domain Name</div>
+                    <div className={input_style}>
+                      {selectedRow?.domain_name || "-"}
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Created Date
-                    </label>
-                    <p className="text-sm text-gray-600">
+                    <div className={label_style}>Project Name</div>
+                    <div className={input_style}>
+                      {selectedRow?.project_name || "-"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className={label_style}>Requested By</div>
+                    <div className={input_style}>
+                      {selectedRow.user?.first_name ||
+                        selectedRow.user?.name ||
+                        "-"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status & Dates Section */}
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <h3 className={heading_label_style}>Status & Timeline</h3>
+                </div>
+
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  {/* Status */}
+                  <div>
+                    <div className={label_style}>Status</div>
+                    <span className={`inline-block px-3 py-1 text-sm`}>
+                      <StatusBadge
+                        status={
+                          selectedRow.proxy?.is_deleted === true
+                            ? "deleted"
+                            : selectedRow.key_status
+                        }
+                      />
+                    </span>
+                  </div>
+                  <div>
+                    <div className={label_style}>Approval Status</div>
+                    <span className={`inline-block px-3 py-1 text-sm`}>
+                      <StatusBadge status={selectedRow.approval_status} />
+                    </span>
+                  </div>
+
+                  {/* Created Date */}
+                  <div>
+                    <div className={label_style}>Created Date</div>
+                    <div className={input_style}>
                       {selectedRow?.createdAt
                         ? new Date(selectedRow.createdAt).toLocaleDateString(
                             undefined,
@@ -708,145 +1087,169 @@ function AliasKeyList() {
                             },
                           )
                         : "-"}
-                    </p>
+                    </div>
                   </div>
+
+                  {/* ✅ Full width rejection reason */}
+                  {selectedRow?.approval_status === "Rejected" &&
+                    selectedRow?.rejection_reason && (
+                      <div className="md:col-span-2">
+                        {/* ✅ Label (separate, consistent) */}
+                        <div className={label_style}>Reason for Rejection</div>
+
+                        {/* ✅ Value (styled box) */}
+                        <div className="mt-1 p-3 bg-gray-50 border border-gray-200 rounded-md  text-gray-700 break-words">
+                          {selectedRow.rejection_reason}
+                        </div>
+                      </div>
+                    )}
+                </div>
+              </div>
+
+              {/* Quota & Cost Section */}
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <h3 className={heading_label_style}>Quota & Cost</h3>
                 </div>
 
-                {/* Right Column */}
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Key
-                    </label>
-                    <p className="text-sm font-mono text-gray-600 break-all bg-gray-50 p-2 rounded-md border border-gray-200">
-                      {selectedRow?.alias_key || "-"}
-                    </p>
+                    <div className={label_style}>Total Quota</div>
+                    <div className={input_style}>
+                      {selectedRow?.total_quota || "-"}
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Domain Name
-                    </label>
-                    <p className="text-sm text-gray-600 break-all">
-                      {selectedRow?.domain_name || "-"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Proxy Permission Required
-                    </label>
-                    <p className="text-sm text-gray-600">
-                      {selectedRow?.proxy_permission_required || "-"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Total Estimated Cost
-                    </label>
-                    <p className="text-lg font-bold text-indigo-600">
-                      $
-                      {selectedRow?.total_estimated_cost?.toLocaleString() ||
-                        "-"}
-                    </p>
+                    <div className={label_style}>Total Estimated Cost</div>
+                    <div className={input_style}>
+                      {selectedRow?.total_estimated_cost
+                        ? `$${selectedRow.total_estimated_cost}`
+                        : "-"}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Cost Calculation - Full Width */}
+              {/* Additional Details - Only if they exist */}
               {selectedRow?.cost_calculation && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                    Cost Calculation
-                  </label>
-                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar font-mono">
-                    {selectedRow?.cost_calculation || "-"}
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <h3 className={heading_label_style}>Cost Calculation</h3>
+                  </div>
+                  <div className={input_style_with_gray_border}>
+                    {selectedRow.cost_calculation}
                   </div>
                 </div>
               )}
 
-              {/* Purpose - Full Width */}
               {selectedRow?.description && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                    Purpose
-                  </label>
-                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar">
-                    {selectedRow?.description || "-"}
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <h3 className={heading_label_style}>Purpose</h3>
+                  </div>
+                  <div className={input_style_with_gray_border}>
+                    {selectedRow.description}
                   </div>
                 </div>
               )}
 
-              {/* Proxy Configuration Section - Only if proxy exists */}
-              {selectedRow?.proxy && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                        Proxy Name
-                      </label>
-                      <p className="text-sm text-gray-600 font-medium">
-                        {selectedRow.proxy?.proxy_name || "-"}
-                      </p>
+              {/* Proxy Configuration - Only if exists and active */}
+              {selectedRow?.proxy &&
+                ["Approved"].includes(selectedRow.approval_status) && (
+                  <div className="mb-8">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                      <h3 className={heading_label_style}>
+                        Proxy Configuration
+                      </h3>
                     </div>
 
-                    {["Active", "Inactive"].includes(selectedRow.status) &&
-                      selectedRow.proxy?.query_params &&
-                      Object.keys(selectedRow.proxy.query_params).length >
-                        0 && (
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                      <div>
+                        <div className={label_style}>Proxy Name</div>
+                        <span className={input_style}>
+                          {selectedRow.proxy.proxy_name || "-"}
+                        </span>
+                      </div>
+                      {liveUrl && (
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                            Proxy URL
-                          </label>
-                          <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-48 custom-scrollbar">
-                            {!liveUrl && "No proxy data"}
-                            {typeof liveUrl === "string" && liveUrl && (
-                              <div className="font-mono break-all text-gray-600">
-                                {liveUrl}
-                              </div>
-                            )}
-                            {typeof liveUrl === "object" && liveUrl && (
-                              <>
-                                <div className="mb-2 font-mono text-xs break-all">
-                                  <span className="font-semibold text-gray-700">
-                                    URL:
-                                  </span>{" "}
-                                  <span className="text-gray-600">
-                                    {liveUrl.url}
-                                  </span>
-                                </div>
-                                <div className="mb-1 font-mono text-xs font-semibold text-gray-700">
-                                  Body:
-                                </div>
-                                <pre className="font-mono text-xs text-gray-600 whitespace-pre-wrap">
-                                  {liveUrl.body}
-                                </pre>
-                              </>
-                            )}
-                          </div>
+                          <div className={label_style}>Method</div>
+                          <span className={input_style}>{liveUrl.method}</span>
+                          {/* <button
+                                           onClick={() =>
+                                             handleCopy(liveUrl?.curlCommand || "")
+                                           }
+                                           className="text-gray-400 hover:text-gray-600 transition-colors"
+                                         >
+                                           <FiCopy className="w-4 h-4" />
+                                         </button> */}
                         </div>
                       )}
+                    </div>
+
+                    {liveUrl && (
+                      <div>
+                        {liveUrl && (
+                          <div>
+                            {/* Header row */}
+                            <div className="flex items-center justify-between mt-5 mb-2">
+                              <div className={label_style}>Curl URL</div>
+
+                              <button
+                                onClick={() =>
+                                  handleCopy(liveUrl?.curlCommand || "")
+                                }
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                title="Copy"
+                              >
+                                <FiCopy className="w-4 h-4" />
+                              </button>
+                            </div>
+
+                            {/* Curl content */}
+                            <div className={input_style_with_gray_border}>
+                              {liveUrl?.curlCommand}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+              {/* Proxy Deleted Warning - Clean version */}
+              {selectedRow.proxy?.is_deleted === true && (
+                <div className="mb-8">
+                  <div className="bg-gray-50 border border-gray-200 rounded p-3">
+                    <div className="flex items-center gap-2">
+                      <FiAlertCircle className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">
+                        This proxy has been marked as deleted
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Proxy Deleted Alert */}
-              {selectedRow.proxy?.is_deleted === true && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <div className="p-3 rounded-lg bg-red-50 border border-red-200">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <FiAlertCircle className="w-4 h-4 text-red-500" />
-                      </div>
-                      <div className="ml-2">
-                        <h3 className="text-sm font-medium text-red-800">
-                          Proxy Deleted
-                        </h3>
-                        <p className="text-xs text-red-600">
-                          This proxy has been marked as deleted
-                        </p>
-                      </div>
+              {/* Proxy Permission */}
+              {selectedRow?.proxy_permission_required && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <h3 className={heading_label_style}>
+                      Additional Information
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <div>
+                      <div className={label_style}>Proxy Permission</div>
+                      <span className={input_style}>
+                        {selectedRow.proxy_permission_required}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -854,13 +1257,13 @@ function AliasKeyList() {
             </div>
 
             {/* Divider */}
-            <div className="border-t border-gray-100"></div>
+            <div className={model_divider}></div>
 
-            {/* Footer - Kept as requested */}
-            <div className="flex justify-end px-6 py-4">
+            {/* Footer - Unchanged */}
+            <div className={model_botton_container}>
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="px-5 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-gray-100 rounded-lg hover:bg-gray-200 hover:shadow-sm active:scale-95"
+                className={close_cancel_button}
               >
                 Close
               </button>
@@ -884,52 +1287,48 @@ function AliasKeyList() {
             </button>
 
             {/* Header - Kept as requested */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
+            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
               <h2 className="text-lg font-semibold text-slate-800">
                 Approve/Reject Request
               </h2>
             </div>
 
             {/* Content - Simple Layout */}
-            <div className="flex-1 px-6 py-5 overflow-y-auto max-h-[55vh] custom-scrollbar">
-              {/* Two column grid for better space utilization */}
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {/* Left Column */}
-                <div className="space-y-4">
+            <div className="flex-1 px-8 py-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
+              {/* Requester Information Section */}
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <h3 className={heading_label_style}>Requester Information</h3>
+                </div>
+
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Requested By
-                    </label>
-                    <p className="text-sm text-gray-800 font-medium">
+                    <div className={label_style}>Requested By</div>
+                    <div className={input_style}>
                       {selectedRow?.user?.first_name ||
                         selectedRow?.user?.name ||
                         "-"}
-                    </p>
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Project Name
-                    </label>
-                    <p className="text-sm text-gray-600">
+                    <div className={label_style}>Project Name</div>
+                    <div className={input_style}>
                       {selectedRow?.project_name || "-"}
-                    </p>
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Total Quota
-                    </label>
-                    <p className="text-lg font-bold text-green-600">
-                      {selectedRow?.total_quota?.toLocaleString() || "-"}
-                    </p>
+                    <div className={label_style}>Domain Name</div>
+                    <div className={input_style}>
+                      {selectedRow?.domain_name || "-"}
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Created Date
-                    </label>
-                    <p className="text-sm text-gray-600">
+                    <div className={label_style}>Created Date</div>
+                    <div className={input_style}>
                       {selectedRow?.createdAt
                         ? new Date(selectedRow.createdAt).toLocaleDateString(
                             undefined,
@@ -940,105 +1339,193 @@ function AliasKeyList() {
                             },
                           )
                         : "-"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Right Column */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Domain Name
-                    </label>
-                    <p className="text-sm text-gray-600 break-all">
-                      {selectedRow?.domain_name || "-"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Proxy Permission Required
-                    </label>
-                    <p className="text-sm text-gray-600">
-                      {selectedRow?.proxy_permission_required || "-"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Total Estimated Cost
-                    </label>
-                    <p className="text-lg font-bold text-indigo-600">
-                      $
-                      {selectedRow?.total_estimated_cost?.toLocaleString() ||
-                        "-"}
-                    </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Cost Calculation - Full Width */}
-              {selectedRow?.cost_calculation && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                    Cost Calculation
-                  </label>
-                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar font-mono">
-                    {selectedRow?.cost_calculation || "-"}
+              {/* Quota & Cost Section */}
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <h3 className={heading_label_style}>Quota & Cost</h3>
+                </div>
+
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div>
+                    <div className={label_style}>Total Quota</div>
+                    <div className={input_style}>
+                      {selectedRow?.total_quota?.toLocaleString() || "-"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className={label_style}>Total Estimated Cost</div>
+                    <div className={input_style}>
+                      {selectedRow?.total_estimated_cost
+                        ? `$${selectedRow.total_estimated_cost.toLocaleString()}`
+                        : "-"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Requirements */}
+              {selectedRow?.proxy_permission_required && (
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <h3 className={heading_label_style}>Requirements</h3>
+                  </div>
+                  <div className=" text-gray-600">
+                    <span className={label_style}>
+                      Proxy Permission Required:
+                    </span>{" "}
+                    <span className={input_style}>
+                      {selectedRow.proxy_permission_required}
+                    </span>
                   </div>
                 </div>
               )}
 
-              {/* Purpose - Full Width */}
+              {/* Cost Calculation - Only if exists */}
+              {selectedRow?.cost_calculation && (
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <h3 className={heading_label_style}>Cost Calculation</h3>
+                  </div>
+                  <div
+                    className={`${input_style}  bg-gray-50 p-3 rounded border border-gray-100 break-all`}
+                  >
+                    {selectedRow.cost_calculation}
+                  </div>
+                </div>
+              )}
+
+              {/* Purpose - Only if exists */}
               {selectedRow?.description && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                    Purpose
-                  </label>
-                  <div className="overflow-y-auto text-sm text-gray-600 bg-gray-50 p-3 rounded-lg max-h-32 custom-scrollbar">
-                    {selectedRow?.description || "-"}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <h3 className={heading_label_style}>Purpose</h3>
+                  </div>
+                  <div className={input_style_with_gray_border}>
+                    {selectedRow.description}
                   </div>
                 </div>
               )}
             </div>
 
             {/* Divider */}
-            <div className="border-t border-gray-100"></div>
+            <div className={model_divider}></div>
 
             {/* Actions - Kept as requested but improved */}
-            <div className="flex justify-end gap-3 px-6 py-4">
+            <div className={model_botton_container}>
               <button
                 onClick={() => setShowPendingRejectedModal(false)}
-                className="px-5 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-gray-100 rounded-lg hover:bg-gray-200 hover:shadow-sm active:scale-95"
+                className={close_cancel_button}
               >
                 Cancel
               </button>
 
               <button
-                onClick={() => handleApprove("Rejected")}
+                onClick={() => {
+                  setShowPendingRejectedModal(false);
+                  setShowRejectModal(true);
+                }}
                 className="px-5 py-2 text-sm font-medium text-white transition-all duration-200 rounded-lg bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 hover:shadow-sm active:scale-95"
               >
                 Reject
               </button>
 
               <button
-                onClick={() => handleApprove("Active")}
+                onClick={() => handleApprove("Approved")}
                 disabled={loading}
                 className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white transition-all duration-200 rounded-lg bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 hover:shadow-sm active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {loading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
-                    Processing...
-                  </>
-                ) : (
-                  "Approve"
-                )}
+                {loading ? <>Processing...</> : "Approve"}
               </button>
             </div>
           </div>
         </div>
       )}{" "}
+      {showRejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
+          {/* Modal */}
+          <div
+            ref={showRejectedRef}
+            className="relative w-full max-w-xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+          >
+            {/* Close Icon */}
+            <button
+              onClick={() => {
+                setShowRejectModal(false);
+                setRejectReason("");
+              }}
+              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 group"
+            >
+              <MdClose className="w-4 h-4 transition-transform group-hover:scale-110" />
+            </button>
+
+            {/* Header - Kept as requested */}
+            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-800">
+                Reject Key Request
+              </h2>
+            </div>
+
+            {/* Body */}
+            <div className="px-5 py-4">
+              <label className="block mb-2 text-sm font-medium text-gray-600">
+                Rejection reason
+              </label>
+
+              <textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                rows={4}
+                maxLength={200}
+                placeholder="Enter rejection reason..."
+                className="w-full p-3 text-sm border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <div className="flex justify-end mt-1 text-xs text-gray-400">
+                {rejectReason.length}/{200}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className={model_divider}></div>
+            <div className={model_botton_container}>
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectReason("");
+                }}
+                className={close_cancel_button}
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={() => {
+                  if (!rejectReason.trim()) {
+                    showToast("Plase enter rejection reason", "error");
+                    return false;
+                  }
+
+                  handleApprove("Rejected", rejectReason); // 👈 PASS HERE
+                  setShowRejectModal(false);
+                  setRejectReason("");
+                }}
+                className="px-4 py-2 text-sm text-white bg-red-500 rounded-lg hover:bg-red-600"
+              >
+                Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showActiveInactiveModal && selectedRow && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
           {/* Modal */}
@@ -1055,7 +1542,7 @@ function AliasKeyList() {
             </button>
 
             {/* Header - Kept as requested */}
-            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
               <h2 className="text-lg font-semibold text-slate-800">
                 Change Status
               </h2>
@@ -1066,18 +1553,18 @@ function AliasKeyList() {
               <p className="text-sm ">
                 Are you sure you want to change the status from{" "}
                 <span className="font-bold">
-                  {selectedRow.status === "Active" ? "Active" : "Inactive"}
+                  {selectedRow.key_status === "Active" ? "Active" : "Inactive"}
                 </span>{" "}
                 to <span className="font-bold">{newStatus}</span>?
               </p>
             </div>
-            <div className="px-6 py-2 border-t border-slate-200"></div>
+            <div className={model_divider}></div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 px-6 pb-6">
+            <div className={model_botton_container}>
               <button
                 onClick={() => setShowActiveInactiveModal(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 transition bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200"
+                className={close_cancel_button}
               >
                 Cancel
               </button>
@@ -1092,10 +1579,7 @@ function AliasKeyList() {
                 }`}
               >
                 {loading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
-                    <span>Processing...</span>
-                  </div>
+                  <span>Processing...</span>
                 ) : (
                   <span>Confirm {newStatus}</span>
                 )}
@@ -1104,8 +1588,20 @@ function AliasKeyList() {
           </div>
         </div>
       )}
+      {/* Total Hits Modal */}
+      {showStats && selectedRow && (
+        <TotalHitsModal
+          data={selectedRow}
+          onClose={() => setShowStats(false)}
+        />
+      )}
+      {loading && (
+        <div className="flex justify-center py-10">
+          <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
+        </div>
+      )}
     </div>
   );
-}
+};
 
 export default AliasKeyList;

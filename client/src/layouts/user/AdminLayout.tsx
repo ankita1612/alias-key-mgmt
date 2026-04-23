@@ -82,7 +82,7 @@ const AdminLayout = () => {
         ? "w-72 md:w-80 lg:w-[260px]"
         : isHovering
           ? "w-72 md:w-80 lg:w-[260px]"
-          : "w-20"
+          : "w-16"
   }
 `}
       >
@@ -193,6 +193,13 @@ const AdminLayout = () => {
             Main
           </p> */}
           {/* Dashboard Link */}
+          {showExpanded && (
+            <>
+              <p className="px-3 pt-2 pb-2 text-[10px] font-semibold uppercase tracking-widest text-white/50">
+                Main
+              </p>
+            </>
+          )}
           <NavLink
             to="/dashboard"
             className={({ isActive }) =>
@@ -216,7 +223,7 @@ const AdminLayout = () => {
           </NavLink>
           {showExpanded && (
             <>
-              <p className="px-3 pt-2 pb-2 text-[10px] font-semibold uppercase tracking-widest text-white/90">
+              <p className="px-3 pt-2 pb-2 text-[10px] font-semibold uppercase tracking-widest text-white/50">
                 ACT-Key Management
               </p>
             </>

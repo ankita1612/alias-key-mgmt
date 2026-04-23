@@ -16,7 +16,7 @@ import connectDB from "./config/db.config";
 import adminAuthRouter from "./routes/admin.auth.route";
 import adminUserRouter from "./routes/admin.user.route";
 import aliasKeyRouter from "./routes/admin.aliasKey.route";
-import proxyRouter from "./routes/admin.proxy.route";
+import proxyRouter from "./routes/proxy.route";
 import proxyAPIRouter from "./routes/admin.proxyAPI.route";
 
 import apiHistoryRouter from "./routes/admin.apiHistory.route";
@@ -67,43 +67,42 @@ if (cluster.isPrimary) {
   app.use("/api/api-history", apiHistoryRouter);
   app.use("/api/dashboard", dashboardRouter);
   app.use("/api/proxy", proxyRouter);
- app.get("/api/get-response", (req, res) => {
-  const { myToken, usernae, email ,salary} = req.query;
-  console.log("Received:", { myToken, usernae, email, salary });
-  // 🔍 basic validation
-  if (!myToken || !usernae || !email || !salary) {
-    return res.status(400).json({
-      success: false,
-      message: "Missing required parameters",
+  app.get("/api/get-response", (req, res) => {
+    const { myToken, usernae, email, salary } = req.query;
+    console.log("Received:", { myToken, usernae, email, salary });
+    // 🔍 basic validation
+    if (!myToken || !usernae || !email || !salary) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required parameters",
+      });
+    }
+
+    console.log("Received:", { usernae, email, salary });
+
+    return res.status(200).json({
+      success: true,
+      message: "API call success",
     });
-  }
-
-  console.log("Received:", { usernae, email, salary });
-
-  return res.status(200).json({
-    success: true,
-    message: "API call success",
   });
-});
-app.post("/api/get-response", (req, res) => {
-  
-  const { validation, method1, method2 ,method4} = req.body;
-  console.log("Received:", { validation, method1, method2 ,method4 });
-  // 🔍 basic validation
-  if (!validation || !method1 || !method2 || !method4) {
-    return res.status(400).json({
-      success: false,
-      message: "Missing required parameters",
+  app.post("/api/get-response", (req, res) => {
+    const { validation, method1, method2, method4 } = req.body;
+    console.log("Received:", { validation, method1, method2, method4 });
+    // 🔍 basic validation
+    if (!validation || !method1 || !method2 || !method4) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required parameters",
+      });
+    }
+
+    console.log("Received:", { validation, method1, method2, method4 });
+
+    return res.status(200).json({
+      success: true,
+      message: "API call success",
     });
-  }
-
-  console.log("Received:", {  validation, method1, method2 ,method4});
-
-  return res.status(200).json({
-    success: true,
-    message: "API call success",
   });
-});
   //page not found
   app.use((req: Request, res: Response, next: NextFunction) => {
     next(new ApiError("Page not found", 404));

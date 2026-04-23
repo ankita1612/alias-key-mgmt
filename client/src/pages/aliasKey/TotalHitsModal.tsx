@@ -1,3 +1,18 @@
+import {
+  model_divider,
+  model_botton_container,
+  close_cancel_button,
+  getStatusStyle,
+  char_max_len_listing,
+  generateProxyUrl,
+  handleCopy,
+  fallbackCopy,
+  heading_label_style,
+  label_style,
+  input_style,
+  input_style_with_gray_border,
+} from "../../utils/CommonFn";
+
 import { MdClose } from "react-icons/md";
 import {
   FiBarChart2,
@@ -103,14 +118,14 @@ function TotalHitsModal({ data, onClose }: TotalHitsModalProps) {
           <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
         </button>
 
-        <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
           <h2 className="text-lg font-semibold text-slate-800">
             Key Hits Summary
           </h2>
         </div>
 
         {/* Scrollable Content - Includes Success Rate Banner and Stats */}
-        <div className="flex-1 px-6 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 px-6 py-4 overflow-y-auto">
           {/* Success Rate Banner */}
           {/* <div className="pt-2 pb-2">
             <div className="p-2 border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
@@ -137,7 +152,7 @@ function TotalHitsModal({ data, onClose }: TotalHitsModalProps) {
           </div> */}
 
           {/* Stats Section - 2 Columns */}
-          <div className="pb-4">
+          <div className="pt-4">
             <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
               {stats.map((item, idx) => {
                 const percentage = getPercentage(item.value);
@@ -146,7 +161,10 @@ function TotalHitsModal({ data, onClose }: TotalHitsModalProps) {
                 return (
                   <div
                     key={idx}
-                    className="p-4 transition-all duration-200 bg-white border border-gray-100 group rounded-xl hover:shadow-md hover:border-gray-200"
+                    className="p-4 transition-all duration-200 bg-white border group rounded-xl hover:shadow-md"
+                    style={{
+                      borderColor: `${item.color}30`, // 👈 very light (hex opacity)
+                    }}
                   >
                     <div className="flex items-start justify-between mb-3 text-xs">
                       <div className="flex items-center gap-3">
@@ -210,12 +228,9 @@ function TotalHitsModal({ data, onClose }: TotalHitsModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-100"></div>
-        <div className="flex justify-end px-6 py-4">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-gray-100 rounded-lg hover:bg-gray-200 hover:shadow-sm active:scale-95"
-          >
+        <div className={model_divider}></div>
+        <div className="flex justify-end gap-3 px-6 pb-6">
+          <button onClick={onClose} className={close_cancel_button}>
             Close
           </button>
         </div>

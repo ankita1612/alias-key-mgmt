@@ -84,7 +84,7 @@ class ProxyController {
         user_id: user_id,
         user_alias_key_id: alias_key_id,
         method: method,
-        execution_time: `${execTime}`,
+        execution_time: `${execTime} ms`,
         response_status: response_status,
         response_msg: response_msg,
         response_code: response_code,
@@ -129,7 +129,7 @@ class ProxyController {
       }
 
       // ❌ Inactive
-      if (existingKey.status !== "Active") {
+      if (existingKey.key_status !== "Active") {
         return this.handleResponse(
           res,
           existingKey.user_id,
@@ -269,12 +269,12 @@ class ProxyController {
       }
 
       let apiResponse;
-      res.json({
-        method: method,
-        url: finalUrl,
-        headers: finalHeaders,
-        data: finalData,
-      });
+      // res.json({
+      //   method: method,
+      //   url: finalUrl,
+      //   headers: finalHeaders,
+      //   data: finalData,
+      // });
       try {
         apiResponse = await axiosInstance.request({
           method,

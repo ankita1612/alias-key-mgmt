@@ -21,14 +21,18 @@ class DashboardController {
       }
 
       // Get time filter from query params, default to "today"
-      const timeFilter = req.query.timeFilter as string || "today";
+      const timeFilter = (req.query.timeFilter as string) || "today";
       const now = new Date();
 
       // Calculate date ranges based on filter
       let startDate: Date;
       switch (timeFilter) {
         case "today":
-          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          startDate = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+          );
           break;
         case "week":
           const weekStart = new Date(now);
@@ -62,16 +66,38 @@ class DashboardController {
         const [
           totalAliasKeys,
           activeAliasKeys,
+          inactiveAliasKeys,
+          approvedAliasKeys,
           pendingAliasKeys,
+          rejectedAliasKeys,
           totalAliasRequestsCurrentMonth,
           lastRequest,
           statusAggregates,
           activeQuotaDocs,
+          aliasStatusBreakdown,
           requestsLast7DaysAggregate,
         ] = await Promise.all([
           AliasKeyModel.countDocuments({ user_id: userId }),
-          AliasKeyModel.countDocuments({ user_id: userId, status: "Active" }),
-          AliasKeyModel.countDocuments({ user_id: userId, status: "Pending" }),
+          AliasKeyModel.countDocuments({
+            user_id: userId,
+            key_status: "Active",
+          }),
+          AliasKeyModel.countDocuments({
+            user_id: userId,
+            key_status: "Inactive",
+          }),
+          AliasKeyModel.countDocuments({
+            user_id: userId,
+            approval_status: "Approved",
+          }),
+          AliasKeyModel.countDocuments({
+            user_id: userId,
+            approval_status: "Pending",
+          }),
+          AliasKeyModel.countDocuments({
+            user_id: userId,
+            approval_status: "Rejected",
+          }),
           AliasKeyModel.countDocuments({
             user_id: userId,
             createdAt: { $gte: monthStart, $lt: now },
@@ -94,9 +120,23 @@ class DashboardController {
               },
             },
           ]),
-          AliasKeyModel.find({ user_id: userId, status: "Active" })
+          AliasKeyModel.find({ user_id: userId, key_status: "Active" })
             .select("total_quota remaining_quota")
             .lean(),
+          AliasKeyModel.aggregate([
+            {
+              $match: { user_id: userId },
+            },
+            {
+              $group: {
+                _id: {
+                  key_status: "$key_status",
+                  approval_status: "$approval_status",
+                },
+                count: { $sum: 1 },
+              },
+            },
+          ]),
           ApiHistoryModel.aggregate([
             {
               $match: {
@@ -127,9 +167,9 @@ class DashboardController {
           LIMIT_EXCEED: 0,
           INTERNAL_SERVER: 0,
           KEY_NOT_ACTIVE: 0,
-           EXTERNAL_ERROR:0,
-           INVALID_PROXY:0,
-            PARAM_MISSING:0
+          EXTERNAL_ERROR: 0,
+          INVALID_PROXY: 0,
+          PARAM_MISSING: 0,
         };
         statusAggregates.forEach((item: any) => {
           const key = item._id as keyof typeof statusCounts;
@@ -143,6 +183,12 @@ class DashboardController {
           statusCounts.LIMIT_EXCEED +
           statusCounts.INTERNAL_SERVER +
           statusCounts.KEY_NOT_ACTIVE;
+
+        // Get total requests count for all time (without filter)
+        const totalRequestsAllTime = await ApiHistoryModel.countDocuments({
+          user_id: userId,
+        });
+
         const statusPercentages = {
           SUCCESS: totalStatusCount
             ? Math.round((statusCounts.SUCCESS / totalStatusCount) * 100)
@@ -159,6 +205,25 @@ class DashboardController {
             ? Math.round((statusCounts.KEY_NOT_ACTIVE / totalStatusCount) * 100)
             : 0,
         };
+
+        const breakdownMap = {
+          Active: { Approved: 0, Pending: 0, Rejected: 0 },
+          Inactive: { Approved: 0, Pending: 0, Rejected: 0 },
+        };
+        aliasStatusBreakdown.forEach((item: any) => {
+          const keyStatus = item._id?.key_status as keyof typeof breakdownMap;
+          const approvalStatus = item._id
+            ?.approval_status as keyof (typeof breakdownMap)["Active"];
+          if (
+            breakdownMap[keyStatus] &&
+            Object.prototype.hasOwnProperty.call(
+              breakdownMap[keyStatus],
+              approvalStatus,
+            )
+          ) {
+            breakdownMap[keyStatus][approvalStatus] = item.count;
+          }
+        });
 
         const totalQuota = activeQuotaDocs.reduce(
           (sum: number, item: any) => sum + (item.total_quota || 0),
@@ -213,12 +278,28 @@ class DashboardController {
         return res.json({
           totalAliasKeys,
           activeAliasKeys,
+          inactiveAliasKeys,
+          approvedAliasKeys,
           pendingAliasKeys,
+          rejectedAliasKeys,
           totalAliasRequestsCurrentMonth,
           lastRequestMinutesAgo,
           lastRequestAt: lastRequest?.createdAt || null,
           totalRequests: totalStatusCount,
+          totalRequestsAllTime,
           apiStatusCounts: statusCounts,
+          aliasStatusCounts: {
+            approvalStatus: {
+              Approved: approvedAliasKeys,
+              Pending: pendingAliasKeys,
+              Rejected: rejectedAliasKeys,
+            },
+            keyStatus: {
+              Active: activeAliasKeys,
+              Inactive: inactiveAliasKeys,
+            },
+            breakdown: breakdownMap,
+          },
           quota: {
             totalQuota,
             usedQuota,
@@ -258,6 +339,9 @@ class DashboardController {
           previousMonthUsers,
           approvedAliasKeys,
           pendingApprovals,
+          rejectedAliasKeys,
+          activeAliasKeys,
+          inactiveAliasKeys,
           overallTotalRequests,
           filteredTotalRequests,
           totalAliasKeysAdmin,
@@ -275,8 +359,11 @@ class DashboardController {
             role: "User",
             createdAt: { $gte: previousMonthStart, $lt: previousMonthEnd },
           }),
-          AliasKeyModel.countDocuments({ status: "Active" }),
-          AliasKeyModel.countDocuments({ status: "Pending" }),
+          AliasKeyModel.countDocuments({ approval_status: "Approved" }),
+          AliasKeyModel.countDocuments({ approval_status: "Pending" }),
+          AliasKeyModel.countDocuments({ approval_status: "Rejected" }),
+          AliasKeyModel.countDocuments({ key_status: "Active" }),
+          AliasKeyModel.countDocuments({ key_status: "Inactive" }),
           ApiHistoryModel.countDocuments(),
           ApiHistoryModel.countDocuments(
             timeFilter === "all" ? {} : { createdAt: { $gte: startDate } },
@@ -285,16 +372,22 @@ class DashboardController {
           AliasKeyModel.aggregate([
             {
               $group: {
-                _id: "$status",
+                _id: {
+                  key_status: "$key_status",
+                  approval_status: "$approval_status",
+                },
                 count: { $sum: 1 },
               },
             },
           ]),
           ApiHistoryModel.aggregate([
             {
-              $match: timeFilter === "all" ? {} : {
-                createdAt: { $gte: startDate },
-              },
+              $match:
+                timeFilter === "all"
+                  ? {}
+                  : {
+                      createdAt: { $gte: startDate },
+                    },
             },
             {
               $group: {
@@ -326,30 +419,49 @@ class DashboardController {
             },
           ]),
           ProxyModel.countDocuments({ is_deleted: false }),
-
         ]);
 
-        const aliasStatusCounts = {
-          Active: 0,
-          Pending: 0,
-          Inactive: 0,
-          Rejected: 0,
+        const aliasStatusBreakdown = {
+          Active: { Approved: 0, Pending: 0, Rejected: 0 },
+          Inactive: { Approved: 0, Pending: 0, Rejected: 0 },
         };
         aliasStatusAggregates.forEach((item: any) => {
-          const key = item._id as keyof typeof aliasStatusCounts;
-          if (Object.prototype.hasOwnProperty.call(aliasStatusCounts, key)) {
-            aliasStatusCounts[key] = item.count;
+          const keyStatus = item._id
+            ?.key_status as keyof typeof aliasStatusBreakdown;
+          const approvalStatus = item._id
+            ?.approval_status as keyof (typeof aliasStatusBreakdown)["Active"];
+          if (
+            aliasStatusBreakdown[keyStatus] &&
+            Object.prototype.hasOwnProperty.call(
+              aliasStatusBreakdown[keyStatus],
+              approvalStatus,
+            )
+          ) {
+            aliasStatusBreakdown[keyStatus][approvalStatus] = item.count;
           }
         });
+
+        const aliasStatusCounts = {
+          approvalStatus: {
+            Approved: approvedAliasKeys,
+            Pending: pendingApprovals,
+            Rejected: rejectedAliasKeys,
+          },
+          keyStatus: {
+            Active: activeAliasKeys,
+            Inactive: inactiveAliasKeys,
+          },
+          breakdown: aliasStatusBreakdown,
+        };
 
         const apiStatusCounts = {
           SUCCESS: 0,
           LIMIT_EXCEED: 0,
           INTERNAL_SERVER: 0,
           KEY_NOT_ACTIVE: 0,
-          EXTERNAL_ERROR:0,
-           INVALID_PROXY:0,
-            PARAM_MISSING:0
+          EXTERNAL_ERROR: 0,
+          INVALID_PROXY: 0,
+          PARAM_MISSING: 0,
         };
         apiStatusAggregates.forEach((item: any) => {
           const key = item._id as keyof typeof apiStatusCounts;

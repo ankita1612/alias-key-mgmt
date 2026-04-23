@@ -37,10 +37,18 @@ const AliasKeySchema: Schema = new Schema(
     alias_key: {
       type: String,
     },
-    status: {
+    rejection_reason: {
       type: String,
-      enum: ["Active", "Inactive", "Pending", "Rejected"],
+    },
+    approval_status: {
+      type: String,
+      enum: ["Approved", "Pending", "Rejected"],
       default: "Pending",
+    },
+    key_status: {
+      type: String,
+      enum: ["Active", "Inactive"],
+      default: "Active",
     },
     total_quota: {
       type: Number,

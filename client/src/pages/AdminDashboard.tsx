@@ -28,6 +28,7 @@ import {
   Filter,
   ChevronDown,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { Navigate } from "react-router-dom";
 
@@ -41,10 +42,19 @@ interface AdminDashboardData {
   totalAliasKeys: number;
   requestSuccessRate: number;
   aliasStatusCounts: {
-    Active: number;
-    Pending: number;
-    Inactive: number;
-    Rejected: number;
+    approvalStatus: {
+      Approved: number;
+      Pending: number;
+      Rejected: number;
+    };
+    keyStatus: {
+      Active: number;
+      Inactive: number;
+    };
+    breakdown?: {
+      Active: { Approved: number; Pending: number; Rejected: number };
+      Inactive: { Approved: number; Pending: number; Rejected: number };
+    };
   };
   apiStatusCounts: {
     SUCCESS: number;
@@ -100,21 +110,23 @@ function AdminDashboard() {
       const response = await apiClient.get<AdminDashboardData>(
         `/api/dashboard?timeFilter=${timeFilter}`,
       );
-      setDashboard(response.data);
-      setLastUpdated(new Date());
+      if (response.data) {
+        setDashboard(response.data);
+        setLastUpdated(new Date());
+      }
     } catch (caughtError) {
-      // const error = caughtError as unknown as {
-      //   name?: string;
-      //   message?: string;
-      //   response?: { data?: { message?: string } };
-      // };
-      // if (error.name !== "CanceledError") {
-      //   toast.error(
-      //     error.response?.data?.message ||
-      //       error.message ||
-      //       "Failed to load data",
-      //   );
-      // }
+      const error = caughtError as unknown as {
+        name?: string;
+        message?: string;
+        response?: { data?: { message?: string } };
+      };
+      if (error.name !== "CanceledError") {
+        toast.error(
+          error.response?.data?.message ||
+            error.message ||
+            "Failed to load dashboard data",
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -251,14 +263,55 @@ function AdminDashboard() {
     );
   }
 
+  if (!dashboard) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <AlertCircle className="w-12 h-12 text-gray-400 mb-3" />
+        <p className="text-lg font-medium text-gray-700">
+          Unable to load dashboard
+        </p>
+        <p className="text-sm text-gray-500 mt-1">
+          Please try refreshing the page
+        </p>
+        <button
+          onClick={() => fetchData()}
+          className="mt-4 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   const aliasStatusData = dashboard
     ? [
-        { name: "Active", value: dashboard.aliasStatusCounts.Active },
-        { name: "Pending", value: dashboard.aliasStatusCounts.Pending },
-        { name: "Inactive", value: dashboard.aliasStatusCounts.Inactive },
-        { name: "Rejected", value: dashboard.aliasStatusCounts.Rejected },
+        {
+          name: "Approved",
+          value: dashboard.aliasStatusCounts?.approvalStatus?.Approved || 0,
+        },
+        {
+          name: "Pending",
+          value: dashboard.aliasStatusCounts?.approvalStatus?.Pending || 0,
+        },
+        {
+          name: "Rejected",
+          value: dashboard.aliasStatusCounts?.approvalStatus?.Rejected || 0,
+        },
+        {
+          name: "Active",
+          value: dashboard.aliasStatusCounts?.keyStatus?.Active || 0,
+        },
+        {
+          name: "Inactive",
+          value: dashboard.aliasStatusCounts?.keyStatus?.Inactive || 0,
+        },
       ].filter((item) => item.value > 0)
     : [];
+  const safeStatusCounts = dashboard?.aliasStatusCounts || {
+    approvalStatus: { Approved: 0, Pending: 0, Rejected: 0 },
+    keyStatus: { Active: 0, Inactive: 0 },
+  };
+
   const TopStatCard = ({
     title,
     value,
@@ -266,27 +319,26 @@ function AdminDashboard() {
     iconColor,
     onClick,
   }: any) => {
-    // convert text-blue-600 → bg-blue-100
     const iconBg = iconColor?.replace("text-", "bg-")?.replace("-600", "-100");
 
     return (
       <div
         onClick={onClick}
         className={`flex items-center gap-3 px-4 py-3 transition bg-white border-t-4 rounded-lg shadow-sm border-menuActive 
-      ${onClick ? "cursor-pointer hover:shadow-md hover:scale-[1.02]" : ""}`}
+      ${onClick ? "cursor-pointer hover:shadow-md" : ""} group`}
       >
         {/* LEFT ICON */}
         <div
-          className={`flex items-center justify-center w-10 h-10 rounded-lg ${
+          className={`flex items-center justify-center w-10 h-10 rounded-lg transition-transform duration-200 ${
             iconBg || "bg-gray-100"
-          }`}
+          } group-hover:scale-110`}
         >
           <Icon className={`w-5 h-5 ${iconColor}`} />
         </div>
 
         {/* RIGHT CONTENT */}
         <div className="flex flex-col">
-          <p className="text-xs text-slate-500 font-medium mt-0.5">{title}</p>
+          <p className="text-xs text-slate-500 font-medium">{title}</p>
           <p className="mt-1 text-lg font-semibold text-primary">{value}</p>
         </div>
       </div>
@@ -298,22 +350,44 @@ function AdminDashboard() {
         {/* Header */}
         <div className="mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-            <div>
+            {/* <div>
               <div className="flex items-center space-x-3">
                 <div>
                   <h5 className="font-bold sm:text-xl">
                     Key management Overview
                   </h5>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Last updated: {lastUpdated.toLocaleTimeString()}
+                  </p>
                 </div>
               </div>
-            </div>
+            </div> */}
+
+            {/* Quick Actions */}
+            {/* <div className="flex items-center gap-2 mt-4 lg:mt-0">
+              <button
+                onClick={() => fetchData()}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Refresh
+              </button>
+              <button
+                onClick={() => navigate("/alias-key")}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90"
+              >
+                <Key className="w-4 h-4" />
+                Manage Keys
+              </button>
+            </div> */}
           </div>
         </div>
 
         {/* Stats Grid */}
         {dashboard && (
           <>
-            <div className="grid gap-4 mb-6 sm:grid-cols-3">
+            {/* Top Stats Row */}
+            <div className="grid gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-3">
               <TopStatCard
                 title="Total Users"
                 value={dashboard.totalUsers.toLocaleString()}
@@ -326,7 +400,7 @@ function AdminDashboard() {
                 value={dashboard.totalProxy.toLocaleString()}
                 icon={FaExchangeAlt}
                 iconColor="text-purple-600"
-                onClick={() => navigate("/proxy")}
+                onClick={undefined}
               />
               <TopStatCard
                 title="Total API Requests"
@@ -335,9 +409,48 @@ function AdminDashboard() {
                 iconColor="text-green-600"
                 onClick={undefined}
               />
+              {/* <TopStatCard
+                title="Success Rate"
+                value={`${dashboard.requestSuccessRate?.toFixed(1) || 0}%`}
+                icon={CheckCircle}
+                iconColor="text-emerald-600"
+                onClick={undefined}
+              /> */}
             </div>
-            <h6 className="pb-2">Key Monitoring</h6>
-            <div className="grid gap-4 mb-8 sm:grid-cols-2 lg:grid-cols-3">
+
+            {/* Pending Approvals Alert */}
+            {/* {dashboard.aliasStatusCounts?.approvalStatus?.Pending > 0 && (
+              <div className="mb-6 flex items-center gap-4 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-md shadow-sm">
+                <div className="flex items-center justify-center w-12 h-12 bg-amber-100 rounded-full flex-shrink-0">
+                  <Clock className="w-6 h-6 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-amber-900">
+                    {dashboard.aliasStatusCounts.approvalStatus.Pending} Pending
+                    Request
+                    {dashboard.aliasStatusCounts.approvalStatus.Pending > 1
+                      ? "s"
+                      : ""}
+                  </p>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    Awaiting your approval. Review and act on these requests to
+                    help developers get access.
+                  </p>
+                </div>
+                <button
+                  onClick={() => navigate("/alias-key?approvalStatus=Pending")}
+                  className="px-4 py-2 text-sm font-medium text-amber-700 bg-amber-100 rounded-lg hover:bg-amber-200 whitespace-nowrap flex-shrink-0"
+                >
+                  Review
+                </button>
+              </div>
+            )} */}
+
+            {/* Key Monitoring Row */}
+            <h6 className="pb-2 text-sm font-semibold text-gray-700">
+              Key Monitoring - Approval Status
+            </h6>
+            <div className="grid gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 title="Total Keys"
                 value={dashboard.totalAliasKeys.toLocaleString()}
@@ -347,21 +460,363 @@ function AdminDashboard() {
               />
 
               <StatCard
-                title="Active Keys"
-                value={dashboard.approvedAliasKeys.toLocaleString()}
+                title="Approved"
+                value={
+                  dashboard.aliasStatusCounts?.approvalStatus?.Approved?.toLocaleString() ||
+                  "0"
+                }
                 subtitle="Approved keys"
                 icon={CheckCircle}
                 color="success"
               />
 
               <StatCard
-                title="Pending Keys"
-                value={dashboard.pendingApprovals.toLocaleString()}
-                subtitle="Waiting approval"
+                title="Pending Approval"
+                value={
+                  dashboard.aliasStatusCounts?.approvalStatus?.Pending?.toLocaleString() ||
+                  "0"
+                }
+                subtitle="Awaiting review"
                 icon={Clock}
                 color="warning"
               />
+
+              <StatCard
+                title="Rejected"
+                value={
+                  dashboard.aliasStatusCounts?.approvalStatus?.Rejected?.toLocaleString() ||
+                  "0"
+                }
+                subtitle="Rejected keys"
+                icon={XCircle}
+                color="info"
+              />
             </div>
+
+            {/* Key Status Row */}
+            {/* <h6 className="pb-2 text-sm font-semibold text-gray-700">
+              Key Monitoring - Activation Status
+            </h6>
+            <div className="grid gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard
+                title="Active Keys"
+                value={
+                  dashboard.aliasStatusCounts?.keyStatus?.Active?.toLocaleString() ||
+                  "0"
+                }
+                subtitle="Currently active"
+                icon={CheckCircle}
+                color="success"
+              />
+
+              <StatCard
+                title="Inactive Keys"
+                value={
+                  dashboard.aliasStatusCounts?.keyStatus?.Inactive?.toLocaleString() ||
+                  "0"
+                }
+                subtitle="Deactivated"
+                icon={XCircle}
+                color="info"
+              />
+            </div> */}
+
+            {/* Key Status Summary */}
+            <div className="grid gap-4 mb-6 lg:grid-cols-2">
+              {/* Active Keys Card */}
+              <div className="overflow-hidden bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300">
+                <div className="px-5 py-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-10 h-10 bg-emerald-500 rounded-xl shadow-sm">
+                        <CheckCircle className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-emerald-600">
+                          Key Status
+                        </p>
+                        <h3 className="text-xl font-bold text-emerald-800">
+                          Active Keys
+                        </h3>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-3xl font-bold text-emerald-700">
+                        {dashboard.aliasStatusCounts?.keyStatus?.Active?.toLocaleString() ||
+                          "0"}
+                      </p>
+                      <p className="text-xs text-emerald-500">Total Active</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5">
+                  <div className="space-y-4">
+                    {[
+                      {
+                        label: "Approved",
+                        value:
+                          dashboard.aliasStatusCounts?.breakdown?.Active
+                            ?.Approved || 0,
+                        color: "emerald",
+                        icon: CheckCircle,
+                      },
+                      {
+                        label: "Pending",
+                        value:
+                          dashboard.aliasStatusCounts?.breakdown?.Active
+                            ?.Pending || 0,
+                        color: "amber",
+                        icon: Clock,
+                      },
+                      {
+                        label: "Rejected",
+                        value:
+                          dashboard.aliasStatusCounts?.breakdown?.Active
+                            ?.Rejected || 0,
+                        color: "red",
+                        icon: XCircle,
+                      },
+                    ].map((item) => {
+                      const total =
+                        dashboard.aliasStatusCounts?.keyStatus?.Active || 1;
+                      const percentage = (item.value / total) * 100;
+
+                      return (
+                        <div key={item.label} className="group">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <item.icon
+                                className={`w-3.5 h-3.5 text-${item.color}-500`}
+                              />
+                              <span className="text-sm text-gray-600">
+                                {item.label}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-gray-900">
+                                {item.value.toLocaleString()}
+                              </span>
+                              {/* <span className="text-xs text-gray-400">
+                                ({percentage.toFixed(1)}%)
+                              </span> */}
+                            </div>
+                          </div>
+                          {/* <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 bg-${item.color}-500 group-hover:bg-${item.color}-600`}
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div> */}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Inactive Keys Card */}
+              <div className="overflow-hidden bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300">
+                <div className="px-5 py-4 bg-gradient-to-r from-gray-50 to-slate-50 border-b border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-10 h-10 bg-gray-500 rounded-xl shadow-sm">
+                        <XCircle className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">
+                          Key Status
+                        </p>
+                        <h3 className="text-xl font-bold text-gray-800">
+                          Inactive Keys
+                        </h3>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-3xl font-bold text-gray-700">
+                        {dashboard.aliasStatusCounts?.keyStatus?.Inactive?.toLocaleString() ||
+                          "0"}
+                      </p>
+                      <p className="text-xs text-gray-500">Total Inactive</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5">
+                  {/* <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
+                    Approval Breakdown
+                  </p> */}
+                  <div className="space-y-4">
+                    {[
+                      {
+                        label: "Approved",
+                        value:
+                          dashboard.aliasStatusCounts?.breakdown?.Inactive
+                            ?.Approved || 0,
+                        color: "emerald",
+                        icon: CheckCircle,
+                      },
+                      {
+                        label: "Pending",
+                        value:
+                          dashboard.aliasStatusCounts?.breakdown?.Inactive
+                            ?.Pending || 0,
+                        color: "amber",
+                        icon: Clock,
+                      },
+                      {
+                        label: "Rejected",
+                        value:
+                          dashboard.aliasStatusCounts?.breakdown?.Inactive
+                            ?.Rejected || 0,
+                        color: "red",
+                        icon: XCircle,
+                      },
+                    ].map((item) => {
+                      const total =
+                        dashboard.aliasStatusCounts?.keyStatus?.Inactive || 1;
+                      const percentage = (item.value / total) * 100;
+
+                      return (
+                        <div key={item.label} className="group">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <item.icon
+                                className={`w-3.5 h-3.5 text-${item.color}-500`}
+                              />
+                              <span className="text-sm text-gray-600">
+                                {item.label}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-gray-900">
+                                {item.value.toLocaleString()}
+                              </span>
+                              {/* <span className="text-xs text-gray-400">
+                                ({percentage.toFixed(1)}%)
+                              </span> */}
+                            </div>
+                          </div>
+                          {/* <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 bg-${item.color}-500 group-hover:bg-${item.color}-600`}
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div> */}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions / System Status Row */}
+            {/* <div className="grid gap-4 mb-6 lg:grid-cols-3"> */}
+            {/* Pending Requests Alert */}
+            {/* {dashboard.pendingApprovals > 0 && (
+                <div className="flex items-center gap-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-center justify-center w-12 h-12 bg-amber-100 rounded-full">
+                    <Clock className="w-6 h-6 text-amber-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-amber-800">
+                      {dashboard.pendingApprovals} Pending Request
+                      {dashboard.pendingApprovals > 1 ? "s" : ""}
+                    </p>
+                    <p className="text-xs text-amber-600">
+                      Awaiting your approval
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => navigate("/alias-key?status=Pending")}
+                    className="px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-100 rounded-md hover:bg-amber-200"
+                  >
+                    Review
+                  </button>
+                </div>
+              )} */}
+
+            {/* Key Status Distribution */}
+            {/* <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                <p className="text-sm font-medium text-gray-700 mb-3">
+                  Key Status Distribution
+                </p>
+                <div className="space-y-2">
+                  {[
+                    {
+                      label: "Active",
+                      count: dashboard.aliasStatusCounts?.Active,
+                      color: "bg-emerald-500",
+                    },
+                    {
+                      label: "Pending",
+                      count: dashboard.aliasStatusCounts?.Pending,
+                      color: "bg-amber-500",
+                    },
+                    {
+                      label: "Inactive",
+                      count: dashboard.aliasStatusCounts?.Inactive,
+                      color: "bg-gray-400",
+                    },
+                    {
+                      label: "Rejected",
+                      count: dashboard.aliasStatusCounts?.Rejected,
+                      color: "bg-red-500",
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${item.color}`} />
+                        <span className="text-xs text-gray-600">
+                          {item.label}
+                        </span>
+                      </div>
+                      <span className="text-xs font-semibold text-gray-900">
+                        {item.count || 0}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div> */}
+
+            {/* API Health Overview */}
+            {/* <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                <p className="text-sm font-medium text-gray-700 mb-3">
+                  API Health
+                </p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">Success</span>
+                    <span className="text-xs font-semibold text-emerald-600">
+                      {dashboard.apiStatusCounts?.SUCCESS?.toLocaleString() ||
+                        0}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">
+                      Limit Exceeded
+                    </span>
+                    <span className="text-xs font-semibold text-amber-600">
+                      {dashboard.apiStatusCounts?.LIMIT_EXCEED?.toLocaleString() ||
+                        0}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">Errors</span>
+                    <span className="text-xs font-semibold text-red-600">
+                      {(
+                        (dashboard.apiStatusCounts?.EXTERNAL_ERROR || 0) +
+                        (dashboard.apiStatusCounts?.INTERNAL_SERVER || 0)
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div> */}
+            {/* </div> */}
             {/* Charts Grid */}
             <div className="grid gap-5 mb-6 lg:grid-cols-2">
               <div className="overflow-hidden duration-300 bg-white border border-gray-100 rounded-md shadow-sm hover:shadow-lg">
@@ -553,7 +1008,7 @@ function AdminDashboard() {
                         <YAxis
                           stroke="#9ca3af"
                           tick={{ fontSize: 12 }}
-                          width={30} // 👈 reduce space
+                          width={35} // 👈 reduce space
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Area

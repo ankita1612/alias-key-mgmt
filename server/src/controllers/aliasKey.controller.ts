@@ -41,12 +41,31 @@ class AliasKeyController {
         project_name: data.project_name,
         proxy_id: data.proxy_id,
         proxy_permission_required: proxyPermission,
-        status: "Pending",
+        approval_status:
+          req?.user?.role === UserType.USER ? "Pending" : "Approved",
+        key_status: "Active",
         total_quota: data.total_quota,
         total_estimated_cost: data.total_estimated_cost,
         cost_calculation: data.cost_calculation,
         description: data.description,
+
+        ...(req?.user?.role == UserType.ADMIN && {
+          remaining_quota: data.total_quota,
+        }),
       });
+
+      if (req?.user?.role === UserType.ADMIN) {
+        const aliasKey = await this.generateUniqueAliasKey();
+
+        await AliasKeyModel.findByIdAndUpdate(result._id, {
+          alias_key: aliasKey,
+          approval_status: "Approved",
+          remaining_quota: data.total_quota, // ✅ correct
+        });
+
+        // Optional: update response object
+        result.alias_key = aliasKey;
+      }
 
       res.status(201).json({
         success: true,
@@ -103,6 +122,13 @@ class AliasKeyController {
       const limit = parseInt(req.query.limit as string) || 10;
       const search = ((req.query.search as string) || "").trim();
 
+      // 🔥 Filter params
+      const key_statusFilter = req.query.key_status as string;
+      const approval_statusFilter = req.query.approval_status as string;
+
+      const startDate = req.query.startDate as string;
+      const endDate = req.query.endDate as string;
+
       const sortBy = req.query.sortBy as string;
       const sortField = req.query.sortField as string;
       const sortOrder = req.query.sortOrder as string;
@@ -115,8 +141,35 @@ class AliasKeyController {
 
       // 🔥 Base match
       const match: any = {
-        status: { $in: ["Active", "Inactive"] }, // ✅ FIXED condition
+        key_status: { $in: ["Active", "Inactive"] }, // ✅ FIXED condition
       };
+      match.approval_status = "Approved";
+      // 🔥 Add status filter
+      if (
+        key_statusFilter &&
+        ["Active", "Inactive"].includes(key_statusFilter)
+      ) {
+        match.key_status = key_statusFilter;
+      }
+
+      if (approval_statusFilter) {
+        match.approval_status = approval_statusFilter;
+      }
+
+      // 🔥 Add date range filter
+      if (startDate || endDate) {
+        match.createdAt = {};
+        if (startDate) {
+          match.createdAt.$gte = new Date(startDate);
+        }
+        if (endDate) {
+          // Set to end of day
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          match.createdAt.$lte = end;
+        }
+      }
+
       if (req.user.role === UserType.USER) {
         match.user_id = new Types.ObjectId(req.user.id);
       }
@@ -131,7 +184,8 @@ class AliasKeyController {
             $or: [
               { alias_key: { $regex: search, $options: "i" } },
               { domain_name: { $regex: search, $options: "i" } },
-              { status: { $regex: search, $options: "i" } },
+              { key_status: { $regex: search, $options: "i" } },
+              { approval_status: { $regex: search, $options: "i" } },
               { "user.first_name": { $regex: search, $options: "i" } },
               { "user.email": { $regex: search, $options: "i" } },
 
@@ -171,11 +225,7 @@ class AliasKeyController {
           },
         },
         { $unwind: { path: "$proxy", preserveNullAndEmptyArrays: true } },
-        {
-          $match: {
-            "proxy.is_deleted": { $ne: true }, // ✅ exclude deleted proxies
-          },
-        },
+
         // ✅ ADD THIS
         {
           $addFields: {
@@ -223,7 +273,8 @@ class AliasKeyController {
       // 🔥 Get active alias IDs
       const activeAliasIds = data
         .filter(
-          (item) => item.status === "Active" || item.status === "Inactive",
+          (item) =>
+            item.key_status === "Active" || item.key_status === "Inactive",
         )
         .map((item) => item._id);
 
@@ -333,7 +384,7 @@ class AliasKeyController {
       // 🔥 Merge stats into paginated data
       const finalData = data.map((item) => {
         // ❌ If not active → return default stats
-        if (!(item.status === "Active" || item.status === "Inactive")) {
+        if (!(item.key_status === "Active" || item.key_status === "Inactive")) {
           return {
             ...item,
             ...defaultStats,
@@ -385,7 +436,7 @@ class AliasKeyController {
 
       // 🔥 Base match
       const match: any = {
-        status: { $in: ["Active", "Inactive"] }, // ✅ FIXED condition
+        key_status: { $in: ["Active", "Inactive"] }, // ✅ FIXED condition
       };
       if (req.user.role === UserType.USER) {
         match.user_id = new Types.ObjectId(req.user.id);
@@ -401,7 +452,8 @@ class AliasKeyController {
             $or: [
               { alias_key: { $regex: search, $options: "i" } },
               { domain_name: { $regex: search, $options: "i" } },
-              { status: { $regex: search, $options: "i" } },
+              { key_status: { $regex: search, $options: "i" } },
+              { approval_status: { $regex: search, $options: "i" } },
               { "user.first_name": { $regex: search, $options: "i" } },
               { "user.email": { $regex: search, $options: "i" } },
 
@@ -493,7 +545,8 @@ class AliasKeyController {
       // 🔥 Get active alias IDs
       const activeAliasIds = data
         .filter(
-          (item) => item.status === "Active" || item.status === "Inactive",
+          (item) =>
+            item.key_status === "Active" || item.key_status === "Inactive",
         )
         .map((item) => item._id);
 
@@ -603,7 +656,7 @@ class AliasKeyController {
       // 🔥 Merge stats into paginated data
       const finalData = data.map((item) => {
         // ❌ If not active → return default stats
-        if (!(item.status === "Active" || item.status === "Inactive")) {
+        if (!(item.key_status === "Active" || item.key_status === "Inactive")) {
           return {
             ...item,
             ...defaultStats,
@@ -639,7 +692,10 @@ class AliasKeyController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       const search = ((req.query.search as string) || "").trim();
-
+      const key_statusFilter = req.query.key_status as string;
+      const approval_statusFilter = req.query.approval_status as string;
+      const startDate = req.query.startDate as string;
+      const endDate = req.query.endDate as string;
       const sortBy = req.query.sortBy as string;
       const sortField = req.query.sortField as string;
       const sortOrder = req.query.sortOrder as string;
@@ -652,7 +708,29 @@ class AliasKeyController {
 
       // 🔥 Base match
       const match: any = {};
+      if (
+        key_statusFilter &&
+        ["Active", "Inactive"].includes(key_statusFilter)
+      ) {
+        match.key_status = key_statusFilter;
+      }
+      if (approval_statusFilter) {
+        match.approval_status = approval_statusFilter;
+      }
 
+      // 🔥 Add date range filter
+      if (startDate || endDate) {
+        match.createdAt = {};
+        if (startDate) {
+          match.createdAt.$gte = new Date(startDate);
+        }
+        if (endDate) {
+          // Set to end of day
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          match.createdAt.$lte = end;
+        }
+      }
       if (req.user.role === UserType.USER) {
         match.user_id = new Types.ObjectId(req.user.id);
       }
@@ -667,7 +745,7 @@ class AliasKeyController {
             $or: [
               { alias_key: { $regex: search, $options: "i" } },
               { domain_name: { $regex: search, $options: "i" } },
-              { status: { $regex: search, $options: "i" } },
+              { key_status: { $regex: search, $options: "i" } },
               { "user.first_name": { $regex: search, $options: "i" } },
               { "user.email": { $regex: search, $options: "i" } },
 
@@ -696,8 +774,66 @@ class AliasKeyController {
             as: "user",
           },
         },
-
         { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+
+        {
+          $lookup: {
+            from: "proxies",
+            localField: "proxy_id",
+            foreignField: "_id",
+            as: "proxy",
+          },
+        },
+        { $unwind: { path: "$proxy", preserveNullAndEmptyArrays: true } },
+      ];
+
+      // ✅ Role-based filter
+      if (req.user.role === UserType.USER) {
+        pipeline.push({
+          $match: {
+            "proxy.is_deleted": { $ne: true },
+          },
+        });
+      }
+
+      // ✅ Continue pipeline properly
+      pipeline.push({
+        $addFields: {
+          user_first_name: { $ifNull: ["$user.first_name", ""] },
+          user_email: { $ifNull: ["$user.email", ""] },
+          query_params: { $ifNull: ["$proxy.query_params", ""] },
+        },
+      });
+
+      // ✅ Add search separately
+      if (search) {
+        pipeline.push({ $match: searchMatch });
+      }
+
+      // ✅ Add remaining stages
+      pipeline.push(
+        {
+          $sort: {
+            [finalSortField]: sortOrder === "asc" ? 1 : -1,
+          },
+        },
+        { $skip: skip },
+        { $limit: Number(limit) },
+      );
+
+      const countPipeline = [
+        { $match: match },
+
+        {
+          $lookup: {
+            from: "users",
+            localField: "user_id",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+
         {
           $lookup: {
             from: "proxies",
@@ -708,40 +844,12 @@ class AliasKeyController {
         },
         { $unwind: { path: "$proxy", preserveNullAndEmptyArrays: true } },
 
-        // ✅ ADD THIS
-        {
-          $addFields: {
-            user_first_name: { $ifNull: ["$user.first_name", ""] },
-            user_email: { $ifNull: ["$user.email", ""] },
-            query_params: { $ifNull: ["$proxy.query_params", ""] },
-          },
-        },
+        ...(req.user.role === UserType.USER
+          ? [{ $match: { "proxy.is_deleted": { $ne: true } } }]
+          : []),
 
         ...(search ? [{ $match: searchMatch }] : []),
 
-        // ✅ UPDATED SORT
-        {
-          $sort: {
-            [finalSortField]: sortOrder === "asc" ? 1 : -1,
-          },
-        },
-
-        { $skip: skip },
-        { $limit: Number(limit) },
-      ];
-
-      const countPipeline = [
-        { $match: match },
-        {
-          $lookup: {
-            from: "users",
-            localField: "user_id",
-            foreignField: "_id",
-            as: "user",
-          },
-        },
-        { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
-        ...(search ? [{ $match: searchMatch }] : []),
         { $count: "total" },
       ];
 
@@ -755,7 +863,8 @@ class AliasKeyController {
       // 🔥 Get active alias IDs
       const activeAliasIds = data
         .filter(
-          (item) => item.status === "Active" || item.status === "Inactive",
+          (item) =>
+            item.key_status === "Active" || item.key_status === "Inactive",
         )
         .map((item) => item._id);
 
@@ -865,7 +974,7 @@ class AliasKeyController {
       // 🔥 Merge stats into paginated data
       const finalData = data.map((item) => {
         // ❌ If not active → return default stats
-        if (!(item.status === "Active" || item.status === "Inactive")) {
+        if (!(item.key_status === "Active" || item.key_status === "Inactive")) {
           return {
             ...item,
             ...defaultStats,
@@ -978,7 +1087,7 @@ class AliasKeyController {
     next: NextFunction,
   ): Promise<void> => {
     try {
-      const { id, action } = req.body;
+      const { id, action, rejection_reason } = req.body;
 
       const existing = await AliasKeyModel.findById(id);
 
@@ -987,23 +1096,24 @@ class AliasKeyController {
       }
 
       // ✅ Only allow once
-      if (existing.status !== "Pending") {
+      if (existing.approval_status !== "Pending") {
         throw new Error("Action already performed");
       }
 
       let updateData: any = {};
 
-      if (action === "Active") {
+      if (action === "Approved") {
         const aliasKey = await this.generateUniqueAliasKey();
 
         updateData = {
           alias_key: aliasKey,
-          status: "Active",
+          approval_status: "Approved",
           remaining_quota: existing.total_quota, // ✅ IMPORTANT LINE
         };
       } else if (action === "Rejected") {
         updateData = {
-          status: "Rejected",
+          approval_status: "Rejected",
+          rejection_reason: rejection_reason,
         };
       }
 
@@ -1048,16 +1158,17 @@ class AliasKeyController {
       }
 
       // ✅ Only allow toggle between Active & Inactive
-      if (!["Active", "Inactive"].includes(existing.status)) {
+      if (!["Active", "Inactive"].includes(existing.key_status)) {
         throw new Error("Only Active/Inactive status can be toggled");
       }
 
       // 🔥 Toggle logic
-      const newStatus = existing.status === "Active" ? "Inactive" : "Active";
+      const newStatus =
+        existing.key_status === "Active" ? "Inactive" : "Active";
 
       const updated = await AliasKeyModel.findByIdAndUpdate(
         id,
-        { $set: { status: newStatus } },
+        { $set: { key_status: newStatus } },
         { new: true },
       );
 

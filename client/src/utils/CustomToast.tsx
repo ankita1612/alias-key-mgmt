@@ -78,3 +78,15 @@ ${t.visible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"}
 };
 
 export default CustomToast;
+
+export const showToast = (
+  message: string,
+  type: "success" | "error" | "info" | "loading" = "info",
+) => {
+  toast.dismiss("global-toast"); // 👈 remove existing toast
+
+  toast.custom((t) => <CustomToast t={{ ...t, message, styleType: type }} />, {
+    id: "global-toast",
+    duration: 4000,
+  });
+};

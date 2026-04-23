@@ -15,6 +15,8 @@ import ApiHistory from "../pages/apiHistory/ApiHistory";
 import ApiHistoryView from "../pages/apiHistory/ApiHistoryView";
 import KeyMonitor from "../pages/apiHistory/KeyMonitor";
 import { useAuth } from "../context/AuthContext";
+import Proxy from "../pages/proxy/Proxy";
+import ProxyView from "../pages/proxy/ProxyView";
 
 const AppRoutes = () => {
   const { user } = useAuth();
@@ -48,7 +50,7 @@ const AppRoutes = () => {
           path="proxy"
           element={
             <ProtectedRoute roles={["Admin"]}>
-              <ProxyList />
+              <Proxy />
             </ProtectedRoute>
           }
         />
@@ -65,6 +67,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute roles={["Admin"]}>
               <ProxyAdd />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="proxy/view/:id?"
+          element={
+            <ProtectedRoute roles={["Admin"]}>
+              <ProxyView />
             </ProtectedRoute>
           }
         />

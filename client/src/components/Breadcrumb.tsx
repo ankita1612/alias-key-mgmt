@@ -1,7 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
+
 import { FaHome } from "react-icons/fa";
 export default function Breadcrumb() {
   const location = useLocation();
+  const historyParentId = location.state?.historyParentId;
   const path = location.pathname;
   const HOME_ROUTE = "/dashboard";
 
@@ -21,11 +23,11 @@ export default function Breadcrumb() {
       items.push({ label: "Main", clickable: false });
       items.push({ label: "Dashboard", clickable: false });
     } else {
-      // ✅ COMMON ROOT
-      // items.push({
-      //   label: "Key Management",
-      //   clickable: false,
-      // });
+      //  ✅ COMMON ROOT
+      items.push({
+        label: "ACT-Key Management",
+        clickable: false,
+      });
 
       // ✅ PROXY
       if (path.startsWith("/proxy")) {
@@ -33,10 +35,13 @@ export default function Breadcrumb() {
           items.push({ label: "Proxy", clickable: false });
         } else if (path === "/proxy/add") {
           items.push({ label: "Proxy", to: "/proxy", clickable: true });
-          items.push({ label: "Proxy Add", clickable: false });
+          items.push({ label: "Add Proxy", clickable: false });
         } else if (/^\/proxy\/add\/[0-9a-fA-F]{24}$/.test(path)) {
           items.push({ label: "Proxy", to: "/proxy", clickable: true });
-          items.push({ label: "Proxy Edit", clickable: false });
+          items.push({ label: "Edit Proxy", clickable: false });
+        } else if (/^\/proxy\/view\/[0-9a-fA-F]{24}$/.test(path)) {
+          items.push({ label: "Proxy", to: "/proxy", clickable: true });
+          items.push({ label: "View Proxy", clickable: false });
         }
       }
 
@@ -50,8 +55,8 @@ export default function Breadcrumb() {
             to: "/alias-key",
             clickable: true,
           });
-          items.push({ label: "Key Add", clickable: false });
-        } else if (/^\/alias-key\/[0-9a-fA-F]{24}$/.test(path)) {
+          items.push({ label: "Add Key", clickable: false });
+        } else if (/^\/alias-key\/add\/[0-9a-fA-F]{24}$/.test(path)) {
           items.push({
             label: "Key Management",
             to: "/alias-key",
@@ -96,8 +101,10 @@ export default function Breadcrumb() {
           });
           items.push({
             label: "Key Monitor History",
-            to: "/api-history", // ✅ redirect here
-            clickable: false,
+            to: historyParentId
+              ? `/api-history/${historyParentId}`
+              : "/key-monitor", // fallback
+            clickable: true,
           });
           items.push({
             label: "Key Monitor View",

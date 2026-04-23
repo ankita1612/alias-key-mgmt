@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { showToast } from "../../utils/CustomToast";
 
 import toast from "react-hot-toast";
 import apiClient from "../../services/apiClient";
@@ -273,7 +274,7 @@ function ProxyAdd() {
     }
 
     if (mode === "edit" && !isDirty) {
-      toast.info("No changes detected to update.");
+      showToast("No changes detected to update.", "info");
       return;
     }
     setLoading(true);

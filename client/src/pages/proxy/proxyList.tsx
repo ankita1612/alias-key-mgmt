@@ -1,87 +1,175 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import DataTable, { type TableColumn } from "react-data-table-component";
+import React, { useEffect, useState, useRef } from "react";
+import {
+  model_divider,
+  model_botton_container,
+  close_cancel_button,
+  getStatusStyle,
+  char_max_len_listing,
+  generateProxyUrl,
+  handleCopy,
+  fallbackCopy,
+  heading_label_style,
+  label_style,
+  input_style,
+  input_style_with_gray_border,
+} from "../../utils/CommonFn";
+import {
+  FiSearch,
+  FiPlus,
+  FiEdit2,
+  FiTrash2,
+  FiEye,
+  FiExternalLink,
+} from "react-icons/fi";
+import { customTableStyles } from "../datatableDesign";
+import CurlModal from "./CurlModal";
 
-import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiEye } from "react-icons/fi";
-
-import { Link, useNavigate } from "react-router-dom";
-import type { IProxy } from "../../interface/proxy.interface";
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-import toast from "react-hot-toast";
+import DataTable from "react-data-table-component";
 import apiClient from "../../services/apiClient";
-import "./ProxyList.css";
-
-// Custom styles for react-data-table-component
-const customTableStyles = {
-  headRow: {
-    style: {
-      backgroundColor: "#ffffff",
-      color: "#000000",
-      fontWeight: 600,
-      fontSize: "14px",
-      height: "50px",
-    },
-  },
-  rows: {
-    style: {
-      fontSize: "15px",
-      minHeight: "52px", // 👈 slightly taller (default ~48)
-
-      backgroundColor: "#ffffff",
-      "&:hover": {
-        backgroundColor: "#f3f4f6",
-        cursor: "pointer",
-      },
-    },
-    stripedStyle: {
-      backgroundColor: "#ffffff",
-    },
-  },
-  cells: {
-    style: {
-      fontSize: "14.5px", // 👈 subtle increase (best sweet spot)
-      lineHeight: "1.5", // 👈 improves readability
-      paddingTop: "10px",
-      paddingBottom: "10px",
-    },
-  },
-  pagination: {
-    style: {
-      minHeight: "56px",
-    },
-  },
-  noData: {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: "#ffffff",
-      minHeight: "300px",
-    },
-  },
-};
+import toast from "react-hot-toast";
 import { MdClose } from "react-icons/md";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  FiChevronLeft,
+  FiChevronRight,
+  FiChevronsLeft,
+  FiChevronsRight,
+  FiArrowUp,
+  FiArrowDown,
+} from "react-icons/fi";
 
-function ProxyList() {
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+import { FiChevronDown, FiChevronUp, FiCopy, FiCheck } from "react-icons/fi";
+
+function CurlCell({ curl }: { curl: string }) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!curl) return <span className="text-gray-400">-</span>;
+
+  const isLong = curl.length > 70;
+  const truncated = curl.substring(0, 70);
+
+  return (
+    <div className=" text-gray-800 break-all whitespace-pre-wrap">
+      {!expanded && isLong ? (
+        <>
+          {truncated}
+          <span className=" items-center">
+            ...{" "}
+            <button
+              onClick={() => setExpanded(true)}
+              className="ml-1 text-black hover:text-gray-700 align-middle"
+            >
+              <FiChevronDown size={14} />
+            </button>
+          </span>
+        </>
+      ) : (
+        <>
+          {curl}
+          {isLong && (
+            <button
+              onClick={() => setExpanded(false)}
+              className="ml-1 text-gray-500 hover:text-gray-700 align-middle"
+            >
+              <FiChevronUp size={14} />
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+type Props = {
+  status: string;
+};
+
+const ProxyList = ({ status }: Props) => {
   const navigate = useNavigate();
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [apiData, setApiData] = useState<IProxy[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedCurl, setSelectedCurl] = useState("");
+
   const [loading, setLoading] = useState(false);
+
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
-  const searchRef = useRef<HTMLInputElement>(null);
+
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [apiData, setApiData] = useState<IProxy[]>([]);
+  const location = useLocation();
+
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  const [sortField, setSortField] = useState("_id");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [selectedRow, setSelectedRow] = useState<IProxy | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1024,
-  );
+  const [showActiveInactiveModal, setShowActiveInactiveModal] = useState(false);
+  const [newStatus, setNewStatus] = useState(false);
 
+  const [mobileView, setMobileView] = useState(false);
   const deleteModalRef = useRef<HTMLDivElement>(null);
   const actionModalRef = useRef<HTMLDivElement>(null);
+  const [sort, setSort] = useState({
+    field: "createdAt",
+    order: "desc" as "asc" | "desc",
+  });
+  const handleActionClick = (row: IProxy) => {
+    setSelectedRow(row);
+    setShowModal(true);
+  };
+  const openCurlModal = (curl) => {
+    setSelectedCurl(curl);
+    setModalOpen(true);
+  };
 
+  const closeCurlModal = () => {
+    setModalOpen(false);
+    setSelectedCurl("");
+  };
+  const controllerRef = useRef<AbortController | null>(null);
+  const handleDeleteClick = (id: string) => {
+    setDeleteId(id);
+    setShowDeleteModal(true);
+  };
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return;
+
+    const previousData = apiData;
+    setApiData((prev) => prev.filter((p) => p._id !== deleteId));
+
+    try {
+      const res = await apiClient.delete(
+        `${BACKEND_URL}/api/proxy/${deleteId}`,
+      );
+      toast.success(res.data.message);
+    } catch (error: unknown) {
+      const err = error as Error & {
+        response?: { data?: { message?: string } };
+      };
+      setApiData(previousData);
+      toast.error(err?.response?.data?.message || "Delete failed");
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteId(null);
+    }
+  };
+  // 🔥 Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Delete modal
@@ -109,168 +197,201 @@ function ProxyList() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showDeleteModal, showModal]);
-
-  // Track window resize for responsive curl column
+  // 🔥 Fetch data
   useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
+    if (controllerRef.current) {
+      controllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const { data } = await apiClient.get(BACKEND_URL + "/api/proxy", {
+          signal: controller.signal,
+          params: {
+            page,
+            limit,
+            search: debouncedSearch,
+            sortField: sort.field,
+            sortOrder: sort.order,
+            is_deleted: status === "deleted" ? true : false,
+          },
+        });
+
+        setApiData(data.data);
+        setTotal(data.pagination.total);
+      } catch (err: any) {
+        if (err.name !== "CanceledError") {
+          toast.error(err?.message || "Error fetching data");
+        }
+      } finally {
+        setLoading(false);
+      }
     };
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const handleActionClick = (row: IProxy) => {
-    setSelectedRow(row);
-    setShowModal(true);
-  };
-  const fetchData = useCallback(async () => {
-    const controller = new AbortController();
-    setLoading(true);
-    const sortField = "_id";
-    try {
-      const { data } = await apiClient.get(BACKEND_URL + "/api/proxy", {
-        signal: controller.signal,
-        params: {
-          page,
-          limit,
-          search,
-          sortField,
-          sortOrder,
-        },
-      });
-      setApiData(data.data);
-      setTotal(data.pagination.total);
-    } catch (error: unknown) {
-      const err = error as Error & {
-        response?: { data?: { message?: string } };
-      };
-      if (err?.name !== "CanceledError") {
-        toast.error(
-          err?.response?.data?.message || err?.message || "Failed to load data",
-        );
-      }
-    } finally {
-      setLoading(false);
-    }
-    return () => controller.abort();
-  }, [page, limit, search, sortOrder]);
-
-  useEffect(() => {
     fetchData();
-  }, [fetchData]);
-  const handleDeleteClick = (id: string) => {
-    setDeleteId(id);
-    setShowDeleteModal(true);
-  };
-  const handleConfirmDelete = async () => {
-    if (!deleteId) return;
 
-    const previousData = apiData;
-    setApiData((prev) => prev.filter((p) => p._id !== deleteId));
+    return () => controller.abort();
+  }, [page, limit, debouncedSearch, sort.field, sort.order]);
 
-    try {
-      const res = await apiClient.delete(
-        `${BACKEND_URL}/api/proxy/${deleteId}`,
-      );
-      toast.success(res.data.message);
-    } catch (error: unknown) {
-      const err = error as Error & {
-        response?: { data?: { message?: string } };
+  // 🔥 Handle sort
+  const handleSort = (column: any, sortDirection: "asc" | "desc") => {
+    if (!column.sortField) return;
+
+    setSort((prev) => {
+      if (prev.field === column.sortField && prev.order === sortDirection) {
+        return prev;
+      }
+
+      return {
+        field: column.sortField,
+        order: sortDirection,
       };
-      setApiData(previousData);
-      toast.error(err?.response?.data?.message || "Delete failed");
-    } finally {
-      setShowDeleteModal(false);
-      setDeleteId(null);
-    }
+    });
+
+    setPage(1);
   };
 
-  useEffect(() => {
-    if (searchRef.current) {
-      searchRef.current.focus();
-    }
-  }, [apiData]);
-
-  // Action column component
   const ActionColumn = (row: IProxy) => (
     <div className="flex items-center gap-1">
+      {status === "active" && (
+        <>
+          <button
+            onClick={() => navigate(`/proxy/add/${row._id}`)}
+            className="flex items-center justify-center p-1.5 text-amber-500 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-all duration-200"
+            title="Edit"
+          >
+            <FiEdit2 className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={() => handleDeleteClick(row._id)}
+            className="flex items-center justify-center p-1.5 text-red-600 hover:text-white hover:bg-red-500 rounded-md transition-all duration-200 group relative"
+            title="Delete"
+          >
+            <FiTrash2 className="w-4 h-4" />
+          </button>
+        </>
+      )}
       <button
-        onClick={() => navigate(`/proxy/add/${row._id}`)}
+        onClick={() => navigate(`/proxy/view/${row._id}`)}
         className="flex items-center justify-center p-1.5 text-blue-600 hover:text-white hover:bg-blue-500 rounded-md transition-all duration-200 group relative"
-        title="Edit"
-      >
-        <FiEdit2 className="w-4 h-4" />
-      </button>
-
-      <button
-        onClick={() => handleDeleteClick(row._id)}
-        className="flex items-center justify-center p-1.5 text-red-600 hover:text-white hover:bg-red-500 rounded-md transition-all duration-200 group relative"
-        title="Delete"
-      >
-        <FiTrash2 className="w-4 h-4" />
-      </button>
-
-      <button
-        onClick={() => handleActionClick(row)}
-        className="flex items-center justify-center p-1.5 text-gray-600 hover:text-white hover:bg-gray-500 rounded-md transition-all duration-200 group relative"
         title="View"
       >
         <FiEye className="w-4 h-4" />
       </button>
     </div>
   );
-
-  // Define columns for DataTable
-  // Helper function to get responsive curl text length
-  const getCurlTextLength = () => {
-    if (windowWidth > 1024) return 100;
-    if (windowWidth > 768) return 70;
-    if (windowWidth > 640) return 50;
-    return 30;
-  };
-
-  const columns: TableColumn<IProxy>[] = [
+  // 🔥 Columns
+  const columns = [
     {
       name: "No.",
-      selector: (_row, index) => (page - 1) * limit + (index ?? 0) + 1,
-      width: "60px",
-      sortable: false,
-      center: true,
+      cell: (_: any, index: number) => (page - 1) * limit + index + 1,
+      minWidth: "70px",
+      width: "70px",
     },
     {
       name: "Proxy Name",
-      selector: (row) => row.proxy_name,
+      selector: (row: any) => row.proxy_name,
       sortable: true,
       grow: 1,
-      cell: (row) => (
-        <span className="break-words whitespace-normal">
-          {row.proxy_name || "-"}
-        </span>
-      ),
+      minWidth: "150px",
+      sortField: "proxy_name",
+
+      cell: (row, index) => {
+        const name = row.proxy_name || "-";
+        const maxLength = char_max_len_listing;
+
+        const isTopRow = index === 0;
+        const isLastRow = index === apiData.length - 1;
+
+        const truncateText = (text, length) => {
+          if (text.length <= length) return text;
+          return text.substring(0, length) + "...";
+        };
+
+        return (
+          <div className="group relative text-gray-900 font-semibold">
+            <span>{truncateText(name, maxLength)}</span>
+
+            {name.length > maxLength && (
+              <div
+                className={`invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 absolute z-10 bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-normal break-words max-w-md left-0 ${
+                  isTopRow
+                    ? "top-full mt-1"
+                    : isLastRow
+                      ? "bottom-full mb-1"
+                      : "bottom-full mb-1"
+                }`}
+              >
+                {name}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       name: "Curl",
-      selector: (row) => row.curl,
+      selector: (row: any) => row.curl,
       sortable: true,
-      grow: 3,
-      wrap: true,
+      sortField: "curl",
       cell: (row) => (
-        <span className="break-all whitespace-normal ">{row.curl || "-"}</span>
+        <div className="flex items-center w-full">
+          <div className="rounded flex-1 min-w-0 text-left">
+            {/* Responsive truncation based on screen size */}
+            <span className="hidden sm:inline text-left">
+              {row.curl?.substring(0, 80)}...
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openCurlModal(row.curl);
+                }}
+                className="p-1 rounded hover:bg-gray-100 transition-colors inline-flex ml-2"
+                title="View full curl"
+              >
+                <FiExternalLink size={14} className="text-blue-500" />
+              </button>
+            </span>
+            <span className="inline sm:hidden text-left">
+              {row.curl?.substring(0, 40)}...
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openCurlModal(row.curl);
+                }}
+                className="p-1 rounded hover:bg-gray-100 transition-colors inline-flex ml-2"
+                title="View full curl"
+              >
+                <FiExternalLink size={14} className="text-blue-500" />
+              </button>
+            </span>
+          </div>
+        </div>
       ),
+      minWidth: "180px",
+      width: "auto",
+      grow: 2,
     },
     {
       name: "Credit",
-      selector: (row) => row.credit,
+      selector: (row: any) => row.credit,
       sortable: true,
-      width: "100px",
-      center: true,
+      sortField: "credit",
+      width: "100px", // Keep as is, it's small
+      minWidth: "100px",
     },
     {
       name: "Created",
-      selector: (row) => new Date(row.createdAt).toLocaleDateString(),
+      selector: (row: any) => row.createdAt,
       sortable: true,
-      width: "120px",
+      width: "130px",
+      minWidth: "130px",
+
+      sortField: "createdAt",
       cell: (row) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-US", {
@@ -280,12 +401,30 @@ function ProxyList() {
             })
           : "-",
     },
+    ...(status === "deleted"
+      ? [
+          {
+            name: "Deleted",
+            sortable: true,
+            width: "130px",
+            sortField: "deleted_at",
+            cell: (row: any) =>
+              row.deleted_at
+                ? new Date(row.deleted_at).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })
+                : "-",
+          },
+        ]
+      : []),
     {
       name: "Actions",
+      ignoreRowClick: true,
       cell: ActionColumn,
-      width: "150px",
-      center: true,
-      sortable: false,
+      width: "120px",
+      minWidth: "120px",
     },
   ];
 
@@ -300,12 +439,12 @@ function ProxyList() {
 
           {/* Title */}
           <div>
-            <h5 className=" sm:text-xl text-white/60">Proxy</h5>
+            <h5 className=" sm:text-xl text-white/60">
+              {status === "deleted" ? "Deleted Proxy" : "Proxy"}{" "}
+            </h5>
           </div>
         </div>
       </div>
-
-      {/* BODY */}
       <div className="p-5 sm:p-6">
         {/* Search + Action Row */}
         <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between">
@@ -314,7 +453,7 @@ function ProxyList() {
             <input
               ref={searchRef}
               type="text"
-              placeholder="Search ..."
+              placeholder="Search proxy, curl, credit"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
@@ -337,67 +476,60 @@ function ProxyList() {
           </div>
 
           {/* Button */}
-          <Link
-            to="/proxy/add"
-            className="whitespace-nowrap inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm"
-          >
-            <FiPlus className="w-4 h-4" />
-            Create Proxy
-          </Link>
+          {status === "active" && (
+            <Link
+              to="/proxy/add"
+              className="whitespace-nowrap inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm"
+            >
+              <FiPlus className="w-4 h-4" />
+              Create Proxy
+            </Link>
+          )}
         </div>
 
         {/* CONTENT (Table / List / etc.) */}
         <div className="overflow-hidden">
-          <div className="overflow-x-auto rounded-sm shadow-sm">
-            <DataTable
-              columns={columns}
-              data={apiData}
-              progressPending={loading}
-              pagination
-              paginationServer
-              paginationTotalRows={total}
-              onChangeRowsPerPage={(newPerPage) => {
-                setLimit(newPerPage);
-                setPage(1);
-              }}
-              onChangePage={(newPage) => setPage(newPage)}
-              onSort={(_column, sortDirection) => {
-                // Sorting state is maintained for backend API
-                if (sortDirection === "asc") {
-                  setSortOrder("asc");
-                } else if (sortDirection === "desc") {
-                  setSortOrder("desc");
-                }
-              }}
-              customStyles={customTableStyles}
-              noDataComponent={
-                <div className="flex items-center justify-center w-full py-10">
-                  <p className="text-sm font-semibold text-gray-600">
-                    No proxy found
-                  </p>
-                </div>
-              }
-              responsive
-              dense
-              highlightOnHover
-              pointerOnHover
-              paginationComponentOptions={{
-                rowsPerPageText: "Rows per page:",
-                rangeSeparatorText: "of",
-                noRowsPerPage: false,
-                selectAllRowsItem: false,
-                selectAllRowsItemText: "All",
-              }}
-              striped
-              conditionalRowStyles={[
-                {
-                  when: (row) => apiData.indexOf(row) % 2 === 0,
-                  style: {
-                    backgroundColor: "#ffffff",
+          <div className="overflow-hidden  shadow-sm rounded-xl">
+            <div className="data-table-responsive w-full">
+              <DataTable
+                columns={columns}
+                data={apiData}
+                progressPending={loading}
+                pagination
+                paginationServer
+                paginationTotalRows={total}
+                paginationPerPage={limit}
+                onChangePage={(p) => setPage(p)}
+                onChangeRowsPerPage={(newLimit) => {
+                  setLimit(newLimit);
+                  setPage(1);
+                }}
+                sortServer
+                onSort={handleSort}
+                highlightOnHover
+                pointerOnHover
+                customStyles={{
+                  ...customTableStyles,
+                  table: {
+                    style: {
+                      width: "100%",
+                    },
                   },
-                },
-              ]}
-            />
+                  rows: {
+                    style: {
+                      cursor: "pointer",
+                    },
+                  },
+                  cells: {
+                    style: {
+                      pointerEvents: "auto", // ✅ ensures clicks bubble
+                    },
+                  },
+                }}
+                responsive
+                onRowClicked={(row) => navigate(`/proxy/view/${row._id}`)}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -429,13 +561,13 @@ function ProxyList() {
             </div>
 
             {/* Divider */}
-            <div className="px-6 py-2 border-t border-slate-200"></div>
+            <div className={model_divider}></div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 px-6 pb-6">
+            <div className={model_botton_container}>
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 transition bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200"
+                className={close_cancel_button}
               >
                 Cancel
               </button>
@@ -467,50 +599,55 @@ function ProxyList() {
             </button>
 
             {/* Header - Kept as requested */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
+            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
               <h2 className="text-lg font-semibold text-slate-800">
                 Proxy Details
               </h2>
             </div>
 
             {/* Proxy Details - Modern Layout */}
-            <div className="flex-1 px-6 py-5 overflow-y-auto max-h-[55vh] custom-scrollbar">
-              {/* Two column grid for better space utilization */}
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {/* Left Column */}
-                <div className="space-y-4">
+            {/* Content - Clean & Readable */}
+            <div className="flex-1 px-8 py-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
+              {/* Basic Information Section */}
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <h3 className="text-base font-medium text-gray-700">
+                    Basic Information
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Proxy Name
-                    </label>
-                    <p className="text-sm font-medium text-gray-800">
+                    <div className="text-xs text-gray-500 mb-1">Proxy Name</div>
+                    <div className="text-sm text-gray-900">
                       {selectedRow?.proxy_name || "-"}
-                    </p>
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                    <div className="text-xs text-gray-500 mb-1">
                       Project Name
-                    </label>
-                    <p className="text-sm text-gray-600">
+                    </div>
+                    <div className="text-sm text-gray-900">
                       {selectedRow?.project_name || "-"}
-                    </p>
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Credit
-                    </label>
-                    <p className="text-lg font-bold text-indigo-600">
-                      {selectedRow?.credit || "0"}
-                    </p>
+                    <div className="text-xs text-gray-500 mb-1">
+                      Domain Name
+                    </div>
+                    <div className="text-sm text-gray-900 break-all">
+                      {selectedRow?.domain_name || "-"}
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                    <div className="text-xs text-gray-500 mb-1">
                       Created Date
-                    </label>
-                    <p className="text-sm text-gray-600">
+                    </div>
+                    <div className="text-sm text-gray-900">
                       {selectedRow?.createdAt
                         ? new Date(selectedRow.createdAt).toLocaleDateString(
                             undefined,
@@ -521,63 +658,81 @@ function ProxyList() {
                             },
                           )
                         : "-"}
-                    </p>
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Right Column */}
+              {/* Credit Information Section */}
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <h3 className="text-base font-medium text-gray-700">
+                    Credit Information
+                  </h3>
+                </div>
+
+                <div>
+                  <div className="text-xs text-gray-500 mb-1">Credit</div>
+                  <div className="text-lg font-semibold text-gray-900">
+                    {selectedRow?.credit?.toLocaleString() || "0"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Tokens Section */}
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <h3 className="text-base font-medium text-gray-700">
+                    Access Tokens
+                  </h3>
+                </div>
+
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Domain Name
-                    </label>
-                    <p className="text-sm text-gray-600 break-all">
-                      {selectedRow?.domain_name || "-"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                    <div className="text-xs text-gray-500 mb-1">
                       Proxy Token
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <p className="flex-1 p-2 font-mono text-sm text-gray-700 break-all border border-gray-200 rounded-md bg-gray-50">
-                        {selectedRow?.proxy_token || "-"}
-                      </p>
+                    </div>
+                    <div className="font-mono text-sm text-gray-900 bg-gray-50 p-2 rounded border border-gray-100 break-all">
+                      {selectedRow?.proxy_token || "-"}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                    <div className="text-xs text-gray-500 mb-1">
                       Token for Curl
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <p className="flex-1 p-2 font-mono text-sm text-gray-700 break-all border border-indigo-200 rounded-md bg-indigo-50">
-                        {selectedRow?.curl_token || "-"}
-                      </p>
+                    </div>
+                    <div className="font-mono text-sm text-gray-900 bg-gray-50 p-2 rounded border border-gray-100 break-all">
+                      {selectedRow?.curl_token || "-"}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Curl Command - Full Width with Copy */}
-              <div className="pt-4 mt-6 border-t border-gray-200">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-semibold tracking-wider text-gray-500 uppercase">
-                    Curl Command
-                  </label>
+              {/* Curl Command Section - Full Width */}
+              {selectedRow?.curl && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <h3 className="text-base font-medium text-gray-700">
+                      Curl Command
+                    </h3>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded border border-gray-100">
+                    <pre className="font-mono text-xs text-gray-700 whitespace-pre-wrap break-all">
+                      {selectedRow.curl}
+                    </pre>
+                  </div>
                 </div>
-                <pre className="font-mono text-xs text-black break-words whitespace-pre-wrap bg-gray-100 rounded-lg ">
-                  <code className="">{selectedRow?.curl || "-"}</code>
-                </pre>
-              </div>
+              )}
             </div>
 
             {/* Divider - Simplified */}
             <div className="border-t border-gray-100"></div>
 
             {/* Actions - Kept as requested but improved button */}
-            <div className="flex justify-end px-6 py-4">
+            <div className="flex justify-end gap-3 px-6 pb-6">
               <button
                 onClick={() => setShowModal(false)}
                 className="px-5 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-gray-100 rounded-lg hover:bg-gray-200 hover:shadow-sm active:scale-95"
@@ -588,8 +743,18 @@ function ProxyList() {
           </div>
         </div>
       )}
+      <CurlModal
+        isOpen={modalOpen}
+        onClose={closeCurlModal}
+        curl={selectedCurl}
+      />
+      {loading && (
+        <div className="flex justify-center py-10">
+          <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
+        </div>
+      )}
     </div>
   );
-}
+};
 
 export default ProxyList;

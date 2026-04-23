@@ -37,7 +37,7 @@ class ApiHistoryController {
         .populate({
           path: "user_alias_key_id",
           select:
-            "alias_key description proxy_id status project_name domain_name",
+            "alias_key description proxy_id key_status approval_status project_name domain_name",
           model: AliasKeyModel,
         })
         .lean();
@@ -99,7 +99,9 @@ class ApiHistoryController {
           _id: apiHistory.user_alias_key_id?._id,
           alias_key: apiHistory.user_alias_key_id?.alias_key || "-",
           description: apiHistory.user_alias_key_id?.description || null,
-          status: apiHistory.user_alias_key_id?.status || null,
+          key_status: apiHistory.user_alias_key_id?.key_status || null,
+          approval_status:
+            apiHistory.user_alias_key_id?.approval_status || null,
           project_name: apiHistory.user_alias_key_id?.project_name || null,
           domain_name: apiHistory.user_alias_key_id?.domain_name || null,
         },
@@ -330,12 +332,12 @@ class ApiHistoryController {
       let aliasKeys = [];
 
       if (user.role === "Admin") {
-        aliasKeys = await AliasKeyModel.find({ status: "Active" })
+        aliasKeys = await AliasKeyModel.find({ key_status: "Active" })
           .select("_id alias_key")
           .lean();
       } else {
         aliasKeys = await AliasKeyModel.find({
-          status: "Active",
+          key_status: "Active",
           user_id: user._id,
         })
           .select("_id alias_key")

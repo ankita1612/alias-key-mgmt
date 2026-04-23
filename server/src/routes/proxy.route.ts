@@ -1,5 +1,5 @@
 import express from "express";
-import { proxyController } from "../controllers/admin.proxy.controller";
+import { proxyController } from "../controllers/proxy.controller";
 import {
   validateAdd,
   isRequestValidated,
@@ -30,6 +30,12 @@ proxyRouter.delete(
   authentication,
   validateId,
   proxyController.deleteData,
+);
+proxyRouter.get(
+  "/get-detail/:id",
+  authentication,
+  validateId,
+  proxyController.getProxyDetails,
 );
 proxyRouter.get(
   "/get-list",

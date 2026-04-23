@@ -13,20 +13,19 @@ export const validateAdd = [
   //   .isMongoId()
   //   .withMessage("Invalid parent key"),
 
-  body("status")
+  body("approval_status")
     .optional()
-    .isIn(["Active", "Inactive", "Pending", "Rejected"])
-    .withMessage("Invalid status"),
+    .isIn(["Approved", "Pending", "Rejected"])
+    .withMessage("Invalid approval status"),
 
   body("total_quota").isNumeric().withMessage("Total quota must be a number"),
 ];
 export const validateEdit = [
   param("id").isMongoId().withMessage("Invalid ID"),
-  body("domain_name")
+  body("domain_name").notEmpty().withMessage("Domain Name is required"),
+  body("cost_calculation")
     .notEmpty()
-    .withMessage("Domain Name is required"),
-  body("cost_calculation").notEmpty().withMessage("Cost Calculation is required"),
-
+    .withMessage("Cost Calculation is required"),
 ];
 export const isRequestValidated = (
   req: Request,

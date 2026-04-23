@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from "express";
+import AliasKeyModel from "../models/aliasKey.model";
 import ProxyModel from "../models/proxy.model";
 import { toJsonString } from "curlconverter";
+import mongoose from "mongoose";
+
 function extractPostData(curl: string) {
   const match =
     curl.match(/--data-raw\s+'([^']+)'/) ||
@@ -98,10 +101,22 @@ class ProxyController {
       const sortField = (req.query.sortField as string) || "createdAt";
       const sortOrder = (req.query.sortOrder as string) === "asc" ? 1 : -1;
       const skip = (page - 1) * limit;
+      const is_deleted =
+        req.query.is_deleted === "true"
+          ? true
+          : req.query.is_deleted === "false"
+            ? false
+            : false;
 
-      const match: any = {
-        is_deleted: false,
-      };
+      const match: any = {};
+
+      //   is_deleted: false,
+      // };
+      if (req.query.is_deleted !== undefined) {
+        match.is_deleted = req.query.is_deleted === "true";
+      } else {
+        match.is_deleted = false;
+      }
       if (search) {
         const isNumber = !isNaN(Number(search));
 
@@ -229,6 +244,7 @@ class ProxyController {
     try {
       const proxies = await ProxyModel.find({ is_deleted: false }) // ✅ filter
         .select("_id proxy_name curl")
+        .sort({ createdAt: -1 })
         .lean();
 
       if (!proxies) {
@@ -241,6 +257,198 @@ class ProxyController {
       res.status(200).json({
         success: true,
         data: proxies,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getProxyDetails = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+
+      const proxy = await ProxyModel.findById(id).lean();
+
+      if (!proxy) {
+        return res.status(404).json({ message: "Proxy not found" });
+      }
+
+      const result = await AliasKeyModel.aggregate([
+        {
+          $match: {
+            proxy_id: new mongoose.Types.ObjectId(id),
+          },
+        },
+
+        // 🔹 Join API History
+        {
+          $lookup: {
+            from: "api_history",
+            localField: "_id",
+            foreignField: "user_alias_key_id",
+            as: "history",
+          },
+        },
+
+        // 🔹 Add API count
+        {
+          $addFields: {
+            api_history_count: { $size: "$history" },
+          },
+        },
+
+        // 🔹 Split into data + stats
+        {
+          $facet: {
+            aliasKeys: [
+              {
+                $project: {
+                  alias_key: 1,
+                  status: 1,
+                  key_status: 1,
+                  approval_status: 1,
+                  createdAt: 1,
+                  api_history_count: 1,
+                },
+              },
+            ],
+
+            stats: [
+              {
+                $group: {
+                  _id: null,
+
+                  // ✅ 1. Active
+                  active: {
+                    $sum: {
+                      $cond: [{ $eq: ["$key_status", "Active"] }, 1, 0],
+                    },
+                  },
+
+                  // ✅ 2. Active + Approved
+                  active_approved: {
+                    $sum: {
+                      $cond: [
+                        {
+                          $and: [
+                            { $eq: ["$key_status", "Active"] },
+                            { $eq: ["$approval_status", "Approved"] },
+                          ],
+                        },
+                        1,
+                        0,
+                      ],
+                    },
+                  },
+
+                  // ✅ 3. Active + Rejected
+                  active_rejected: {
+                    $sum: {
+                      $cond: [
+                        {
+                          $and: [
+                            { $eq: ["$key_status", "Active"] },
+                            { $eq: ["$approval_status", "Rejected"] },
+                          ],
+                        },
+                        1,
+                        0,
+                      ],
+                    },
+                  },
+
+                  // ✅ 4. Active + Pending
+                  active_pending: {
+                    $sum: {
+                      $cond: [
+                        {
+                          $and: [
+                            { $eq: ["$key_status", "Active"] },
+                            { $eq: ["$approval_status", "Pending"] },
+                          ],
+                        },
+                        1,
+                        0,
+                      ],
+                    },
+                  },
+                  inactive: {
+                    $sum: {
+                      $cond: [{ $eq: ["$key_status", "Inactive"] }, 1, 0],
+                    },
+                  },
+                  // ✅ 5. Inactive + Approved
+                  inactive_approved: {
+                    $sum: {
+                      $cond: [
+                        {
+                          $and: [
+                            { $eq: ["$key_status", "Inactive"] },
+                            { $eq: ["$approval_status", "Approved"] },
+                          ],
+                        },
+                        1,
+                        0,
+                      ],
+                    },
+                  },
+
+                  // ✅ 6. Inactive + Rejected
+                  inactive_rejected: {
+                    $sum: {
+                      $cond: [
+                        {
+                          $and: [
+                            { $eq: ["$key_status", "Inactive"] },
+                            { $eq: ["$approval_status", "Rejected"] },
+                          ],
+                        },
+                        1,
+                        0,
+                      ],
+                    },
+                  },
+
+                  // ✅ 7. Inactive + Pending
+                  inactive_pending: {
+                    $sum: {
+                      $cond: [
+                        {
+                          $and: [
+                            { $eq: ["$key_status", "Inactive"] },
+                            { $eq: ["$approval_status", "Pending"] },
+                          ],
+                        },
+                        1,
+                        0,
+                      ],
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      ]);
+
+      const aliasKeys = result[0]?.aliasKeys || [];
+      const stats = result[0]?.stats[0] || {
+        active: 0,
+        active_approved: 0,
+        active_rejected: 0,
+        active_pending: 0,
+        inactive: 0,
+        inactive_approved: 0,
+        inactive_rejected: 0,
+        inactive_pending: 0,
+      };
+
+      return res.json({
+        data: {
+          proxy,
+          stats,
+          aliasKeys,
+        },
       });
     } catch (error) {
       next(error);
