@@ -555,6 +555,7 @@ const AliasKeyList = () => {
             minWidth: "150px", // Change from width to minWidth
             grow: 1,
             sortable: true,
+            sortField: "user.first_name",
           },
         ]
       : []),
@@ -593,7 +594,7 @@ const AliasKeyList = () => {
         };
 
         return (
-          <div className="group relative">
+          <div className="relative group">
             <span>{truncateText(name, maxLength)}</span>
 
             {name.length > maxLength && (
@@ -742,7 +743,7 @@ const AliasKeyList = () => {
                 placeholder="Search..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg pl-9 pr-9 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
+                className="w-full py-2 text-sm border border-gray-300 rounded-lg shadow-sm pl-9 pr-9 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
               />
 
               <FiSearch className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
@@ -856,7 +857,7 @@ const AliasKeyList = () => {
           {/* RIGHT SIDE */}
           <Link
             to="/alias-key/add"
-            className="whitespace-nowrap inline-flex items-center justify-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg shadow-sm whitespace-nowrap bg-primary hover:bg-primaryHover"
           >
             <FiPlus className="w-4 h-4" />
             Create Key
@@ -864,14 +865,15 @@ const AliasKeyList = () => {
         </div>
 
         <div className="overflow-hidden">
-          <div className="overflow-hidden  shadow-sm rounded-xl">
-            <div className="data-table-responsive w-full">
+          <div className="overflow-hidden shadow-sm rounded-xl">
+            <div className="w-full data-table-responsive">
               <DataTable
                 columns={columns}
                 data={apiData}
                 progressPending={loading}
                 pagination
                 paginationServer
+                paginationDefaultPage={page}
                 paginationTotalRows={total}
                 paginationPerPage={limit}
                 onChangePage={(p) => setPage(p)}
@@ -996,7 +998,7 @@ const AliasKeyList = () => {
               {/* Key Information Section */}
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <div className="w-1 h-4 rounded-full bg-secondary"></div>
                   <h3 className={heading_label_style}>
                     Key & User Information
                   </h3>
@@ -1008,7 +1010,7 @@ const AliasKeyList = () => {
                       <span className={label_style}>Key</span>
                       <button
                         onClick={() => handleCopy(selectedRow?.alias_key || "")}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-gray-400 transition-colors hover:text-gray-600"
                       >
                         <FiCopy className="w-4 h-4" />
                       </button>
@@ -1048,7 +1050,7 @@ const AliasKeyList = () => {
               {/* Status & Dates Section */}
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <div className="w-1 h-4 rounded-full bg-secondary"></div>
                   <h3 className={heading_label_style}>Status & Timeline</h3>
                 </div>
 
@@ -1098,7 +1100,7 @@ const AliasKeyList = () => {
                         <div className={label_style}>Reason for Rejection</div>
 
                         {/* ✅ Value (styled box) */}
-                        <div className="mt-1 p-3 bg-gray-50 border border-gray-200 rounded-md  text-gray-700 break-words">
+                        <div className="p-3 mt-1 text-gray-700 break-words border border-gray-200 rounded-md bg-gray-50">
                           {selectedRow.rejection_reason}
                         </div>
                       </div>
@@ -1109,7 +1111,7 @@ const AliasKeyList = () => {
               {/* Quota & Cost Section */}
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <div className="w-1 h-4 rounded-full bg-secondary"></div>
                   <h3 className={heading_label_style}>Quota & Cost</h3>
                 </div>
 
@@ -1136,7 +1138,7 @@ const AliasKeyList = () => {
               {selectedRow?.cost_calculation && (
                 <div className="mb-8">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <div className="w-1 h-4 rounded-full bg-secondary"></div>
                     <h3 className={heading_label_style}>Cost Calculation</h3>
                   </div>
                   <div className={input_style_with_gray_border}>
@@ -1148,7 +1150,7 @@ const AliasKeyList = () => {
               {selectedRow?.description && (
                 <div className="mb-8">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <div className="w-1 h-4 rounded-full bg-secondary"></div>
                     <h3 className={heading_label_style}>Purpose</h3>
                   </div>
                   <div className={input_style_with_gray_border}>
@@ -1162,7 +1164,7 @@ const AliasKeyList = () => {
                 ["Approved"].includes(selectedRow.approval_status) && (
                   <div className="mb-8">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                      <div className="w-1 h-4 rounded-full bg-secondary"></div>
                       <h3 className={heading_label_style}>
                         Proxy Configuration
                       </h3>
@@ -1183,7 +1185,7 @@ const AliasKeyList = () => {
                                            onClick={() =>
                                              handleCopy(liveUrl?.curlCommand || "")
                                            }
-                                           className="text-gray-400 hover:text-gray-600 transition-colors"
+                                           className="text-gray-400 transition-colors hover:text-gray-600"
                                          >
                                            <FiCopy className="w-4 h-4" />
                                          </button> */}
@@ -1203,7 +1205,7 @@ const AliasKeyList = () => {
                                 onClick={() =>
                                   handleCopy(liveUrl?.curlCommand || "")
                                 }
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                className="text-gray-400 transition-colors hover:text-gray-600"
                                 title="Copy"
                               >
                                 <FiCopy className="w-4 h-4" />
@@ -1224,7 +1226,7 @@ const AliasKeyList = () => {
               {/* Proxy Deleted Warning - Clean version */}
               {selectedRow.proxy?.is_deleted === true && (
                 <div className="mb-8">
-                  <div className="bg-gray-50 border border-gray-200 rounded p-3">
+                  <div className="p-3 border border-gray-200 rounded bg-gray-50">
                     <div className="flex items-center gap-2">
                       <FiAlertCircle className="w-4 h-4 text-gray-500" />
                       <span className="text-sm text-gray-600">
@@ -1239,7 +1241,7 @@ const AliasKeyList = () => {
               {selectedRow?.proxy_permission_required && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <div className="w-1 h-4 rounded-full bg-secondary"></div>
                     <h3 className={heading_label_style}>
                       Additional Information
                     </h3>
@@ -1298,7 +1300,7 @@ const AliasKeyList = () => {
               {/* Requester Information Section */}
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <div className="w-1 h-4 rounded-full bg-secondary"></div>
                   <h3 className={heading_label_style}>Requester Information</h3>
                 </div>
 
@@ -1347,7 +1349,7 @@ const AliasKeyList = () => {
               {/* Quota & Cost Section */}
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <div className="w-1 h-4 rounded-full bg-secondary"></div>
                   <h3 className={heading_label_style}>Quota & Cost</h3>
                 </div>
 
@@ -1374,10 +1376,10 @@ const AliasKeyList = () => {
               {selectedRow?.proxy_permission_required && (
                 <div className="mb-8">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <div className="w-1 h-4 rounded-full bg-secondary"></div>
                     <h3 className={heading_label_style}>Requirements</h3>
                   </div>
-                  <div className=" text-gray-600">
+                  <div className="text-gray-600 ">
                     <span className={label_style}>
                       Proxy Permission Required:
                     </span>{" "}
@@ -1392,7 +1394,7 @@ const AliasKeyList = () => {
               {selectedRow?.cost_calculation && (
                 <div className="mb-8">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <div className="w-1 h-4 rounded-full bg-secondary"></div>
                     <h3 className={heading_label_style}>Cost Calculation</h3>
                   </div>
                   <div
@@ -1407,7 +1409,7 @@ const AliasKeyList = () => {
               {selectedRow?.description && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <div className="w-1 h-4 rounded-full bg-secondary"></div>
                     <h3 className={heading_label_style}>Purpose</h3>
                   </div>
                   <div className={input_style_with_gray_border}>

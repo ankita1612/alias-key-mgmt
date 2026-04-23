@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { FiEye, FiList, FiSearch } from "react-icons/fi";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import { customTableStyles } from "../datatableDesign";
+import { MdClose } from "react-icons/md";
 const ApiHistory = () => {
   const navigate = useNavigate();
 
@@ -33,11 +34,11 @@ const ApiHistory = () => {
     field: "createdAt",
     order: "desc" as "asc" | "desc",
   });
-  useEffect(() => {
-    if (searchRef.current) {
-      searchRef.current.focus();
-    }
-  }, [data]);
+  // useEffect(() => {
+  //   if (searchRef.current) {
+  //     searchRef.current.focus();
+  //   }
+  // }, [data]);
   useEffect(() => {
     if (aliasKeyId) {
       setSelectedAliasKey(aliasKeyId);
@@ -103,7 +104,6 @@ const ApiHistory = () => {
 
       setData(data.data);
       setKeyData(data.aliasKeysList);
-      console.log(data);
       setTotal(data.pagination.total);
     } catch (err: any) {
       if (err.name !== "CanceledError") {
@@ -240,6 +240,18 @@ const ApiHistory = () => {
               className="w-full border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
             />
             <FiSearch className="absolute w-4 h-4 text-gray-400 left-3 top-3" />
+            {search && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  searchRef.current?.focus();
+                }}
+                className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2 hover:text-gray-600"
+              >
+                <MdClose size={16} />
+              </button>
+            )}
           </div>
 
           {/* Status */}
@@ -262,43 +274,52 @@ const ApiHistory = () => {
               setSearch("");
               setStatus("");
               searchRef.current?.focus();
+              setDebouncedSearch("");
+              setPage(1);
             }}
-            disabled={!isFilterActive}
-            className={`px-4 py-2.5 text-sm rounded-lg transition-all duration-200
-      ${
-        isFilterActive
-          ? "bg-gray-100 hover:bg-gray-200 text-gray-700"
-          : "bg-gray-100 text-gray-400 cursor-not-allowed"
-      }`}
+            className="px-4 py-3 text-xs font-medium bg-white border rounded-lg text-primary border-primary hover:bg-primary hover:text-white"
           >
-            Clear All
+            Clear
           </button>
         </div>
         <div className="overflow-hidden">
-          <div className="overflow-hidden  shadow-sm rounded-xl">
-            <div className="data-table-responsive w-full">
+          <div className="overflow-hidden shadow-sm rounded-xl">
+            <div className="w-full data-table-responsive">
               {/* 📊 DataTable */}
               <DataTable
+                key={`${debouncedSearch}-${status}`}
                 columns={columns}
                 data={data}
                 progressPending={loading}
                 pagination
                 paginationServer
+                paginationDefaultPage={page}
                 paginationTotalRows={total}
                 paginationPerPage={limit}
                 onChangePage={(p) => setPage(p)}
-                onChangeRowsPerPage={(l) => {
-                  setLimit(l);
+                onChangeRowsPerPage={(newLimit) => {
+                  setLimit(newLimit);
                   setPage(1);
                 }}
                 sortServer
                 onSort={handleSort}
                 highlightOnHover
+                pointerOnHover
                 customStyles={{
                   ...customTableStyles,
                   table: {
                     style: {
                       width: "100%",
+                    },
+                  },
+                  rows: {
+                    style: {
+                      cursor: "pointer",
+                    },
+                  },
+                  cells: {
+                    style: {
+                      pointerEvents: "auto", // ✅ ensures clicks bubble
                     },
                   },
                 }}

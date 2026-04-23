@@ -266,16 +266,16 @@ function AdminDashboard() {
   if (!dashboard) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <AlertCircle className="w-12 h-12 text-gray-400 mb-3" />
+        <AlertCircle className="w-12 h-12 mb-3 text-gray-400" />
         <p className="text-lg font-medium text-gray-700">
           Unable to load dashboard
         </p>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="mt-1 text-sm text-gray-500">
           Please try refreshing the page
         </p>
         <button
           onClick={() => fetchData()}
-          className="mt-4 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90"
+          className="px-4 py-2 mt-4 text-sm font-medium text-white rounded-lg bg-primary hover:bg-primary/90"
         >
           Retry
         </button>
@@ -338,7 +338,7 @@ function AdminDashboard() {
 
         {/* RIGHT CONTENT */}
         <div className="flex flex-col">
-          <p className="text-xs text-slate-500 font-medium">{title}</p>
+          <p className="text-xs font-medium text-slate-500">{title}</p>
           <p className="mt-1 text-lg font-semibold text-primary">{value}</p>
         </div>
       </div>
@@ -356,7 +356,7 @@ function AdminDashboard() {
                   <h5 className="font-bold sm:text-xl">
                     Key management Overview
                   </h5>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="mt-1 text-xs text-slate-500">
                     Last updated: {lastUpdated.toLocaleTimeString()}
                   </p>
                 </div>
@@ -374,7 +374,7 @@ function AdminDashboard() {
               </button>
               <button
                 onClick={() => navigate("/alias-key")}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white rounded-lg bg-primary hover:bg-primary/90"
               >
                 <Key className="w-4 h-4" />
                 Manage Keys
@@ -409,19 +409,19 @@ function AdminDashboard() {
                 iconColor="text-green-600"
                 onClick={undefined}
               />
-              {/* <TopStatCard
+              <TopStatCard
                 title="Success Rate"
                 value={`${dashboard.requestSuccessRate?.toFixed(1) || 0}%`}
                 icon={CheckCircle}
                 iconColor="text-emerald-600"
                 onClick={undefined}
-              /> */}
+              />
             </div>
 
             {/* Pending Approvals Alert */}
             {/* {dashboard.aliasStatusCounts?.approvalStatus?.Pending > 0 && (
-              <div className="mb-6 flex items-center gap-4 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-md shadow-sm">
-                <div className="flex items-center justify-center w-12 h-12 bg-amber-100 rounded-full flex-shrink-0">
+              <div className="flex items-center gap-4 p-4 mb-6 border-l-4 rounded-md shadow-sm bg-amber-50 border-amber-500">
+                <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-full bg-amber-100">
                   <Clock className="w-6 h-6 text-amber-600" />
                 </div>
                 <div className="flex-1">
@@ -439,7 +439,7 @@ function AdminDashboard() {
                 </div>
                 <button
                   onClick={() => navigate("/alias-key?approvalStatus=Pending")}
-                  className="px-4 py-2 text-sm font-medium text-amber-700 bg-amber-100 rounded-lg hover:bg-amber-200 whitespace-nowrap flex-shrink-0"
+                  className="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg text-amber-700 bg-amber-100 hover:bg-amber-200 whitespace-nowrap"
                 >
                   Review
                 </button>
@@ -524,11 +524,11 @@ function AdminDashboard() {
             {/* Key Status Summary */}
             <div className="grid gap-4 mb-6 lg:grid-cols-2">
               {/* Active Keys Card */}
-              <div className="overflow-hidden bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300">
-                <div className="px-5 py-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+              <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md">
+                <div className="px-5 py-4 border-b bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-100">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 bg-emerald-500 rounded-xl shadow-sm">
+                      <div className="flex items-center justify-center w-10 h-10 shadow-sm bg-emerald-500 rounded-xl">
                         <CheckCircle className="w-5 h-5 text-white" />
                       </div>
                       <div>
@@ -602,7 +602,7 @@ function AdminDashboard() {
                               </span> */}
                             </div>
                           </div>
-                          {/* <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                          {/* <div className="w-full h-2 overflow-hidden bg-gray-100 rounded-full">
                             <div
                               className={`h-full rounded-full transition-all duration-500 bg-${item.color}-500 group-hover:bg-${item.color}-600`}
                               style={{ width: `${percentage}%` }}
@@ -616,11 +616,11 @@ function AdminDashboard() {
               </div>
 
               {/* Inactive Keys Card */}
-              <div className="overflow-hidden bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300">
-                <div className="px-5 py-4 bg-gradient-to-r from-gray-50 to-slate-50 border-b border-gray-100">
+              <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md">
+                <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-slate-50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 bg-gray-500 rounded-xl shadow-sm">
+                      <div className="flex items-center justify-center w-10 h-10 bg-gray-500 shadow-sm rounded-xl">
                         <XCircle className="w-5 h-5 text-white" />
                       </div>
                       <div>
@@ -643,7 +643,7 @@ function AdminDashboard() {
                 </div>
 
                 <div className="p-5">
-                  {/* <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
+                  {/* <p className="mb-4 text-xs font-semibold tracking-wider text-gray-400 uppercase">
                     Approval Breakdown
                   </p> */}
                   <div className="space-y-4">
@@ -697,7 +697,7 @@ function AdminDashboard() {
                               </span> */}
                             </div>
                           </div>
-                          {/* <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                          {/* <div className="w-full h-2 overflow-hidden bg-gray-100 rounded-full">
                             <div
                               className={`h-full rounded-full transition-all duration-500 bg-${item.color}-500 group-hover:bg-${item.color}-600`}
                               style={{ width: `${percentage}%` }}
@@ -715,8 +715,8 @@ function AdminDashboard() {
             {/* <div className="grid gap-4 mb-6 lg:grid-cols-3"> */}
             {/* Pending Requests Alert */}
             {/* {dashboard.pendingApprovals > 0 && (
-                <div className="flex items-center gap-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                  <div className="flex items-center justify-center w-12 h-12 bg-amber-100 rounded-full">
+                <div className="flex items-center gap-4 p-4 border rounded-lg bg-amber-50 border-amber-200">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-amber-100">
                     <Clock className="w-6 h-6 text-amber-600" />
                   </div>
                   <div className="flex-1">
@@ -739,7 +739,7 @@ function AdminDashboard() {
 
             {/* Key Status Distribution */}
             {/* <div className="p-4 bg-white border border-gray-200 rounded-lg">
-                <p className="text-sm font-medium text-gray-700 mb-3">
+                <p className="mb-3 text-sm font-medium text-gray-700">
                   Key Status Distribution
                 </p>
                 <div className="space-y-2">
@@ -785,7 +785,7 @@ function AdminDashboard() {
 
             {/* API Health Overview */}
             {/* <div className="p-4 bg-white border border-gray-200 rounded-lg">
-                <p className="text-sm font-medium text-gray-700 mb-3">
+                <p className="mb-3 text-sm font-medium text-gray-700">
                   API Health
                 </p>
                 <div className="space-y-2">

@@ -53,7 +53,11 @@ const schema = yup.object().shape({
     .required("Total Estimated cost is required") // ✅ FIRST
     .typeError("Total Estimated cost must be a number") // ✅ SECOND
     .positive("Total Estimated cost must be greater than 0")
-    .integer("Total Estimated cost must be an integer"),
+    .max(
+      1_000_000_000,
+      "Total Estimated Cost must be less than or equal to 100 crore",
+    )
+    .integer("Total Estimated Cost must be an integer"),
   description: yup.string().optional(),
 });
 

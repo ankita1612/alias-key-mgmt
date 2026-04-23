@@ -32,7 +32,7 @@ const InfoRow = ({ label, value, icon, isLink = false, isFull = false }) => (
   >
     <span className="text-xl">{icon || "📄"}</span>
     <div className="flex-1">
-      <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+      <p className="text-xs font-medium tracking-wide text-gray-400 uppercase">
         {label}
       </p>
       {isLink ? (
@@ -40,12 +40,12 @@ const InfoRow = ({ label, value, icon, isLink = false, isFull = false }) => (
           href={value}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-indigo-600 hover:text-indigo-700 font-medium break-all text-sm"
+          className="text-sm font-medium text-indigo-600 break-all hover:text-indigo-700"
         >
           {value}
         </a>
       ) : (
-        <p className="text-gray-700 font-medium break-all text-sm">
+        <p className="text-sm font-medium text-gray-700 break-all">
           {value || "—"}
         </p>
       )}
@@ -66,9 +66,9 @@ const StatCard = ({ title, value, icon, color = "indigo" }) => {
 
   return (
     <div className={`p-[1.5px] rounded-xl bg- ${colorClasses[color]}`}>
-      <div className="bg-white rounded-xl p-5 text-center">
+      <div className="p-5 text-center bg-white rounded-xl">
         <p className="text-3xl font-bold text-gray-800">{value || 0}</p>
-        <p className="text-sm text-gray-500 mt-1 uppercase tracking-wide">
+        <p className="mt-1 text-sm tracking-wide text-gray-500 uppercase">
           {title}
         </p>
       </div>
@@ -85,7 +85,7 @@ const ProxyInfoRow = ({ label, value, isLink = false }) => (
         href={value}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-indigo-600 hover:text-indigo-700 font-medium break-all text-sm"
+        className="text-sm font-medium text-indigo-600 break-all hover:text-indigo-700"
       >
         {value || "-"}
       </a>
@@ -163,24 +163,22 @@ function ProxyView() {
           {/* PART 1: Proxy Detail Section */}
           <div className="overflow-hidden bg-white shadow-sm rounded-xl">
             {/* Card Header */}
-            <div className="px-6 py-3 bg-slate-50 border-b border-gray-100">
+            <div className="px-6 py-2 bg-slate-50">
               <div className="flex items-center gap-2">
-                <h5 className="text-lg font-semibold text-gray-800">
-                  Proxy Details
-                </h5>
+                <h5 className="font-semibold ">Proxy Detail</h5>
               </div>
             </div>
 
             {/* Card Content */}
             <div className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <ProxyInfoRow
                   label="Project"
                   value={data?.proxy?.project_name}
                 />
                 <ProxyInfoRow label="Domain" value={data?.proxy?.domain_name} />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <ProxyInfoRow
                   label="Proxy Name"
                   value={data?.proxy?.proxy_name}
@@ -191,14 +189,14 @@ function ProxyView() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <ProxyInfoRow
                   label="Curl Token"
                   value={data?.proxy?.curl_token}
                 />
                 <ProxyInfoRow label="Credit" value={data?.proxy?.credit} />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <ProxyInfoRow
                   label="Status"
                   value={data?.proxy?.is_deleted ? "Deleted" : "Active"}
@@ -210,158 +208,179 @@ function ProxyView() {
             </div>
           </div>
 
-          {/* PART 2: Key Details Section */}
-          <div className="overflow-hidden bg-white shadow-sm rounded-xl">
-            {/* Header */}
-            <div className="px-6 py-3 bg-slate-50 border-b border-gray-100">
-              <h5 className="text-lg font-semibold text-gray-800">
-                Key Details
-              </h5>
+          {/* PART 2: Key Details Section - Modern Design */}
+          <div className="overflow-hidden bg-white shadow-sm rounded-xl ">
+            {/* Header with gradient accent */}
+            <div className="px-6 py-2 bg-slate-50">
+              <div className="flex items-center gap-2">
+                <h5 className="font-semibold ">Key Detail</h5>
+              </div>
             </div>
 
             <div className="p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* LEFT: KEY LIST (2 columns width) */}
-                <div className="lg:col-span-2 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden flex flex-col min-h-0">
-                  {/* Title */}
-                  <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
-                    <div className="flex items-center gap-2">
-                      <div className="w-1 h-5 bg-menuActive rounded-full"></div>
-                      <h6 className="font-semibold text-gray-800 text-sm">
-                        Key List
-                      </h6>
-                    </div>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                {/* LEFT: KEY LIST - Adaptive height based on content */}
+                <div
+                  className={`lg:col-span-2 transition-all duration-300 ${
+                    data?.aliasKeys?.length === 0 ? "lg:col-span-3" : ""
+                  }`}
+                >
+                  <div
+                    className={`overflow-hidden transition-all ${
+                      data?.aliasKeys?.length > 0
+                        ? "border rounded-xl border-gray-200 bg-gray-50"
+                        : ""
+                    }`}
+                  >
+                    {data?.aliasKeys?.length > 0 ? (
+                      // Table view for data with independent scroll
+                      <div className="relative flex flex-col h-full">
+                        {/* Fixed Header - Adjusted column widths */}
+                        <div className="flex-none bg-gray-100 rounded-t-xl">
+                          <div className="grid grid-cols-12 gap-3 px-4 py-3">
+                            <div className="col-span-6">
+                              <div className="text-xs font-semibold tracking-wider text-left text-gray-600 ">
+                                Key
+                              </div>
+                            </div>
+                            <div className="col-span-3">
+                              <div className="text-xs font-semibold tracking-wider text-left text-gray-600 ">
+                                Status
+                              </div>
+                            </div>
+                            <div className="col-span-3">
+                              <div className="text-xs font-semibold tracking-wider text-left text-gray-600 ">
+                                Approval Status
+                              </div>
+                            </div>
+                          </div>
+                        </div>
 
-                    <span className="text-xs text-gray-500">
-                      {data?.aliasKeys?.length || 0} keys
-                    </span>
-                  </div>
+                        {/* Scrollable Body - Fixed height */}
+                        <div
+                          className="overflow-y-auto"
+                          style={{ maxHeight: "230px" }}
+                        >
+                          <div className="divide-y divide-gray-100">
+                            {data.aliasKeys.map((item: any, index: number) => (
+                              <div
+                                key={item._id}
+                                className="grid grid-cols-12 gap-3 px-4 py-3 transition-all duration-200 bg-white hover:bg-gray-50 group"
+                              >
+                                {/* Key Column - More width */}
+                                <div className="col-span-6">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono text-sm text-gray-700 break-all">
+                                      {item.alias_key}
+                                    </span>
+                                  </div>
+                                </div>
 
-                  {/* TABLE WITH SCROLL */}
-                  <div className="overflow-y-auto max-h-[260px]">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-100 sticky top-0 z-10">
-                        <tr>
-                          <th className="p-3 text-left text-xs font-medium text-gray-600 ">
-                            Key
-                          </th>
-                          <th className="p-3 text-left text-xs font-medium text-gray-600 ">
-                            Status
-                          </th>
-                          <th className="p-3 text-left text-xs font-medium text-gray-600 ">
-                            Approval Status
-                          </th>
-                        </tr>
-                      </thead>
+                                {/* Status Column */}
+                                <div className="col-span-3">
+                                  <StatusBadge
+                                    status={item.key_status}
+                                  ></StatusBadge>
+                                </div>
 
-                      <tbody className="divide-y divide-gray-100 bg-white">
-                        {data?.aliasKeys?.length > 0 ? (
-                          data.aliasKeys.map((item: any) => (
-                            <tr
-                              key={item._id}
-                              className="hover:bg-gray-50 transition"
-                            >
-                              <td className="p-3 font-mono text-gray-700">
-                                {item.alias_key}
-                              </td>
-
-                              <td className="p-3">
-                                <StatusBadge status={item.key_status} />
-                              </td>
-
-                              <td className="p-3">
-                                <StatusBadge status={item.approval_status} />
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td
-                              colSpan={3}
-                              className="p-6 text-center text-sm text-gray-500"
-                            >
-                              No keys found
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* RIGHT: STATISTICS */}
-                <div className="space-y-5">
-                  {/* Header */}
-                  <div className="flex items-center justify-between">
-                    <h6 className="font-semibold text-gray-800 text-sm">
-                      Statistics
-                    </h6>
-                  </div>
-
-                  {/* Active Card */}
-                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-gray-700">Active</span>
-                      <span className="text-xl font-bold text-emerald-600">
-                        {data?.stats?.active || 0}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-3 text-center text-sm">
-                      <div>
-                        <p className="text-gray-500">Approved</p>
-                        <p className="font-bold text-green-600">
-                          {data?.stats?.active_approved || 0}
-                        </p>
+                                {/* Approval Status Column */}
+                                <div className="col-span-3">
+                                  <StatusBadge
+                                    status={item.approval_status}
+                                  ></StatusBadge>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-gray-500">Pending</p>
-                        <p className="font-bold text-yellow-600">
-                          {data?.stats?.active_pending || 0}
-                        </p>
+                    ) : (
+                      // Compact empty state
+                      <div className="flex flex-col items-center justify-center px-4 py-4 text-center">
+                        <h4 className="">No Keys Found</h4>
                       </div>
-                      <div>
-                        <p className="text-gray-500">Rejected</p>
-                        <p className="font-bold text-red-600">
-                          {data?.stats?.active_rejected || 0}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Inactive Card */}
-                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-gray-700">
-                        Inactive
-                      </span>
-                      <span className="text-xl font-bold text-gray-600">
-                        {data?.stats?.inactive || 0}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-3 text-center text-sm">
-                      <div>
-                        <p className="text-gray-500">Approved</p>
-                        <p className="font-bold text-gray-600">
-                          {data?.stats?.inactive_approved || 0}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Pending</p>
-                        <p className="font-bold text-yellow-600">
-                          {data?.stats?.inactive_pending || 0}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Rejected</p>
-                        <p className="font-bold text-red-600">
-                          {data?.stats?.inactive_rejected || 0}
-                        </p>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
+
+                {/* RIGHT: STATISTICS - Hide when no keys */}
+                {data?.aliasKeys?.length > 0 && (
+                  <div className="space-y-5 animate-fadeIn">
+                    {/* Header with icon */}
+
+                    {/* Active Card - Modern design */}
+                    <div className="p-4 space-y-3 transition-all duration-200 border rounded-xl border-emerald-200 bg-gradient-to-br from-emerald-50 to-white hover:shadow-md">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                          <span className="font-medium text-gray-700">
+                            Active Keys
+                          </span>
+                        </div>
+                        <span className="text-2xl font-bold text-emerald-600">
+                          {data?.stats?.active || 0}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-3 pt-2 text-sm border-t border-emerald-100">
+                        <div className="text-center">
+                          <p className="text-xs text-gray-500">Approved</p>
+                          <p className="mt-1 font-bold text-green-600">
+                            {data?.stats?.active_approved || 0}
+                          </p>
+                        </div>
+                        <div className="text-center border-l border-r border-emerald-100">
+                          <p className="text-xs text-gray-500">Pending</p>
+                          <p className="mt-1 font-bold text-yellow-600">
+                            {data?.stats?.active_pending || 0}
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-gray-500">Rejected</p>
+                          <p className="mt-1 font-bold text-red-600">
+                            {data?.stats?.active_rejected || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Inactive Card - Modern design */}
+                    <div className="p-4 space-y-3 transition-all duration-200 border border-gray-200 rounded-xl bg-gradient-to-br from-gray-50 to-white hover:shadow-md">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                          <span className="font-medium text-gray-700">
+                            Inactive Keys
+                          </span>
+                        </div>
+                        <span className="text-2xl font-bold text-gray-600">
+                          {data?.stats?.inactive || 0}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-3 pt-2 text-sm border-t border-gray-200">
+                        <div className="text-center">
+                          <p className="text-xs text-gray-500">Approved</p>
+                          <p className="mt-1 font-bold text-gray-600">
+                            {data?.stats?.inactive_approved || 0}
+                          </p>
+                        </div>
+                        <div className="text-center border-l border-r border-gray-200">
+                          <p className="text-xs text-gray-500">Pending</p>
+                          <p className="mt-1 font-bold text-yellow-600">
+                            {data?.stats?.inactive_pending || 0}
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-gray-500">Rejected</p>
+                          <p className="mt-1 font-bold text-red-600">
+                            {data?.stats?.inactive_rejected || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

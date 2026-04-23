@@ -80,9 +80,7 @@ function ApiHistoryView() {
     <div className="py-1 ">
       <label className={label_style_bold}>{label}</label>
       {isCode ? (
-        <pre className="p-2 font-mono text-xs text-gray-500 break-words whitespace-pre-wrap rounded-lg">
-          {value || "-"}
-        </pre>
+        <pre className={input_style}>{value || "-"}</pre>
       ) : type === "status" ? (
         <p className="block px-3 py-1 text-sm">
           <StatusBadge status={value}></StatusBadge>
@@ -150,7 +148,7 @@ function ApiHistoryView() {
               {/* Card Header - No Border, Just Background */}
               <div className="px-6 py-2 bg-slate-50">
                 <div className="flex items-center gap-2">
-                  <h5 className="font-semibold ">API Request</h5>
+                  <h5 className="font-semibold ">API Request Detail</h5>
                 </div>
               </div>
 
@@ -212,14 +210,14 @@ function ApiHistoryView() {
               <div className="overflow-hidden bg-white shadow-sm rounded-xl">
                 <div className="px-6 py-2 bg-slate-50">
                   <div className="flex items-center gap-2">
-                    <h2 className="font-semibold">Alias Key</h2>
+                    <h5 className="font-semibold ">Key Detail</h5>
                   </div>
                 </div>
 
                 <div className="p-6 space-y-4">
-                  <InfoRow label="Alias Key" value={data.alias?.alias_key} />
+                  <InfoRow label="Key" value={data.alias?.alias_key} />
 
-                  <div>
+                  {/* <div>
                     <InfoRow
                       label="Key Status"
                       type="status"
@@ -232,7 +230,7 @@ function ApiHistoryView() {
                       type="status"
                       value={data.alias?.approval_status}
                     />
-                  </div>
+                  </div> */}
                   <InfoRow
                     label="Project Name"
                     value={data.alias?.project_name}
@@ -249,7 +247,7 @@ function ApiHistoryView() {
                 <div className="px-6 py-2 bg-slate-50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <h6 className="font-semibold ">Proxy</h6>
+                      <h6 className="font-semibold ">Proxy Detail</h6>
                     </div>
                     {data.proxy?.is_deleted && (
                       <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full">

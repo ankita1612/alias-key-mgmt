@@ -519,7 +519,7 @@ const KeyMonitorActive = () => {
         };
 
         return (
-          <div className="group relative">
+          <div className="relative group">
             <span>{truncateText(name, maxLength)}</span>
 
             {name.length > maxLength && (
@@ -612,6 +612,7 @@ const KeyMonitorActive = () => {
       name: "Status",
       selector: (row: IAliasKey) => row.key_status,
       sortable: true,
+      sortField: "key_status",
       // cell: (row: IAliasKey) => (
       //   <span
       //     className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getStatusStyle(
@@ -690,7 +691,7 @@ const KeyMonitorActive = () => {
                 placeholder="Search..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg pl-9 pr-9 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
+                className="w-full py-2 text-sm border border-gray-300 rounded-lg shadow-sm pl-9 pr-9 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
               />
 
               <FiSearch className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
@@ -788,8 +789,8 @@ const KeyMonitorActive = () => {
         </div>
 
         <div className="overflow-hidden">
-          <div className="overflow-hidden  shadow-sm rounded-xl">
-            <div className="data-table-responsive w-full">
+          <div className="overflow-hidden shadow-sm rounded-xl">
+            <div className="w-full data-table-responsive">
               <DataTable
                 columns={columns}
                 data={apiData}
@@ -797,6 +798,7 @@ const KeyMonitorActive = () => {
                 pagination
                 paginationServer
                 paginationTotalRows={total}
+                paginationDefaultPage={page}
                 paginationPerPage={limit}
                 onChangePage={(p) => setPage(p)}
                 onChangeRowsPerPage={(newLimit) => {
@@ -910,7 +912,7 @@ const KeyMonitorActive = () => {
               {/* Key Information Section */}
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <div className="w-1 h-4 rounded-full bg-secondary"></div>
                   <h3 className={heading_label_style}>
                     Key & User Information
                   </h3>
@@ -922,7 +924,7 @@ const KeyMonitorActive = () => {
                       <span className={label_style}>Key</span>
                       <button
                         onClick={() => handleCopy(selectedRow?.alias_key || "")}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-gray-400 transition-colors hover:text-gray-600"
                       >
                         <FiCopy className="w-4 h-4" />
                       </button>
@@ -962,7 +964,7 @@ const KeyMonitorActive = () => {
               {/* Status & Dates Section */}
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <div className="w-1 h-4 rounded-full bg-secondary"></div>
                   <h3 className={heading_label_style}>Status & Timeline</h3>
                 </div>
 
@@ -1012,7 +1014,7 @@ const KeyMonitorActive = () => {
                         <div className={label_style}>Reason for Rejection</div>
 
                         {/* ✅ Value (styled box) */}
-                        <div className="mt-1 p-3 bg-gray-50 border border-gray-200 rounded-md  text-gray-700 break-words">
+                        <div className="p-3 mt-1 text-gray-700 break-words border border-gray-200 rounded-md bg-gray-50">
                           {selectedRow.rejection_reason}
                         </div>
                       </div>
@@ -1023,7 +1025,7 @@ const KeyMonitorActive = () => {
               {/* Quota & Cost Section */}
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <div className="w-1 h-4 rounded-full bg-secondary"></div>
                   <h3 className={heading_label_style}>Quota & Cost</h3>
                 </div>
 
@@ -1050,7 +1052,7 @@ const KeyMonitorActive = () => {
               {selectedRow?.cost_calculation && (
                 <div className="mb-8">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <div className="w-1 h-4 rounded-full bg-secondary"></div>
                     <h3 className={heading_label_style}>Cost Calculation</h3>
                   </div>
                   <div className={input_style_with_gray_border}>
@@ -1062,7 +1064,7 @@ const KeyMonitorActive = () => {
               {selectedRow?.description && (
                 <div className="mb-8">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <div className="w-1 h-4 rounded-full bg-secondary"></div>
                     <h3 className={heading_label_style}>Purpose</h3>
                   </div>
                   <div className={input_style_with_gray_border}>
@@ -1076,7 +1078,7 @@ const KeyMonitorActive = () => {
                 ["Approved"].includes(selectedRow.approval_status) && (
                   <div className="mb-8">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                      <div className="w-1 h-4 rounded-full bg-secondary"></div>
                       <h3 className={heading_label_style}>
                         Proxy Configuration
                       </h3>
@@ -1097,7 +1099,7 @@ const KeyMonitorActive = () => {
                                            onClick={() =>
                                              handleCopy(liveUrl?.curlCommand || "")
                                            }
-                                           className="text-gray-400 hover:text-gray-600 transition-colors"
+                                           className="text-gray-400 transition-colors hover:text-gray-600"
                                          >
                                            <FiCopy className="w-4 h-4" />
                                          </button> */}
@@ -1117,7 +1119,7 @@ const KeyMonitorActive = () => {
                                 onClick={() =>
                                   handleCopy(liveUrl?.curlCommand || "")
                                 }
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                className="text-gray-400 transition-colors hover:text-gray-600"
                                 title="Copy"
                               >
                                 <FiCopy className="w-4 h-4" />
@@ -1138,7 +1140,7 @@ const KeyMonitorActive = () => {
               {/* Proxy Deleted Warning - Clean version */}
               {selectedRow.proxy?.is_deleted === true && (
                 <div className="mb-8">
-                  <div className="bg-gray-50 border border-gray-200 rounded p-3">
+                  <div className="p-3 border border-gray-200 rounded bg-gray-50">
                     <div className="flex items-center gap-2">
                       <FiAlertCircle className="w-4 h-4 text-gray-500" />
                       <span className="text-sm text-gray-600">
@@ -1153,7 +1155,7 @@ const KeyMonitorActive = () => {
               {selectedRow?.proxy_permission_required && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <div className="w-1 h-4 rounded-full bg-secondary"></div>
                     <h3 className={heading_label_style}>
                       Additional Information
                     </h3>

@@ -1135,7 +1135,7 @@ class AliasKeyController {
       res.status(200).json({
         success: true,
         message: `Alias key ${
-          action === "Active" ? "activated" : "rejected"
+          action === "Approved" ? "activated" : "rejected"
         } successfully`,
         data: updated, // optional but useful
       });

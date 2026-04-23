@@ -51,15 +51,15 @@ function CurlCell({ curl }: { curl: string }) {
   const truncated = curl.substring(0, 70);
 
   return (
-    <div className=" text-gray-800 break-all whitespace-pre-wrap">
+    <div className="text-gray-800 break-all whitespace-pre-wrap ">
       {!expanded && isLong ? (
         <>
           {truncated}
-          <span className=" items-center">
+          <span className="items-center ">
             ...{" "}
             <button
               onClick={() => setExpanded(true)}
-              className="ml-1 text-black hover:text-gray-700 align-middle"
+              className="ml-1 text-black align-middle hover:text-gray-700"
             >
               <FiChevronDown size={14} />
             </button>
@@ -71,7 +71,7 @@ function CurlCell({ curl }: { curl: string }) {
           {isLong && (
             <button
               onClick={() => setExpanded(false)}
-              className="ml-1 text-gray-500 hover:text-gray-700 align-middle"
+              className="ml-1 text-gray-500 align-middle hover:text-gray-700"
             >
               <FiChevronUp size={14} />
             </button>
@@ -314,7 +314,7 @@ const ProxyList = ({ status }: Props) => {
         };
 
         return (
-          <div className="group relative text-gray-900 font-semibold">
+          <div className="relative font-semibold text-gray-900 group">
             <span>{truncateText(name, maxLength)}</span>
 
             {name.length > maxLength && (
@@ -341,29 +341,29 @@ const ProxyList = ({ status }: Props) => {
       sortField: "curl",
       cell: (row) => (
         <div className="flex items-center w-full">
-          <div className="rounded flex-1 min-w-0 text-left">
+          <div className="flex-1 min-w-0 text-left rounded">
             {/* Responsive truncation based on screen size */}
-            <span className="hidden sm:inline text-left">
+            <span className="hidden text-left sm:inline">
               {row.curl?.substring(0, 80)}...
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   openCurlModal(row.curl);
                 }}
-                className="p-1 rounded hover:bg-gray-100 transition-colors inline-flex ml-2"
+                className="inline-flex p-1 ml-2 transition-colors rounded hover:bg-gray-100"
                 title="View full curl"
               >
                 <FiExternalLink size={14} className="text-blue-500" />
               </button>
             </span>
-            <span className="inline sm:hidden text-left">
+            <span className="inline text-left sm:hidden">
               {row.curl?.substring(0, 40)}...
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   openCurlModal(row.curl);
                 }}
-                className="p-1 rounded hover:bg-gray-100 transition-colors inline-flex ml-2"
+                className="inline-flex p-1 ml-2 transition-colors rounded hover:bg-gray-100"
                 title="View full curl"
               >
                 <FiExternalLink size={14} className="text-blue-500" />
@@ -489,8 +489,8 @@ const ProxyList = ({ status }: Props) => {
 
         {/* CONTENT (Table / List / etc.) */}
         <div className="overflow-hidden">
-          <div className="overflow-hidden  shadow-sm rounded-xl">
-            <div className="data-table-responsive w-full">
+          <div className="overflow-hidden shadow-sm rounded-xl">
+            <div className="w-full data-table-responsive">
               <DataTable
                 columns={columns}
                 data={apiData}
@@ -498,6 +498,7 @@ const ProxyList = ({ status }: Props) => {
                 pagination
                 paginationServer
                 paginationTotalRows={total}
+                paginationDefaultPage={page}
                 paginationPerPage={limit}
                 onChangePage={(p) => setPage(p)}
                 onChangeRowsPerPage={(newLimit) => {
@@ -611,7 +612,7 @@ const ProxyList = ({ status }: Props) => {
               {/* Basic Information Section */}
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <div className="w-1 h-4 rounded-full bg-secondary"></div>
                   <h3 className="text-base font-medium text-gray-700">
                     Basic Information
                   </h3>
@@ -619,14 +620,14 @@ const ProxyList = ({ status }: Props) => {
 
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Proxy Name</div>
+                    <div className="mb-1 text-xs text-gray-500">Proxy Name</div>
                     <div className="text-sm text-gray-900">
                       {selectedRow?.proxy_name || "-"}
                     </div>
                   </div>
 
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">
+                    <div className="mb-1 text-xs text-gray-500">
                       Project Name
                     </div>
                     <div className="text-sm text-gray-900">
@@ -635,7 +636,7 @@ const ProxyList = ({ status }: Props) => {
                   </div>
 
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">
+                    <div className="mb-1 text-xs text-gray-500">
                       Domain Name
                     </div>
                     <div className="text-sm text-gray-900 break-all">
@@ -644,7 +645,7 @@ const ProxyList = ({ status }: Props) => {
                   </div>
 
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">
+                    <div className="mb-1 text-xs text-gray-500">
                       Created Date
                     </div>
                     <div className="text-sm text-gray-900">
@@ -666,14 +667,14 @@ const ProxyList = ({ status }: Props) => {
               {/* Credit Information Section */}
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <div className="w-1 h-4 rounded-full bg-secondary"></div>
                   <h3 className="text-base font-medium text-gray-700">
                     Credit Information
                   </h3>
                 </div>
 
                 <div>
-                  <div className="text-xs text-gray-500 mb-1">Credit</div>
+                  <div className="mb-1 text-xs text-gray-500">Credit</div>
                   <div className="text-lg font-semibold text-gray-900">
                     {selectedRow?.credit?.toLocaleString() || "0"}
                   </div>
@@ -683,7 +684,7 @@ const ProxyList = ({ status }: Props) => {
               {/* Tokens Section */}
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                  <div className="w-1 h-4 rounded-full bg-secondary"></div>
                   <h3 className="text-base font-medium text-gray-700">
                     Access Tokens
                   </h3>
@@ -691,19 +692,19 @@ const ProxyList = ({ status }: Props) => {
 
                 <div className="space-y-4">
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">
+                    <div className="mb-1 text-xs text-gray-500">
                       Proxy Token
                     </div>
-                    <div className="font-mono text-sm text-gray-900 bg-gray-50 p-2 rounded border border-gray-100 break-all">
+                    <div className="p-2 font-mono text-sm text-gray-900 break-all border border-gray-100 rounded bg-gray-50">
                       {selectedRow?.proxy_token || "-"}
                     </div>
                   </div>
 
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">
+                    <div className="mb-1 text-xs text-gray-500">
                       Token for Curl
                     </div>
-                    <div className="font-mono text-sm text-gray-900 bg-gray-50 p-2 rounded border border-gray-100 break-all">
+                    <div className="p-2 font-mono text-sm text-gray-900 break-all border border-gray-100 rounded bg-gray-50">
                       {selectedRow?.curl_token || "-"}
                     </div>
                   </div>
@@ -714,13 +715,13 @@ const ProxyList = ({ status }: Props) => {
               {selectedRow?.curl && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-4 bg-secondary rounded-full"></div>
+                    <div className="w-1 h-4 rounded-full bg-secondary"></div>
                     <h3 className="text-base font-medium text-gray-700">
                       Curl Command
                     </h3>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded border border-gray-100">
-                    <pre className="font-mono text-xs text-gray-700 whitespace-pre-wrap break-all">
+                  <div className="p-3 border border-gray-100 rounded bg-gray-50">
+                    <pre className="font-mono text-xs text-gray-700 break-all whitespace-pre-wrap">
                       {selectedRow.curl}
                     </pre>
                   </div>
