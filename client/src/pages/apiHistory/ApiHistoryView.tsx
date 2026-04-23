@@ -21,6 +21,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import { FiAlertCircle } from "react-icons/fi";
 
 function ApiHistoryView() {
   const { apiHistoryId } = useParams();
@@ -249,22 +250,16 @@ function ApiHistoryView() {
                     <div className="flex items-center gap-2">
                       <h6 className="font-semibold ">Proxy Detail</h6>
                     </div>
-                    {data.proxy?.is_deleted && (
+                    {/* {data.proxy?.is_deleted && (
                       <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full">
                         <AlertCircle className="w-3 h-3" />
                         Deleted
                       </span>
-                    )}
+                    )} */}
                   </div>
                 </div>
 
                 <div className="p-6 space-y-4">
-                  {data.proxy?.is_deleted && (
-                    <div className="p-3 text-sm text-red-700 border-l-4 border-red-500 rounded-lg bg-red-50">
-                      This proxy has been deleted and is no longer available
-                    </div>
-                  )}
-
                   <InfoRow label="Proxy Name" value={data.proxy?.proxy_name} />
 
                   {/* <InfoRow
@@ -278,6 +273,16 @@ function ApiHistoryView() {
                       label="Description"
                       value={data.proxy?.description}
                     />
+                  )}
+                  {data.proxy?.is_deleted && (
+                    <div className="p-3 border border-red-200 rounded bg-red-50">
+                      <div className="flex items-center gap-2">
+                        <FiAlertCircle className="w-4 h-4 text-red-500" />
+                        <span className="p-0 text-sm text-red-700 rounded-lg bg-red-50">
+                          This proxy has been deleted and is no longer available
+                        </span>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

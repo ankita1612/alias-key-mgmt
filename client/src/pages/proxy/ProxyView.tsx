@@ -24,6 +24,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import apiClient from "../../services/apiClient";
 import toast from "react-hot-toast";
+import { FiAlertCircle } from "react-icons/fi";
 
 // Move these components OUTSIDE of ProxyView
 const InfoRow = ({ label, value, icon, isLink = false, isFull = false }) => (
@@ -205,6 +206,16 @@ function ProxyView() {
               <div className="grid grid-cols-1 gap-5">
                 <ProxyInfoRow label="Curl" value={data?.proxy?.curl} />
               </div>
+              {data.proxy?.is_deleted && (
+                <div className="p-3 border border-red-200 rounded bg-red-50">
+                  <div className="flex items-center gap-2">
+                    <FiAlertCircle className="w-4 h-4 text-red-500" />
+                    <span className="p-0 text-sm text-red-700 rounded-lg bg-red-50">
+                      This proxy has been deleted and is no longer available
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

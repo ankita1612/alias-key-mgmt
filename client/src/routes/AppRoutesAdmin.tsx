@@ -55,6 +55,14 @@ const AppRoutes = () => {
           }
         />
         <Route
+          path="proxy/deleted-proxy"
+          element={
+            <ProtectedRoute roles={["Admin"]}>
+              <Proxy />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="proxy/add"
           element={
             <ProtectedRoute roles={["Admin"]}>

@@ -1,3 +1,4 @@
+import { FiX } from "react-icons/fi";
 import StatusBadge, { getStatusConfig } from "../../utils/StatusBadge";
 import { customTableStyles } from "../datatableDesign";
 import { showToast } from "../../utils/CustomToast";
@@ -568,9 +569,25 @@ const AliasKeyList = () => {
       minWidth: "250px",
       grow: 2, // Give more space to Key column
       cell: (row: IAliasKey) => (
-        <span className={`font-semibold text-gray-900 break-all}`}>
-          {row.alias_key || "-"}
-        </span>
+        <div className="relative flex items-center gap-2 group">
+          <span
+            className={`font-semibold ${row.proxy?.is_deleted ? "text-gray-400 line-through" : "text-gray-900"} break-all`}
+          >
+            {row.alias_key || "-"}
+          </span>
+          {row.proxy?.is_deleted && (
+            <>
+              {/* Cross Icon */}
+              <FiX className="w-4 h-4 text-red-500" />
+
+              {/* Tooltip on Hover */}
+              <div className="absolute z-10 invisible px-2 py-1 ml-2 text-xs text-white transition-all duration-200 bg-gray-900 rounded-md opacity-0 pointer-events-none group-hover:visible group-hover:opacity-100 whitespace-nowrap left-full">
+                Proxy deleted
+                <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-1.5 h-1.5 bg-gray-900 rotate-45"></div>
+              </div>
+            </>
+          )}
+        </div>
       ),
     },
     {
@@ -1226,11 +1243,11 @@ const AliasKeyList = () => {
               {/* Proxy Deleted Warning - Clean version */}
               {selectedRow.proxy?.is_deleted === true && (
                 <div className="mb-8">
-                  <div className="p-3 border border-gray-200 rounded bg-gray-50">
+                  <div className="p-3 border border-red-200 rounded bg-red-50">
                     <div className="flex items-center gap-2">
-                      <FiAlertCircle className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">
-                        This proxy has been marked as deleted
+                      <FiAlertCircle className="w-4 h-4 text-red-500" />
+                      <span className="p-0 text-sm text-red-700 rounded-lg bg-red-50">
+                        This proxy has been deleted and is no longer available
                       </span>
                     </div>
                   </div>
