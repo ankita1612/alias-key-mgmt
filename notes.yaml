@@ -27,6 +27,9 @@ http://172.28.148.155:5000/api/get-proxy-response?alias_key=ALIAS_KEY_TOKEN&url=
 2)curl --location --request GET 'http://localhost:5002/get_response?token=1&args1=test&args2=demo'
 
 
+2)curl --location --request GET 'http://localhost:5002//api/get-response?myToken=1&username=test&email=demo&salary=demo'
+
+
 curl --location --request GET 'http://localhost:5001/api/get-response?usernae=1&email=2&myToken=123&salary=2000'
 
 

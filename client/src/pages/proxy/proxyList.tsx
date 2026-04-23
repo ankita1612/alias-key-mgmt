@@ -503,6 +503,7 @@ const ProxyList = ({ status }: Props) => {
                 paginationServer
                 paginationTotalRows={total}
                 paginationDefaultPage={page}
+                paginationRowsPerPageOptions={[10, 20, 30, 50, 100]}
                 paginationPerPage={limit}
                 onChangePage={(p) => setPage(p)}
                 onChangeRowsPerPage={(newLimit) => {

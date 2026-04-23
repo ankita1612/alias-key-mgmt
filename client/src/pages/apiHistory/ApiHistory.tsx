@@ -52,7 +52,7 @@ const ApiHistory = () => {
         setAliasKeyName("");
         return;
       }
-
+      //setLoading(true);
       try {
         const { data } = await apiClient.get(
           `${BACKEND_URL}/api/alias-key/${aliasKeyId}`,
@@ -61,6 +61,8 @@ const ApiHistory = () => {
         setAliasKeyName(data.data?.alias_key || "");
       } catch (error) {
         setAliasKeyName("");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -296,6 +298,7 @@ const ApiHistory = () => {
                 paginationDefaultPage={page}
                 paginationTotalRows={total}
                 paginationPerPage={limit}
+                paginationRowsPerPageOptions={[10, 20, 30, 50, 100]}
                 onChangePage={(p) => setPage(p)}
                 onChangeRowsPerPage={(newLimit) => {
                   setLimit(newLimit);

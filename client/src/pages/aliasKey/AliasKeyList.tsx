@@ -898,6 +898,7 @@ const AliasKeyList = () => {
                   setLimit(newLimit);
                   setPage(1);
                 }}
+                paginationRowsPerPageOptions={[10, 20, 30, 50, 100]}
                 sortServer
                 onSort={handleSort}
                 highlightOnHover

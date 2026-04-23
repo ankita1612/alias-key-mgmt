@@ -818,6 +818,7 @@ const KeyMonitorActive = () => {
                 paginationDefaultPage={page}
                 paginationPerPage={limit}
                 onChangePage={(p) => setPage(p)}
+                paginationRowsPerPageOptions={[10, 20, 30, 50, 100]}
                 onChangeRowsPerPage={(newLimit) => {
                   setLimit(newLimit);
                   setPage(1);
