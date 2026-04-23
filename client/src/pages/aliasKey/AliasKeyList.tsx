@@ -757,7 +757,7 @@ const AliasKeyList = () => {
               <input
                 ref={searchRef}
                 type="text"
-                placeholder="Search..."
+                placeholder="Search user, key,domain name, total quota"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full py-2 text-sm border border-gray-300 rounded-lg shadow-sm pl-9 pr-9 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
@@ -887,7 +887,7 @@ const AliasKeyList = () => {
               <DataTable
                 columns={columns}
                 data={apiData}
-                progressPending={loading}
+                // progressPending={loading}
                 pagination
                 paginationServer
                 paginationDefaultPage={page}
@@ -1615,8 +1615,32 @@ const AliasKeyList = () => {
         />
       )}
       {loading && (
-        <div className="flex justify-center py-10">
-          <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3">
+            {/* Spinner */}
+            <div className="w-10 h-10 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
+
+            {/* Optional text */}
+            <p className="text-sm text-gray-700">Loading...</p>
+          </div>
+        </div>
+      )}
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3">
+            {/* Pulsing Circle */}
+            <div className="w-12 h-12 border-4 rounded-full border-primary/30 border-t-primary animate-spin"></div>
+
+            {/* Animated Text */}
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-medium text-gray-700">Loading</span>
+              <span className="flex gap-1">
+                <span className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                <span className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                <span className="w-1 h-1 rounded-full bg-primary animate-bounce"></span>
+              </span>
+            </div>
+          </div>
         </div>
       )}
     </div>

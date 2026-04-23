@@ -121,11 +121,8 @@ class ProxyController {
         const isNumber = !isNaN(Number(search));
 
         match.$or = [
-          { proxy_name: { $regex: search, $options: "i" } },
-          { proxy_token: { $regex: search, $options: "i" } },
-          { curl: { $regex: search, $options: "i" } },
-
-          // ✅ Only add credit search if number
+          { proxy_name: { $regex: search, $options: "i" } },          
+          { curl: { $regex: search, $options: "i" } },          
           ...(isNumber ? [{ credit: Number(search) }] : []),
         ];
       }

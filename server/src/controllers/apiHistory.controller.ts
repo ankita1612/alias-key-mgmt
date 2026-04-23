@@ -134,6 +134,7 @@ class ApiHistoryController {
     res: Response,
     next: NextFunction,
   ) => {
+    //await new Promise(resolve => setTimeout(resolve, 120000));
     try {
       const user = req.user;
 

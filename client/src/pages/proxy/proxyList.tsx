@@ -275,9 +275,13 @@ const ProxyList = ({ status }: Props) => {
             <FiTrash2 className="w-4 h-4" />
           </button>
         </>
-      )}
+      )}{" "}
       <button
-        onClick={() => navigate(`/proxy/view/${row._id}`)}
+        onClick={() =>
+          navigate(`/proxy/view/${row._id}`, {
+            state: { from: status === "active" ? "proxy" : "deleted-proxy" },
+          })
+        }
         className="flex items-center justify-center p-1.5 text-blue-600 hover:text-white hover:bg-blue-500 rounded-md transition-all duration-200 group relative"
         title="View"
       >
@@ -750,8 +754,21 @@ const ProxyList = ({ status }: Props) => {
         curl={selectedCurl}
       />
       {loading && (
-        <div className="flex justify-center py-10">
-          <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3">
+            {/* Pulsing Circle */}
+            <div className="w-12 h-12 border-4 rounded-full border-primary/30 border-t-primary animate-spin"></div>
+
+            {/* Animated Text */}
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-medium text-gray-700">Loading</span>
+              <span className="flex gap-1">
+                <span className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                <span className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                <span className="w-1 h-1 rounded-full bg-primary animate-bounce"></span>
+              </span>
+            </div>
+          </div>
         </div>
       )}
     </div>

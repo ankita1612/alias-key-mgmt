@@ -341,7 +341,7 @@ function ProxyAdd() {
             loading ? "opacity-50 pointer-events-none" : ""
           }`}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label className="block mb-2 text-sm">
                 Project Name (Optional)
@@ -379,7 +379,7 @@ function ProxyAdd() {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label className="block mb-2 text-sm">
                 Proxy Name <span className="text-red-500">*</span>
@@ -533,6 +533,24 @@ ${
           </div>
         </div>
       </form>
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3">
+            {/* Pulsing Circle */}
+            <div className="w-12 h-12 border-4 rounded-full border-primary/30 border-t-primary animate-spin"></div>
+
+            {/* Animated Text */}
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-medium text-gray-700">Loading</span>
+              <span className="flex gap-1">
+                <span className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                <span className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                <span className="w-1 h-1 rounded-full bg-primary animate-bounce"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

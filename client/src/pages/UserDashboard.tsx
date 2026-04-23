@@ -359,30 +359,27 @@ function UserDashboard() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-10">
-        <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+        <div className="flex flex-col items-center gap-3">
+          {/* Pulsing Circle */}
+          <div className="w-12 h-12 border-4 rounded-full border-primary/30 border-t-primary animate-spin"></div>
+
+          {/* Animated Text */}
+          <div className="flex items-center gap-1">
+            <span className="text-sm font-medium text-gray-700">Loading</span>
+            <span className="flex gap-1">
+              <span className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+              <span className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+              <span className="w-1 h-1 rounded-full bg-primary animate-bounce"></span>
+            </span>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!dashboard) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <AlertCircle className="w-12 h-12 mb-3 text-gray-400" />
-        <p className="text-lg font-medium text-gray-700">
-          Unable to load dashboard
-        </p>
-        <p className="mt-1 text-sm text-gray-500">
-          Please try refreshing the page
-        </p>
-        <button
-          onClick={() => fetchData()}
-          className="px-4 py-2 mt-4 text-sm font-medium text-white rounded-lg bg-primary hover:bg-primary/90"
-        >
-          Retry
-        </button>
-      </div>
-    );
+    return <></>;
   }
 
   return (

@@ -5,6 +5,7 @@ export default function Breadcrumb() {
   const location = useLocation();
   const historyParentId = location.state?.historyParentId;
   const path = location.pathname;
+  const from = location.state?.from;
   const HOME_ROUTE = "/dashboard";
 
   // 🧠 Breadcrumb Logic
@@ -36,11 +37,27 @@ export default function Breadcrumb() {
         } else if (path === "/proxy/add") {
           items.push({ label: "Proxy", to: "/proxy", clickable: true });
           items.push({ label: "Add Proxy", clickable: false });
+        } else if (path === "/proxy/deleted-proxy") {
+          //items.push({ label: "Proxy", to: "/proxy", clickable: true });
+          items.push({ label: "Deleted Proxy", clickable: false });
         } else if (/^\/proxy\/add\/[0-9a-fA-F]{24}$/.test(path)) {
           items.push({ label: "Proxy", to: "/proxy", clickable: true });
           items.push({ label: "Edit Proxy", clickable: false });
         } else if (/^\/proxy\/view\/[0-9a-fA-F]{24}$/.test(path)) {
-          items.push({ label: "Proxy", to: "/proxy", clickable: true });
+          if (from === "deleted-proxy") {
+            items.push({
+              label: "Deleted Proxy",
+              to: "/proxy/deleted-proxy",
+              clickable: true,
+            });
+          } else {
+            items.push({
+              label: "Proxy",
+              to: "/proxy",
+              clickable: true,
+            });
+          }
+
           items.push({ label: "View Proxy", clickable: false });
         }
       }

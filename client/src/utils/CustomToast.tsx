@@ -50,7 +50,7 @@ ${t.visible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"}
     >
       <button
         onClick={() => toast.dismiss(t.id)}
-        className="absolute top-2 right-2 text-gray-400 hover:text-gray-700"
+        className="absolute text-gray-400 top-2 right-2 hover:text-gray-700"
       >
         <FiX size={16} />
       </button>

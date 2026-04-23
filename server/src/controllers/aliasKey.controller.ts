@@ -199,6 +199,15 @@ class AliasKeyController {
                   },
                 },
               },
+              {
+                $expr: {
+                  $regexMatch: {
+                    input: { $toString: "$remaining_quota" },
+                    regex: search,
+                    options: "i",
+                  },
+                },
+              },
             ],
           }
         : {};
@@ -467,10 +476,18 @@ class AliasKeyController {
                   },
                 },
               },
+               {
+                $expr: {
+                  $regexMatch: {
+                    input: { $toString: "$remaining_quota" },
+                    regex: search,
+                    options: "i",
+                  },
+                },
+              },
             ],
           }
         : {};
-
       const pipeline: any[] = [
         { $match: match },
 
@@ -754,6 +771,15 @@ class AliasKeyController {
                 $expr: {
                   $regexMatch: {
                     input: { $toString: "$total_quota" },
+                    regex: search,
+                    options: "i",
+                  },
+                },
+              },
+               {
+                $expr: {
+                  $regexMatch: {
+                    input: { $toString: "$remaining_quota" },
                     regex: search,
                     options: "i",
                   },
@@ -1198,3 +1224,5 @@ class AliasKeyController {
 }
 
 export const aliasKeyController = new AliasKeyController();
+
+//  await new Promise(resolve => setTimeout(resolve, 120000));
