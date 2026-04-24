@@ -76,6 +76,9 @@ class DashboardController {
           activeQuotaDocs,
           aliasStatusBreakdown,
           requestsLast7DaysAggregate,
+          totalQuotaAgg,
+          totalUsedQuotaAgg,
+          totalFailedQuotaAgg,
         ] = await Promise.all([
           AliasKeyModel.countDocuments({ user_id: userId }),
           AliasKeyModel.countDocuments({
@@ -160,6 +163,26 @@ class DashboardController {
               $sort: { _id: 1 },
             },
           ]),
+          // Quota aggregations for user
+          AliasKeyModel.aggregate([
+            {
+              $match: { user_id: userId },
+            },
+            {
+              $group: {
+                _id: null,
+                totalQuota: { $sum: "$total_quota" },
+              },
+            },
+          ]),
+          ApiHistoryModel.countDocuments({
+            user_id: userId,
+            response_code_str: "SUCCESS",
+          }),
+          ApiHistoryModel.countDocuments({
+            user_id: userId,
+            response_code_str: { $ne: "SUCCESS" },
+          }),
         ]);
 
         const statusCounts = {
@@ -275,6 +298,12 @@ class DashboardController {
             )
           : null;
 
+        // Extract API Quota values for User
+        const apiQuotaTotal = totalQuotaAgg?.[0]?.totalQuota || 0;
+        const apiQuotaUsed = totalUsedQuotaAgg || 0;
+        const apiQuotaFailed = totalFailedQuotaAgg || 0;
+        const apiQuotaRemaining = Math.max(0, apiQuotaTotal - apiQuotaUsed);
+
         return res.json({
           totalAliasKeys,
           activeAliasKeys,
@@ -307,6 +336,12 @@ class DashboardController {
             usedPercent: totalQuota
               ? Math.round((usedQuota / totalQuota) * 100)
               : 0,
+          },
+          apiQuota: {
+            totalQuota: apiQuotaTotal,
+            totalUsedQuota: apiQuotaUsed,
+            totalFailedQuota: apiQuotaFailed,
+            remainingQuota: apiQuotaRemaining,
           },
           requestsLast7Days,
         });
@@ -349,6 +384,9 @@ class DashboardController {
           apiStatusAggregates,
           requestsLast7DaysAggregate,
           totalProxy,
+          totalQuotaAgg,
+          totalUsedQuotaAgg,
+          totalFailedQuotaAgg,
         ] = await Promise.all([
           User.countDocuments({ role: "User" }),
           User.countDocuments({
@@ -419,6 +457,21 @@ class DashboardController {
             },
           ]),
           ProxyModel.countDocuments({ is_deleted: false }),
+          // Quota aggregations
+          AliasKeyModel.aggregate([
+            {
+              $group: {
+                _id: null,
+                totalQuota: { $sum: "$total_quota" },
+              },
+            },
+          ]),
+          ApiHistoryModel.countDocuments({
+            response_code_str: "SUCCESS",
+          }),
+          ApiHistoryModel.countDocuments({
+            response_code_str: { $ne: "SUCCESS" },
+          }),
         ]);
 
         const aliasStatusBreakdown = {
@@ -498,6 +551,12 @@ class DashboardController {
           {},
         );
 
+        // Extract quota values
+        const totalQuota = totalQuotaAgg?.[0]?.totalQuota || 0;
+        const totalUsedQuota = totalUsedQuotaAgg || 0;
+        const totalFailedQuota = totalFailedQuotaAgg || 0;
+        const remainingQuota = Math.max(0, totalQuota - totalUsedQuota);
+
         const requestsLast7Days = [] as Array<{ date: string; count: number }>;
         for (let i = 0; i < 7; i++) {
           const day = new Date(
@@ -534,6 +593,12 @@ class DashboardController {
           apiStatusCounts,
           requestsLast7Days,
           totalProxy,
+          apiQuota: {
+            totalQuota,
+            totalUsedQuota,
+            totalFailedQuota,
+            remainingQuota,
+          },
         });
       }
 

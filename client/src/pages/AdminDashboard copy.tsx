@@ -158,7 +158,7 @@ function AdminDashboard() {
     };
 
     return (
-      <div className="flex items-center gap-3 px-3 py-3 transition bg-white border rounded-lg shadow-sm hover:shadow-md">
+      <div className="flex items-center gap-3 px-4 py-4 transition bg-white border rounded-lg shadow-sm hover:shadow-md">
         {/* Icon */}
         <div
           className={`flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br ${
@@ -430,7 +430,7 @@ function AdminDashboard() {
               />
 
               <StatCard
-                title="Success Quota"
+                title="Used Quota"
                 value={
                   dashboard.apiQuota?.totalUsedQuota?.toLocaleString() || "0"
                 }
@@ -462,27 +462,35 @@ function AdminDashboard() {
 
             {/* Key Status Summary */}
             <div className="grid gap-4 mb-6 lg:grid-cols-2">
-              {/* Active Keys Card - Ultra Compact */}
+              {/* Active Keys Card */}
               <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md">
-                <div className="px-3 py-1.5 border-b bg-teal-50 border-emerald-100">
+                <div className="px-5 py-4 border-b bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-100">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex items-center justify-center w-6 h-6 rounded-md shadow-sm bg-emerald-500">
-                        <CheckCircle className="w-3 h-3 text-white" />
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-10 h-10 shadow-sm bg-emerald-500 rounded-xl">
+                        <CheckCircle className="w-5 h-5 text-white" />
                       </div>
-                      <h4 className="text-xs font-bold text-emerald-800">
-                        Active Keys
-                      </h4>
+                      <div>
+                        <p className="text-sm font-medium text-emerald-600">
+                          Key Status
+                        </p>
+                        <h3 className="text-xl font-bold text-emerald-800">
+                          Active Keys
+                        </h3>
+                      </div>
                     </div>
-                    <p className="text-lg font-bold text-emerald-700">
-                      {dashboard.aliasStatusCounts?.keyStatus?.Active?.toLocaleString() ||
-                        "0"}
-                    </p>
+                    <div className="text-right">
+                      <p className="text-3xl font-bold text-emerald-700">
+                        {dashboard.aliasStatusCounts?.keyStatus?.Active?.toLocaleString() ||
+                          "0"}
+                      </p>
+                      <p className="text-xs text-emerald-500">Total Active</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="px-3 py-2">
-                  <div className="space-y-1.5">
+                <div className="p-5">
+                  <div className="space-y-4">
                     {[
                       {
                         label: "Approved",
@@ -514,22 +522,21 @@ function AdminDashboard() {
                       const percentage = (item.value / total) * 100;
 
                       return (
-                        <div
-                          key={item.label}
-                          className="flex items-center justify-between"
-                        >
-                          <div className="flex items-center gap-1">
-                            <item.icon
-                              className={`w-2.5 h-2.5 text-${item.color}-500`}
-                            />
-                            <span className="text-xs text-slate-500 font-medium mt-0.5">
-                              {item.label}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs font-semibold text-gray-900">
-                              {item.value.toLocaleString()}
-                            </span>
+                        <div key={item.label} className="group">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <item.icon
+                                className={`w-3.5 h-3.5 text-${item.color}-500`}
+                              />
+                              <span className="text-sm text-gray-600">
+                                {item.label}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-gray-900">
+                                {item.value.toLocaleString()}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       );
@@ -538,27 +545,38 @@ function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Inactive Keys Card - Ultra Compact */}
+              {/* Inactive Keys Card */}
               <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md">
-                <div className="px-3 py-1.5 border-b bg-gray-50">
+                <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-slate-50">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex items-center justify-center w-6 h-6 bg-gray-500 rounded-md shadow-sm">
-                        <XCircle className="w-3 h-3 text-white" />
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-10 h-10 bg-gray-500 shadow-sm rounded-xl">
+                        <XCircle className="w-5 h-5 text-white" />
                       </div>
-                      <h3 className="text-xs font-bold text-gray-800">
-                        Inactive Keys
-                      </h3>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">
+                          Key Status
+                        </p>
+                        <h3 className="text-xl font-bold text-gray-800">
+                          Inactive Keys
+                        </h3>
+                      </div>
                     </div>
-                    <p className="text-lg font-bold text-gray-700">
-                      {dashboard.aliasStatusCounts?.keyStatus?.Inactive?.toLocaleString() ||
-                        "0"}
-                    </p>
+                    <div className="text-right">
+                      <p className="text-3xl font-bold text-gray-700">
+                        {dashboard.aliasStatusCounts?.keyStatus?.Inactive?.toLocaleString() ||
+                          "0"}
+                      </p>
+                      <p className="text-xs text-gray-500">Total Inactive</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="px-3 py-2">
-                  <div className="space-y-1.5">
+                <div className="p-5">
+                  {/* <p className="mb-4 text-xs font-semibold tracking-wider text-gray-400 uppercase">
+                    Approval Breakdown
+                  </p> */}
+                  <div className="space-y-4">
                     {[
                       {
                         label: "Approved",
@@ -590,22 +608,21 @@ function AdminDashboard() {
                       const percentage = (item.value / total) * 100;
 
                       return (
-                        <div
-                          key={item.label}
-                          className="flex items-center justify-between"
-                        >
-                          <div className="flex items-center gap-1">
-                            <item.icon
-                              className={`w-2.5 h-2.5 text-${item.color}-500`}
-                            />
-                            <span className="text-xs text-slate-500 font-medium mt-0.5">
-                              {item.label}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs font-semibold text-gray-900">
-                              {item.value.toLocaleString()}
-                            </span>
+                        <div key={item.label} className="group">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <item.icon
+                                className={`w-3.5 h-3.5 text-${item.color}-500`}
+                              />
+                              <span className="text-sm text-gray-600">
+                                {item.label}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-gray-900">
+                                {item.value.toLocaleString()}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       );
