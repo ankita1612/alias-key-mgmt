@@ -166,7 +166,11 @@ class DashboardController {
           // Quota aggregations for user
           AliasKeyModel.aggregate([
             {
-              $match: { user_id: userId },
+              $match: {
+                user_id: userId,
+                key_status: "Active",
+                approval_status: "Approved",
+              },
             },
             {
               $group: {
@@ -459,6 +463,12 @@ class DashboardController {
           ProxyModel.countDocuments({ is_deleted: false }),
           // Quota aggregations
           AliasKeyModel.aggregate([
+            {
+              $match: {
+                key_status: "Active",
+                approval_status: "Approved",
+              },
+            },
             {
               $group: {
                 _id: null,

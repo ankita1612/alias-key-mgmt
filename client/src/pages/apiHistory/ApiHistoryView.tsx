@@ -149,7 +149,7 @@ function ApiHistoryView() {
               {/* Card Header - No Border, Just Background */}
               <div className="px-6 py-2 bg-slate-50">
                 <div className="flex items-center gap-2">
-                  <h5 className="font-semibold ">API Request Detail</h5>
+                  <h5 className={heading_label_style}>API Request Detail</h5>
                 </div>
               </div>
 
@@ -211,7 +211,7 @@ function ApiHistoryView() {
               <div className="overflow-hidden bg-white shadow-sm rounded-xl">
                 <div className="px-6 py-2 bg-slate-50">
                   <div className="flex items-center gap-2">
-                    <h5 className="font-semibold ">Key Detail</h5>
+                    <h5 className={heading_label_style}>Key Detail</h5>
                   </div>
                 </div>
 
@@ -248,7 +248,7 @@ function ApiHistoryView() {
                 <div className="px-6 py-2 bg-slate-50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <h6 className="font-semibold ">Proxy Detail</h6>
+                      <h6 className={heading_label_style}>Proxy Detail</h6>
                     </div>
                     {/* {data.proxy?.is_deleted && (
                       <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full">

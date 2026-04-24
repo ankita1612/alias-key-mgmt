@@ -453,7 +453,14 @@ function UserDashboard() {
                 icon={Zap}
                 color="primary"
               />
-
+              <StatCard
+                title="Remaining Quota"
+                value={
+                  dashboard.apiQuota?.remainingQuota?.toLocaleString() || "0"
+                }
+                icon={Activity}
+                color="warning"
+              />
               <StatCard
                 title="Used Quota"
                 value={
@@ -470,15 +477,6 @@ function UserDashboard() {
                 }
                 icon={XCircle}
                 color="info"
-              />
-
-              <StatCard
-                title="Remaining Quota"
-                value={
-                  dashboard.apiQuota?.remainingQuota?.toLocaleString() || "0"
-                }
-                icon={Activity}
-                color="warning"
               />
             </div>
 

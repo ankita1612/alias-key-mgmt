@@ -507,7 +507,7 @@ const KeyMonitorActive = () => {
 
               {/* Tooltip on Hover */}
               <div className="absolute z-10 invisible px-2 py-1 ml-2 text-xs text-white transition-all duration-200 bg-gray-900 rounded-md opacity-0 pointer-events-none group-hover:visible group-hover:opacity-100 whitespace-nowrap left-full">
-                Proxy deleted
+                Proxy Deleted
                 <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-1.5 h-1.5 bg-gray-900 rotate-45"></div>
               </div>
             </>
@@ -747,8 +747,14 @@ const KeyMonitorActive = () => {
                 value={startDate}
                 max={new Date().toISOString().split("T")[0]}
                 onChange={(e) => {
-                  setStartDate(e.target.value);
+                  const newStartDate = e.target.value;
+
+                  setStartDate(newStartDate);
                   setPage(1);
+                  if (endDate && newStartDate > endDate) {
+                    setEndDate("");
+                    setAppliedEndDate(""); // also reset applied filter
+                  }
                 }}
                 className="border border-gray-300 rounded-lg px-2.5 py-2 text-xs sm:text-sm"
               />

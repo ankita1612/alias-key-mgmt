@@ -582,7 +582,7 @@ const AliasKeyList = () => {
 
               {/* Tooltip on Hover */}
               <div className="absolute z-10 invisible px-2 py-1 ml-2 text-xs text-white transition-all duration-200 bg-gray-900 rounded-md opacity-0 pointer-events-none group-hover:visible group-hover:opacity-100 whitespace-nowrap left-full">
-                Proxy deleted
+                Proxy Deleted
                 <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-1.5 h-1.5 bg-gray-900 rotate-45"></div>
               </div>
             </>
@@ -813,8 +813,14 @@ const AliasKeyList = () => {
                 value={startDate}
                 max={new Date().toISOString().split("T")[0]}
                 onChange={(e) => {
-                  setStartDate(e.target.value);
+                  const newStartDate = e.target.value;
+
+                  setStartDate(newStartDate);
                   setPage(1);
+                  if (endDate && newStartDate > endDate) {
+                    setEndDate("");
+                    setAppliedEndDate(""); // also reset applied filter
+                  }
                 }}
                 className="border border-gray-300 rounded-lg px-2.5 py-2 text-xs sm:text-sm"
               />
@@ -1483,9 +1489,9 @@ const AliasKeyList = () => {
                 setShowRejectModal(false);
                 setRejectReason("");
               }}
-              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 group"
+              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 hover:bg-gray-100 group"
             >
-              <MdClose className="w-4 h-4 transition-transform group-hover:scale-110" />
+              <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>
 
             {/* Header - Kept as requested */}

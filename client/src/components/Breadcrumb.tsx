@@ -58,7 +58,7 @@ export default function Breadcrumb() {
             });
           }
 
-          items.push({ label: "View Proxy", clickable: false });
+          items.push({ label: "Proxy View", clickable: false });
         }
       }
 
