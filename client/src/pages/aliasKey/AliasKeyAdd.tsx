@@ -14,7 +14,7 @@ import type { IAliasKey } from "../../interface/aliasKey.interface";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const schema = yup.object().shape({
-  project_name: yup.string().required("Project Name is required"),
+  project_name: yup.string().trim().required("Project Name is required"),
   domain_name: yup
     .string()
     .trim()
@@ -326,6 +326,24 @@ disabled:border-gray-200
                   (opt) => opt.value === watch("proxy_id"),
                 )}
                 className="text-sm"
+                styles={{
+                  control: (base, state) => ({
+                    ...base,
+                    minHeight: "44px", // 👈 matches input height (~py-3)
+                    height: "44px",
+                    borderRadius: "10px",
+                    borderColor: state.isFocused ? "#d1d5db" : base.borderColor,
+                    boxShadow: state.isFocused ? "0 0 0 1px #d1d5db" : "none",
+                    "&:hover": {
+                      borderColor: "#d1d5db",
+                    },
+                  }),
+                  placeholder: (base) => ({
+                    ...base,
+                    color: "#94a3b8", // slate-400 (same as your input)
+                    fontSize: "14px",
+                  }),
+                }}
               />
               {errors.proxy_id && (
                 <p className="mt-1.5 text-sm text-red-500">
@@ -430,8 +448,8 @@ disabled:border-gray-200
               Purpose / Description (Optional)
             </label>
 
-            {/* <div className="border border-gray-900 rounded-xl overflow-hidden  focus-within:ring-primary/20 transition"> */}
-            <div className="rounded-xl bg-white border text-slate-900 transition text-sm  border-gray-300 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary">
+            {/* <div className="overflow-hidden transition border border-gray-900 rounded-xl focus-within:ring-primary/20"> */}
+            <div className="text-sm transition bg-white border border-gray-300 rounded-xl text-slate-900 focus-within:ring-2 focus-within:ring-primary/10 focus-within:border-primary/5">
               <DescriptionEditor
                 key={id || "new"}
                 value={watch("description")}

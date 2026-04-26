@@ -26,7 +26,7 @@ export default function DescriptionEditor({ value, onChange }: Props) {
       className={`description-editor-container transition-all duration-200 ${
         isFocused ? "border-[#d1d5db] shadow-sm" : "border-gray-200"
       }`}
-      style={{ border: `1px solid ${isFocused ? "#d1d5db" : "#e2e8f0"}` }}
+      style={{ border: `0px solid ${isFocused ? "#d1d5db" : "#e2e8f0"}` }}
     >
       <ReactQuill
         theme="snow"

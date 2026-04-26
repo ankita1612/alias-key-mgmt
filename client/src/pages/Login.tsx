@@ -33,6 +33,7 @@ const Login = () => {
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: yupResolver(schema),
+    mode: "onSubmit",
   });
 
   const onSubmit = async (data: loginInterface) => {
@@ -66,7 +67,7 @@ const Login = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
       {/* Card */}
-      <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl border border-gray-100">
+      <div className="w-full max-w-md p-8 bg-white border border-gray-100 shadow-xl rounded-2xl">
         {/* Title Section */}
         <div className="mb-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
@@ -185,11 +186,11 @@ ${
           </button>
 
           {/* Sign Up Link */}
-          {/* <p className="text-center text-sm text-gray-600">
+          {/* <p className="text-sm text-center text-gray-600">
             Don't have an account?{" "}
             <button
               type="button"
-              className="text-primary hover:text-primaryHover font-medium transition-colors duration-200"
+              className="font-medium transition-colors duration-200 text-primary hover:text-primaryHover"
             >
               Create account
             </button>

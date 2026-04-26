@@ -1,7 +1,6 @@
 import { MdArrowForward } from "react-icons/md";
 import React, { useState, useEffect } from "react";
 import { MdClose, MdExpandMore, MdExpandLess } from "react-icons/md";
-//import { getLogStyle } from "../../utils/commonHistory";
 import {
   model_divider,
   model_botton_container,

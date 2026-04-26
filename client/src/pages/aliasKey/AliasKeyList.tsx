@@ -1,5 +1,6 @@
 import { History } from "lucide-react";
 import HistoryModal from "./HistoryModal";
+import KeyDetailModal from "./KeyDetailModal";
 
 import { FiX } from "react-icons/fi";
 import StatusBadge, { getStatusConfig } from "../../utils/StatusBadge";
@@ -1659,6 +1660,12 @@ const AliasKeyList = () => {
         onClose={() => setShowHistoryModal(false)}
         data={historyData}
         title="Key History"
+      />
+      <KeyDetailModal
+        open={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        selectedRow={selectedRow}
+        liveUrl={liveUrl}
       />
     </div>
   );

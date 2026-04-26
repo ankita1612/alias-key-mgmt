@@ -79,7 +79,7 @@ const StatCard = ({ title, value, icon, color = "indigo" }) => {
 
 // Simple InfoRow for proxy details (without icon)
 const ProxyInfoRow = ({ label, value, isLink = false }) => (
-  <div className="py-1">
+  <div className="py-1  overflow-y-auto max-h-[300px]">
     <label className={label_style_bold}>{label}</label>
     {isLink ? (
       <a
@@ -197,19 +197,10 @@ function ProxyView() {
                 />
                 <ProxyInfoRow label="Credit" value={data?.proxy?.credit} />
               </div>
-              {data?.proxy?.is_deleted && (
-                <>
-                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                    <ProxyInfoRow
-                      label="Status"
-                      value={data?.proxy?.is_deleted ? "Deleted" : "Active"}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 gap-5">
-                    <ProxyInfoRow label="Curl" value={data?.proxy?.curl} />
-                  </div>
-                </>
-              )}
+              <div className="grid grid-cols-1 gap-5">
+                <ProxyInfoRow label="Curl" value={data?.proxy?.curl} />
+              </div>
+
               {data.proxy?.is_deleted && (
                 <div className="p-3 border border-red-200 rounded bg-red-50">
                   <div className="flex items-center gap-2">

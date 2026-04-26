@@ -1,5 +1,4 @@
 import { History } from "lucide-react";
-import { getLogStyle } from "../../utils/commonHistory";
 import React, { useEffect, useState, useRef } from "react";
 import {
   model_divider,

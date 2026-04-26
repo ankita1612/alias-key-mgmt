@@ -316,7 +316,7 @@ const AdminLayout = () => {
         ? "ml-72 md:ml-80 lg:ml-[260px]"
         : isHovering
           ? "ml-72 md:ml-80 lg:ml-[260px]"
-          : "ml-20"
+          : "ml-16"
   }`}
       >
         <Header />

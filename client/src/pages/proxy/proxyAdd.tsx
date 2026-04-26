@@ -21,12 +21,13 @@ type ProxyFormValues = {
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const schema = yup.object().shape({
-  proxy_name: yup.string().required("Proxy Name is required"),
+  proxy_name: yup.string().trim().required("Proxy Name is required"),
 
-  proxy_token: yup.string().required("Proxy Token is required"),
+  proxy_token: yup.string().trim().required("Proxy Token is required"),
 
   curl: yup
     .string()
+    .trim()
     .required("Curl is required") // ✅ 1) not null
     .test("valid-curl", function (value) {
       if (!value) return false;

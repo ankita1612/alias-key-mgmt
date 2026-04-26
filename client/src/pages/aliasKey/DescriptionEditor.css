@@ -36,7 +36,7 @@
 /* Focus state - this will trigger when any child inside is focused */
 .description-editor-container:focus-within {
   border-color: #d1d5db !important;
-  box-shadow: 0 0 0 0px #d1d5db;
+  box-shadow: 0 0 0 0.5px #d1d5db;
 }
 
 /* Also ensure Quill's own focus styles don't override */
