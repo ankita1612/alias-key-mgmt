@@ -483,7 +483,7 @@ ${
                       {curlParams.map((param) => (
                         <label
                           key={param}
-                          className="flex items-center gap-2 text-sm cursor-pointer"
+                          className="flex items-start gap-2 text-sm cursor-pointer"
                         >
                           <input
                             type="radio"
@@ -496,7 +496,9 @@ ${
                             }}
                             className="w-4 h-4 text-primary focus:ring-primary"
                           />
-                          <span>{param}</span>
+                          <span className="flex-1 min-w-0 break-words">
+                            {param}
+                          </span>
                         </label>
                       ))}
                     </div>

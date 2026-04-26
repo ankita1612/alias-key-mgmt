@@ -74,6 +74,7 @@ class AliasKeyController {
         ...(req?.user?.role == UserType.ADMIN && {
           remaining_quota: data.total_quota,
         }),
+         is_deleted: false,
       });
 
       if (req?.user?.role === UserType.ADMIN) {
@@ -134,7 +135,10 @@ class AliasKeyController {
         return;
       }
 
-      const data = await AliasKeyModel.findById(id);
+      const data = await AliasKeyModel.findById({
+        _id: id,
+        is_deleted: false, // ✅ important for soft delete
+      });
 
       if (!data) {
         res.status(404).json({
@@ -181,6 +185,8 @@ class AliasKeyController {
         key_status: { $in: ["Active", "Inactive"] }, // ✅ FIXED condition
       };
       match.approval_status = "Approved";
+      match.is_deleted = false; 
+
       // 🔥 Add status filter
       if (
         key_statusFilter &&
@@ -460,286 +466,7 @@ class AliasKeyController {
       next(error);
     }
   };
-  getDatasKeyMonitorDeleted = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) => {
-    try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const search = ((req.query.search as string) || "").trim();
 
-      const sortBy = req.query.sortBy as string;
-      const sortField = req.query.sortField as string;
-      const sortOrder = req.query.sortOrder as string;
-      const finalSortBy = (sortBy || sortField || "createdAt") as string;
-      if (![UserType.ADMIN, UserType.USER].includes(req.user.role)) {
-        throw new ApiError("You are not allowed access", 403);
-      }
-
-      const skip = (Number(page) - 1) * Number(limit);
-
-      // 🔥 Base match
-      const match: any = {
-        key_status: { $in: ["Active", "Inactive"] }, // ✅ FIXED condition
-      };
-      if (req.user.role === UserType.USER) {
-        match.user_id = new Types.ObjectId(req.user.id);
-      }
-      const sortMap: any = {
-        "user.first_name": "user_first_name",
-        "user.email": "user_email",
-      };
-
-      const finalSortField = sortMap[finalSortBy] || finalSortBy; // 🔥 Search condition
-      const searchMatch = search
-        ? {
-            $or: [
-              { alias_key: { $regex: search, $options: "i" } },
-              { domain_name: { $regex: search, $options: "i" } },
-              { key_status: { $regex: search, $options: "i" } },
-              { approval_status: { $regex: search, $options: "i" } },
-              { "user.first_name": { $regex: search, $options: "i" } },
-              { "user.email": { $regex: search, $options: "i" } },
-
-              // ✅ numeric search (partial match)
-              {
-                $expr: {
-                  $regexMatch: {
-                    input: { $toString: "$total_quota" },
-                    regex: search,
-                    options: "i",
-                  },
-                },
-              },
-              {
-                $expr: {
-                  $regexMatch: {
-                    input: { $toString: "$remaining_quota" },
-                    regex: search,
-                    options: "i",
-                  },
-                },
-              },
-            ],
-          }
-        : {};
-      const pipeline: any[] = [
-        { $match: match },
-
-        {
-          $lookup: {
-            from: "users",
-            localField: "user_id",
-            foreignField: "_id",
-            as: "user",
-          },
-        },
-
-        { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
-        {
-          $lookup: {
-            from: "proxies",
-            localField: "proxy_id",
-            foreignField: "_id",
-            as: "proxy",
-          },
-        },
-        { $unwind: { path: "$proxy", preserveNullAndEmptyArrays: true } },
-        {
-          $match: {
-            "proxy.is_deleted": { $ne: false }, // ✅ exclude deleted proxies
-          },
-        },
-        // ✅ ADD THIS
-        {
-          $addFields: {
-            user_first_name: { $ifNull: ["$user.first_name", ""] },
-            user_email: { $ifNull: ["$user.email", ""] },
-            query_params: { $ifNull: ["$proxy.query_params", ""] },
-          },
-        },
-
-        ...(search ? [{ $match: searchMatch }] : []),
-
-        // ✅ UPDATED SORT
-        {
-          $sort: {
-            [finalSortField]: sortOrder === "asc" ? 1 : -1,
-          },
-        },
-
-        { $skip: skip },
-        { $limit: Number(limit) },
-      ];
-
-      const countPipeline = [
-        { $match: match },
-        {
-          $lookup: {
-            from: "users",
-            localField: "user_id",
-            foreignField: "_id",
-            as: "user",
-          },
-        },
-        { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
-        ...(search ? [{ $match: searchMatch }] : []),
-        { $count: "total" },
-      ];
-
-      const [data, countResult] = await Promise.all([
-        AliasKeyModel.aggregate(pipeline),
-        AliasKeyModel.aggregate(countPipeline),
-      ]);
-
-      const total = countResult[0]?.total || 0;
-      //fetch history
-      // 🔥 Get active alias IDs
-      const activeAliasIds = data
-        .filter(
-          (item) =>
-            item.key_status === "Active" || item.key_status === "Inactive",
-        )
-        .map((item) => item._id);
-
-      // 🔥 Default stats (used everywhere)
-      const defaultStats = {
-        total_history_records: 0,
-        total_success: 0,
-        total_limit_exceed: 0,
-        total_internal_server: 0,
-        total_key_not_active: 0,
-        total_extrenal_error: 0,
-        total_invalid_proxy: 0,
-        total_invalid_params: 0,
-      };
-
-      // 🔥 Fetch stats ONLY if active aliases exist
-      let stats: any[] = [];
-
-      if (activeAliasIds.length > 0) {
-        stats = await ApiHistoryModel.aggregate([
-          {
-            $match: {
-              user_alias_key_id: { $in: activeAliasIds },
-            },
-          },
-          {
-            $group: {
-              _id: "$user_alias_key_id",
-
-              total_history_records: { $sum: 1 },
-
-              total_success: {
-                $sum: {
-                  $cond: [{ $eq: ["$response_code_str", "SUCCESS"] }, 1, 0],
-                },
-              },
-
-              total_limit_exceed: {
-                $sum: {
-                  $cond: [
-                    { $eq: ["$response_code_str", "LIMIT_EXCEED"] },
-                    1,
-                    0,
-                  ],
-                },
-              },
-
-              total_internal_server: {
-                $sum: {
-                  $cond: [
-                    { $eq: ["$response_code_str", "INTERNAL_SERVER"] }, // ⚠️ check typo
-                    1,
-                    0,
-                  ],
-                },
-              },
-
-              total_key_not_active: {
-                $sum: {
-                  $cond: [
-                    { $eq: ["$response_code_str", "KEY_NOT_ACTIVE"] },
-                    1,
-                    0,
-                  ],
-                },
-              },
-              total_extrenal_error: {
-                $sum: {
-                  $cond: [
-                    { $eq: ["$response_code_str", "EXTERNAL_ERROR"] },
-                    1,
-                    0,
-                  ],
-                },
-              },
-              total_invalid_proxy: {
-                $sum: {
-                  $cond: [
-                    { $eq: ["$response_code_str", "INVALID_PROXY"] },
-                    1,
-                    0,
-                  ],
-                },
-              },
-              total_invalid_params: {
-                $sum: {
-                  $cond: [
-                    { $eq: ["$response_code_str", "PARAM_MISSING"] },
-                    1,
-                    0,
-                  ],
-                },
-              },
-            },
-          },
-        ]);
-      }
-
-      // 🔥 Convert to map for O(1) lookup
-      const statsMap: Record<string, any> = {};
-
-      for (const item of stats) {
-        const key = String(item._id);
-        statsMap[key] = item;
-      }
-
-      // 🔥 Merge stats into paginated data
-      const finalData = data.map((item) => {
-        // ❌ If not active → return default stats
-        if (!(item.key_status === "Active" || item.key_status === "Inactive")) {
-          return {
-            ...item,
-            ...defaultStats,
-          };
-        }
-
-        const stat = statsMap[String(item._id)] || defaultStats;
-
-        return {
-          ...item,
-          ...defaultStats, // ensures all fields exist
-          ...stat, // overwrite with actual values if present
-        };
-      });
-      //end fetch
-
-      res.status(200).json({
-        success: true,
-        data: finalData,
-        pagination: {
-          total,
-          page: Number(page),
-          limit: Number(limit),
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
   // ✅ GET LIST (pagination + search)
   getDatas = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -771,7 +498,11 @@ class AliasKeyController {
       if (approval_statusFilter) {
         match.approval_status = approval_statusFilter;
       }
-
+if (req.query.is_deleted === "true") {
+  match.is_deleted = true;
+} else {
+  match.is_deleted = false; // default
+}
       // 🔥 Add date range filter
       if (startDate || endDate) {
         match.createdAt = {};
@@ -1081,7 +812,10 @@ class AliasKeyController {
         res.status(400).json({ success: false, message: "Invalid ID" });
         return;
       }
-      const oldData = await AliasKeyModel.findById(id);
+      const oldData = await AliasKeyModel.findOne({
+      _id: id,
+      is_deleted: false,
+    });
       if (!oldData) {
         return res.status(404).json({ success: false, message: "Not found" });
       }
@@ -1106,7 +840,7 @@ class AliasKeyController {
         }
       }
       const data = await AliasKeyModel.findByIdAndUpdate(
-        id,
+        { _id: id, is_deleted: false },
         {
           domain_name: req.body.domain_name,
           description: req.body.description,
@@ -1153,7 +887,7 @@ class AliasKeyController {
     req: Request<{ id: string }>,
     res: Response,
     next: NextFunction,
-  ): Promise<void> => {
+  )=> {
     try {
       const { id } = req.params;
 
@@ -1182,8 +916,21 @@ class AliasKeyController {
       );
 
       // ✅ Delete
-      await AliasKeyModel.findByIdAndDelete(id);
-
+     
+      const deleted = await AliasKeyModel.findByIdAndUpdate(
+        id,
+        {
+          is_deleted: true,
+          deleted_at: new Date(),
+        },
+        { new: true },
+      ); 
+      if (!deleted) {
+         res.status(404).json({
+          success: false,
+          message: "Alias Key not found",
+        });
+      }
       res.status(200).json({
         success: true,
         message: `${msgTitle} deleted successfully`,
@@ -1357,3 +1104,7 @@ class AliasKeyController {
 export const aliasKeyController = new AliasKeyController();
 
 //  await new Promise(resolve => setTimeout(resolve, 120000));
+// db["alias_keys"].updateMany(
+//   { is_deleted: { $exists: false } },
+//   { $set: { is_deleted: false } }
+// );

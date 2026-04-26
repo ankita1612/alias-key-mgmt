@@ -245,14 +245,6 @@ const KeyDetailModal: React.FC<Props> = ({
                     <div>
                       <div className={label_style}>Method</div>
                       <span className={input_style}>{liveUrl.method}</span>
-                      {/* <button
-                                           onClick={() =>
-                                             handleCopy(liveUrl?.curlCommand || "")
-                                           }
-                                           className="text-gray-400 transition-colors hover:text-gray-600"
-                                         >
-                                           <FiCopy className="w-4 h-4" />
-                                         </button> */}
                     </div>
                   )}
                 </div>

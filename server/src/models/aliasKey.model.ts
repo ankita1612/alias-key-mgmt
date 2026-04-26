@@ -60,6 +60,15 @@ const AliasKeySchema: Schema = new Schema(
     remaining_quota: {
       type: Number,
     },
+    is_deleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deleted_at: {
+      type: Date,
+      default: null,
+    }
   },
   {
     timestamps: true, // ✅ createdAt & updatedAt

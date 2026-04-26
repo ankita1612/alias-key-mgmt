@@ -32,11 +32,7 @@ aliasKeyRouter.get(
   authentication,
   aliasKeyController.getDatasKeyMonitor,
 );
-aliasKeyRouter.get(
-  "/key-monitor-deleted",
-  authentication,
-  aliasKeyController.getDatasKeyMonitorDeleted,
-);
+
 aliasKeyRouter.get("/", authentication, aliasKeyController.getDatas);
 aliasKeyRouter.put(
   "/:id",

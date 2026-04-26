@@ -9,7 +9,7 @@ function Proxy() {
 
   // Determine active tab based on URL path
   const getActiveTabFromPath = () => {
-    if (location.pathname.includes("/deleted-proxy")) {
+    if (location.pathname.includes("/archived-proxy")) {
       return "deleted";
     }
     return "active";
@@ -29,7 +29,7 @@ function Proxy() {
 
     // Navigate to the appropriate URL
     if (tab === "deleted") {
-      navigate("/proxy/deleted-proxy");
+      navigate("/proxy/archived-proxy");
     } else {
       navigate("/proxy");
     }
@@ -73,7 +73,7 @@ function Proxy() {
             `}
           >
             <FiTrash2 className="w-4 h-4" />
-            <span>Deleted Proxy</span>
+            <span>Archived Proxy</span>
 
             {activeTab === "deleted" && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"></div>

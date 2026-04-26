@@ -43,7 +43,10 @@ import DataTable from "react-data-table-component";
 import apiClient from "../../services/apiClient";
 import toast from "react-hot-toast";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-const AliasKeyList = () => {
+type Props = {
+  alias_key_status: string;
+};
+const AliasKeyList = ({ alias_key_status }: Props) => {
   const navigate = useNavigate();
 
   const { user } = useAuth();
@@ -396,6 +399,8 @@ const AliasKeyList = () => {
         params: {
           page,
           limit,
+          is_deleted: alias_key_status === "deleted" ? true : false,
+
           search: debouncedSearch,
           sortField: sort.field,
           sortOrder: sort.order,
@@ -466,7 +471,11 @@ const AliasKeyList = () => {
     isDeleted,
   }: any) => {
     let canEdit = false;
-    if (row.key_status === "Active" && row.approval_status === "Pending") {
+    if (
+      row.key_status === "Active" &&
+      row.approval_status === "Pending" &&
+      row.is_deleted != true
+    ) {
       canEdit = true;
     }
     return (
@@ -490,7 +499,8 @@ const AliasKeyList = () => {
                 <FiEdit2 className="w-4 h-4" />
               </button>
             )}
-            {row.approval_status == "Pending" && row.key_status == "Active" && (
+            {/* {row.approval_status == "Pending" && row.key_status == "Active" && ( */}
+            {row.is_deleted != true && (
               <button
                 onClick={() => onDelete(row._id)}
                 className="relative flex items-center justify-center p-0.5 text-red-600 transition-all duration-200 rounded-md hover:text-white hover:bg-red-500 group"
@@ -514,7 +524,7 @@ const AliasKeyList = () => {
             <button
               onClick={() => handleShowHistory(row)}
               className="relative flex items-center justify-center p-0.5 text-amber-600 transition-all duration-200 rounded-md hover:text-white hover:bg-amber-500 group"
-              title="Approve"
+              title="Log"
             >
               <History className="w-4 h-4 " />
             </button>
@@ -614,15 +624,6 @@ const AliasKeyList = () => {
           </div>
         );
       },
-      // cell: (row) => (
-      //   <span
-      //     className={`break-all whitespace-normal ${
-      //       row.proxy?.is_deleted ? "line-through text-gray-400" : ""
-      //     }`}
-      //   >
-      //     {row.domain_name || "-"}
-      //   </span>
-      // ),
     },
 
     {
@@ -1649,12 +1650,6 @@ const AliasKeyList = () => {
           </div>
         </div>
       )}
-      <HistoryModal
-        open={showHistoryModal}
-        onClose={() => setShowHistoryModal(false)}
-        data={historyData}
-        title="Key History"
-      />
       <HistoryModal
         open={showHistoryModal}
         onClose={() => setShowHistoryModal(false)}

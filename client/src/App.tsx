@@ -9,7 +9,7 @@ import { HiCheckCircle, HiXCircle, HiInformationCircle } from "react-icons/hi";
 toast.info = (message: string) =>
   toast(message, {
     duration: 2000,
-    icon: <HiInformationCircle className="text-blue-500  w-7 h-7" />,
+    icon: <HiInformationCircle className="text-blue-500 w-7 h-7" />,
   });
 // Success
 toast.success = (message: string) =>

@@ -37,17 +37,17 @@ export default function Breadcrumb() {
         } else if (path === "/proxy/add") {
           items.push({ label: "Proxy", to: "/proxy", clickable: true });
           items.push({ label: "Add Proxy", clickable: false });
-        } else if (path === "/proxy/deleted-proxy") {
+        } else if (path === "/proxy/archived-proxy") {
           //items.push({ label: "Proxy", to: "/proxy", clickable: true });
-          items.push({ label: "Deleted Proxy", clickable: false });
+          items.push({ label: "Archived Proxy", clickable: false });
         } else if (/^\/proxy\/add\/[0-9a-fA-F]{24}$/.test(path)) {
           items.push({ label: "Proxy", to: "/proxy", clickable: true });
           items.push({ label: "Edit Proxy", clickable: false });
         } else if (/^\/proxy\/view\/[0-9a-fA-F]{24}$/.test(path)) {
-          if (from === "deleted-proxy") {
+          if (from === "archived-proxy") {
             items.push({
               label: "Deleted Proxy",
-              to: "/proxy/deleted-proxy",
+              to: "/proxy/archived-proxy",
               clickable: true,
             });
           } else {
@@ -80,6 +80,8 @@ export default function Breadcrumb() {
             clickable: true,
           });
           items.push({ label: "Key Edit", clickable: false });
+        } else if (path === "/alias-key/archived-alias-key") {
+          items.push({ label: "Archived Key", clickable: false });
         }
       }
       if (path.startsWith("/key-monitor")) {

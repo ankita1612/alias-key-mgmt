@@ -119,7 +119,7 @@ class ProxyController {
       const allRequestParams = JSON.parse(JSON.stringify(requestParams));
 
       delete requestParams.alias_key;
-      const existingKey = await AliasKeyModel.findOne({ alias_key }).lean();
+      const existingKey = await AliasKeyModel.findOne({ alias_key:alias_key , is_deleted: false }).lean();
 
       if (!existingKey) {
         return res.status(400).json({

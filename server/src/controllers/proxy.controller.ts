@@ -81,13 +81,14 @@ class ProxyController {
         query_params: finalParams,
         domain_name: data.domain_name?.trim(),
         project_name: data.project_name?.trim(),
+        is_deleted: false,
       });
 
       // ✅ LOG: Create action
       await ProxyLogModel.create({
         proxy_id: proxy._id,
         action: "CREATE",
-        desc: `Proxy "${proxy.proxy_name}" created`,
+        desc: `Proxy created`,
         user_id: req.user?.id,
         meta: {
           proxy_name: proxy.proxy_name,

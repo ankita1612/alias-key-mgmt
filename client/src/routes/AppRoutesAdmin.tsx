@@ -7,9 +7,9 @@ import PublicRoute from "./PublicRoute";
 
 import PageNotFound from "../pages/PageNotFound";
 import ChangePassword from "../pages/ChangePassword";
-import AliasKeyList from "../pages/aliasKey/AliasKeyList";
+import AliasKey from "../pages/aliasKey/AliasKey";
 import AliasKeyAdd from "../pages/aliasKey/AliasKeyAdd";
-import ProxyList from "../pages/proxy/ProxyList";
+
 import ProxyAdd from "../pages/proxy/ProxyAdd";
 import ApiHistory from "../pages/apiHistory/ApiHistory";
 import ApiHistoryView from "../pages/apiHistory/ApiHistoryView";
@@ -43,9 +43,17 @@ const AppRoutes = () => {
 
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="key-monitor" element={<KeyMonitor />} />
-        <Route path="alias-key" element={<AliasKeyList />} />
+        <Route path="alias-key" element={<AliasKey />} />
         <Route path="alias-key/add" element={<AliasKeyAdd />} />
         <Route path="alias-key/add/:id?" element={<AliasKeyAdd />} />
+        <Route
+          path="alias-key/archived-alias-key"
+          element={
+            <ProtectedRoute roles={["Admin"]}>
+              <AliasKey />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="proxy"
           element={
@@ -55,7 +63,7 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="proxy/deleted-proxy"
+          path="proxy/archived-proxy"
           element={
             <ProtectedRoute roles={["Admin"]}>
               <Proxy />

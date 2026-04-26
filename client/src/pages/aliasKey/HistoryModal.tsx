@@ -181,27 +181,42 @@ const HistoryModal: React.FC<Props> = ({ open, onClose, data, title }) => {
                                       key={key}
                                       className="flex items-center justify-between p-2 border rounded-lg bg-gray-50"
                                     >
-                                      <span className="font-medium text-gray-600 capitalize">
+                                      <span className="font-medium text-gray-600 capitalize whitespace-nowrap">
                                         {key.replace(/_/g, " ")}
                                       </span>
 
-                                      <div className="flex items-center gap-2 text-gray-700">
+                                      <div className="flex flex-col w-full gap-2 text-gray-700">
                                         {key !== "rejection_reason" &&
                                           isDiff && (
-                                            <>
-                                              <span className="px-2 py-0.5 bg-red-50 text-red-600 rounded">
-                                                {value.old ?? "-"}
-                                              </span>
+                                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                              {/* OLD */}
+                                              <div className="p-2 rounded bg-red-50">
+                                                <div className="mb-1 text-[10px] font-semibold text-red-500 uppercase">
+                                                  22Old
+                                                </div>
+                                                <div className="overflow-auto text-xs break-words max-h-24">
+                                                  11{value.old ?? "-"}
+                                                </div>
+                                              </div>
 
-                                              <MdArrowForward className="text-gray-400" />
-                                            </>
+                                              {/* NEW */}
+                                              <div className="p-2 rounded bg-green-50">
+                                                <div className="mb-1 text-[10px] font-semibold text-green-500 uppercase">
+                                                  New
+                                                </div>
+                                                <div className="overflow-auto text-xs break-words max-h-24">
+                                                  {value.new ?? "-"}
+                                                </div>
+                                              </div>
+                                            </div>
                                           )}
 
-                                        <span className="px-2 py-0.5 bg-green-50 text-green-600 rounded">
-                                          {isDiff
-                                            ? (value.new ?? "-")
-                                            : (value ?? "-")}
-                                        </span>
+                                        {/* Non-diff case */}
+                                        {!isDiff && (
+                                          <div className="p-2 overflow-auto text-xs break-words rounded bg-green-50 max-h-24">
+                                            {value ?? "-"}
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   );

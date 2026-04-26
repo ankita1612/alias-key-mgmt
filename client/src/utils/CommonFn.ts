@@ -18,7 +18,7 @@ export const model_body_part = "flex-1 px-6 py-4 overflow-y-auto";
 export const model_divider = "px-6 py-2 border-t border-slate-200";
 export const model_botton_container = "flex justify-end gap-3 px-6 pb-6";
 export const close_cancel_button =
-  "px-5 py-2.5 text-sm font-medium text-slate-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 over:border-gray-400 hover:shadow-md hover:-translate-y-0.5 active:scale-95 active:translate-y-0 transition-all duration-200 ease-in-out";
+  "px-5 py-2.5 text-sm font-medium text-slate-700 bg-white border border-gray-500 rounded-lg shadow-sm hover:bg-gray-100 over:border-gray-400 hover:shadow-md active:scale-95 active:translate-y-0 transition-all duration-200 ease-in-out";
 export const char_max_len_listing = 60;
 export const heading_label_style = "text-base font-semibold text-gray-700";
 export const label_style = "text-gray-900";
