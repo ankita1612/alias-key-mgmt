@@ -33,7 +33,7 @@ export default function Breadcrumb() {
       // ✅ PROXY
       if (path.startsWith("/proxy")) {
         if (path === "/proxy") {
-          items.push({ label: "Proxy", clickable: false });
+          items.push({ label: "Active Proxy", clickable: false });
         } else if (path === "/proxy/add") {
           items.push({ label: "Proxy", to: "/proxy", clickable: true });
           items.push({ label: "Add Proxy", clickable: false });

@@ -102,8 +102,8 @@ class AliasKeyController {
       };
       let logText;
       if (userId.role === "Admin")
-        logText = `Alias key '${result.alias_key || "-"}' created`;
-      else logText = `Alias key created`;
+        logText = `Key '${result.alias_key || "-"}' created`;
+      else logText = `Key created`;
       await this.addToAliasKeyLog(result._id,"CREATE", logText, req.user.id, logMeta);
       res.status(201).json({
         success: true,
@@ -114,7 +114,7 @@ class AliasKeyController {
       if (error.code === 11000) {
         return res.status(400).json({
           success: false,
-          message: "Alias key already exists",
+          message: "Key already exists",
         });
       }
       next(error);
@@ -858,7 +858,7 @@ if (req.query.is_deleted === "true") {
         await this.addToAliasKeyLog(
           id,
           "UPDATE",
-          "Alias updated",
+          "Key updated",
           req.user.id,
           changes, // { field: { old, new } }
         );
@@ -911,7 +911,7 @@ if (req.query.is_deleted === "true") {
       await this.addToAliasKeyLog(
         id,
         "DELETE",
-        `Alias key '${existing.alias_key || "-"}' deleted`,
+        `Key '${existing.alias_key || "-"}' deleted`,
         req.user.id,
       );
 
@@ -928,7 +928,7 @@ if (req.query.is_deleted === "true") {
       if (!deleted) {
          res.status(404).json({
           success: false,
-          message: "Alias Key not found",
+          message: "Key not found",
         });
       }
       res.status(200).json({
@@ -954,7 +954,7 @@ if (req.query.is_deleted === "true") {
     const existing = await AliasKeyModel.findById(id);
 
     if (!existing) {
-      throw new Error("Alias key not found");
+      throw new Error("Key not found");
     }
 
     // if (existing.approval_status !== "Pending") {
@@ -975,7 +975,7 @@ if (req.query.is_deleted === "true") {
         remaining_quota: existing.total_quota,
       };
 
-      logText = `Alias key approved`;
+      logText = `Key approved`;
 
       meta = {
         alias_key: {
@@ -1000,7 +1000,7 @@ if (req.query.is_deleted === "true") {
         rejection_reason,
       };
 
-      logText = `Alias key rejected`;
+      logText = `Key Rejected`;
 
       meta = {
         approval_status: {
@@ -1031,7 +1031,7 @@ if (req.query.is_deleted === "true") {
 
     res.status(200).json({
       success: true,
-      message: `Alias key ${
+      message: `Key ${
         action === "Approved" ? "approved" : "rejected"
       } successfully`,
       data: updated,
@@ -1051,7 +1051,7 @@ if (req.query.is_deleted === "true") {
       const existing = await AliasKeyModel.findById(id);
 
       if (!existing) {
-        throw new Error("Alias key not found");
+        throw new Error("Key not found");
       }
 
       // ✅ Only allow toggle between Active & Inactive
@@ -1078,7 +1078,7 @@ if (req.query.is_deleted === "true") {
 
       res.status(200).json({
         success: true,
-        message: `Alias key ${
+        message: `Key ${
           newStatus === "Active" ? "activated" : "inactivated"
         } successfully`,
         data: updated,

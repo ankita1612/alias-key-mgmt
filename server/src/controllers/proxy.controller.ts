@@ -94,6 +94,8 @@ class ProxyController {
           proxy_name: proxy.proxy_name,
           domain_name: proxy.domain_name,
           project_name: proxy.project_name,
+          proxy_token: proxy.proxy_token,
+          curl: proxy.curl,
         },
       });
 
@@ -243,7 +245,7 @@ updateData = async (req: Request, res: Response, next: NextFunction) => {
       await ProxyLogModel.create({
         proxy_id: updated._id,
         action: "UPDATE",
-        desc: `Proxy "${updated.proxy_name}" updated`,
+        desc: `Proxy updated`,
         user_id: req.user?.id,
         meta,
       });
@@ -284,14 +286,14 @@ updateData = async (req: Request, res: Response, next: NextFunction) => {
       await ProxyLogModel.create({
         proxy_id: deleted._id,
         action: "DELETE",
-        desc: `Proxy "${deleted.proxy_name}" deleted`,
+        desc: `Proxy deleted`,
         user_id: req.user?.id,
-        meta: {
-          proxy_name: deleted.proxy_name,
-          domain_name: deleted.domain_name,
-          project_name: deleted.project_name,
-          deleted_at: deleted.deleted_at,
-        },
+        // meta: {
+        //   proxy_name: deleted.proxy_name,
+        //   domain_name: deleted.domain_name,
+        //   project_name: deleted.project_name,
+        //   deleted_at: deleted.deleted_at,
+        // },
       });
 
       res.status(200).json({

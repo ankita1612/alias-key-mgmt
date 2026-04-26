@@ -127,6 +127,9 @@ const HistoryModal: React.FC<Props> = ({ open, onClose, data, title }) => {
                 });
                 const isOpen = expandedIndex === index;
 
+                const isCreate = log.action?.toUpperCase() === "CREATE";
+                const isLongText = (val: any) =>
+                  typeof val === "string" && val.length > 40;
                 return (
                   <div key={index} className="relative group">
                     {/* Timeline Dot */}
@@ -143,7 +146,7 @@ const HistoryModal: React.FC<Props> = ({ open, onClose, data, title }) => {
                             {log.desc}
                           </h4>
 
-                          <div className="mt-1 text-xs text-gray-500">
+                          <div className="mt-1 text-sm text-gray-500">
                             By{" "}
                             <span className="font-medium text-gray-700">
                               {log.user_id?.first_name || "System"}
@@ -175,45 +178,78 @@ const HistoryModal: React.FC<Props> = ({ open, onClose, data, title }) => {
                                 ([key, value]: any) => {
                                   const isDiff =
                                     typeof value === "object" && value !== null;
+                                  const isCreate =
+                                    log.action?.toUpperCase() === "CREATE";
 
                                   return (
                                     <div
                                       key={key}
-                                      className="flex items-center justify-between p-2 border rounded-lg bg-gray-50"
+                                      className="flex items-start gap-3 p-2 border rounded-lg bg-gray-50"
                                     >
-                                      <span className="font-medium text-gray-600 capitalize whitespace-nowrap">
+                                      {/* KEY */}
+                                      <span className="font-medium text-gray-900 capitalize whitespace-nowrap">
                                         {key.replace(/_/g, " ")}
                                       </span>
 
-                                      <div className="flex flex-col w-full gap-2 text-gray-700">
-                                        {key !== "rejection_reason" &&
-                                          isDiff && (
-                                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                              {/* OLD */}
-                                              <div className="p-2 rounded bg-red-50">
-                                                <div className="mb-1 text-[10px] font-semibold text-red-500 uppercase">
-                                                  22Old
+                                      {/* VALUE */}
+                                      <div className="flex flex-col flex-1 min-w-0 text-xs text-gray-700">
+                                        {/* ✅ CREATE */}
+                                        {isCreate && (
+                                          <div className="self-start w-full px-2 overflow-y-auto text-gray-600 break-words max-h-24">
+                                            {isDiff
+                                              ? (value.new ?? "-")
+                                              : (value ?? "-")}
+                                          </div>
+                                        )}
+
+                                        {/* ✅ UPDATE */}
+                                        {!isCreate && isDiff && (
+                                          <>
+                                            {isLongText(value.old) ||
+                                            isLongText(value.new) ? (
+                                              // 🔥 LARGE TEXT → BOX WITH SCROLL
+                                              <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2">
+                                                {/* OLD */}
+                                                <div className="min-w-0 px-2 rounded ">
+                                                  <div className="overflow-auto text-xs text-gray-600 break-words max-h-24">
+                                                    {value.old ?? "-"}
+                                                  </div>
                                                 </div>
-                                                <div className="overflow-auto text-xs break-words max-h-24">
-                                                  11{value.old ?? "-"}
+
+                                                {/* ARROW */}
+                                                <div className="flex items-center justify-center h-full">
+                                                  <MdArrowForward className="text-lg text-gray-400" />
+                                                </div>
+
+                                                {/* NEW */}
+                                                <div className="min-w-0 px-2 rounded">
+                                                  <div className="overflow-auto text-xs text-gray-600 break-words max-h-24">
+                                                    {value.new ?? "-"}
+                                                  </div>
                                                 </div>
                                               </div>
+                                            ) : (
+                                              // ✅ SMALL TEXT → INLINE
+                                              <div className="flex items-center gap-2">
+                                                <span className="px-2 py-0.5 rounded max-h-24 overflow-y-auto break-words">
+                                                  {value.old ?? "-"}
+                                                </span>
 
-                                              {/* NEW */}
-                                              <div className="p-2 rounded bg-green-50">
-                                                <div className="mb-1 text-[10px] font-semibold text-green-500 uppercase">
-                                                  New
-                                                </div>
-                                                <div className="overflow-auto text-xs break-words max-h-24">
+                                                <span className="text-gray-400">
+                                                  →
+                                                </span>
+
+                                                <span className="px-2 py-0.5 bg-green-50 text-green-600 rounded max-h-24 overflow-y-auto break-words">
                                                   {value.new ?? "-"}
-                                                </div>
+                                                </span>
                                               </div>
-                                            </div>
-                                          )}
+                                            )}
+                                          </>
+                                        )}
 
-                                        {/* Non-diff case */}
-                                        {!isDiff && (
-                                          <div className="p-2 overflow-auto text-xs break-words rounded bg-green-50 max-h-24">
+                                        {/* ✅ NON-DIFF */}
+                                        {!isCreate && !isDiff && (
+                                          <div className="px-2 py-1 overflow-y-auto text-green-600 break-words rounded bg-green-50 max-h-24">
                                             {value ?? "-"}
                                           </div>
                                         )}

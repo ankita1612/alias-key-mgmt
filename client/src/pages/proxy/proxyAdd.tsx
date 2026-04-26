@@ -506,13 +506,13 @@ ${
                 )}
               </>
             ) : (
-              <div className="mt-4 space-y-3 rounded-lg ">
-                <label className="block mb-2 text-sm">
-                  Curl URL Token Key{" "}
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
-                  {getValues("curl_token")}
+              <div className="mt-4 space-y-3 rounded-lg">
+                <label className="block mb-2 text-sm">Curl URL Token Key</label>
+
+                <div className="flex w-full">
+                  <div className="flex-1 min-w-0 px-3 py-2 overflow-y-auto font-mono text-sm text-gray-400 break-words whitespace-pre-wrap border rounded-xl bg-gray-50 max-h-32">
+                    {getValues("curl_token") || "-"}
+                  </div>
                 </div>
               </div>
             )}

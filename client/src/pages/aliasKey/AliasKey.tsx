@@ -57,7 +57,7 @@ function AliasKey() {
           `}
             >
               <FiArchive className="w-4 h-4" />
-              <span>Active Key</span>
+              <span>Active Key Management</span>
 
               {activeTab === "active" && (
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"></div>
@@ -77,7 +77,7 @@ function AliasKey() {
           `}
             >
               <FiTrash2 className="w-4 h-4" />
-              <span>Archived Key</span>
+              <span>Archived Key Management</span>
 
               {activeTab === "deleted" && (
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"></div>

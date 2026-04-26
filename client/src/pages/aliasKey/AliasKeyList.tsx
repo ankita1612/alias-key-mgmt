@@ -874,13 +874,17 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
           </div>
 
           {/* RIGHT SIDE */}
-          <Link
-            to="/alias-key/add"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg shadow-sm whitespace-nowrap bg-primary hover:bg-primaryHover"
-          >
-            <FiPlus className="w-4 h-4" />
-            Create Key
-          </Link>
+          {alias_key_status == "active" && (
+            <>
+              <Link
+                to="/alias-key/add"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg shadow-sm whitespace-nowrap bg-primary hover:bg-primaryHover"
+              >
+                <FiPlus className="w-4 h-4" />
+                Create Key
+              </Link>
+            </>
+          )}
         </div>
 
         <div className="overflow-hidden">
@@ -1654,7 +1658,7 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
         open={showHistoryModal}
         onClose={() => setShowHistoryModal(false)}
         data={historyData}
-        title="Key History"
+        title="Key Log"
       />
       <KeyDetailModal
         open={showDetailModal}

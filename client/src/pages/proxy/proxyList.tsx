@@ -421,7 +421,7 @@ const ProxyList = ({ status }: Props) => {
           {/* Title */}
           <div>
             <h5 className=" sm:text-xl text-white/60">
-              {status === "deleted" ? "Archived Proxy" : "Proxy"}{" "}
+              {status === "deleted" ? "Proxy" : "Proxy"}{" "}
             </h5>
           </div>
         </div>
@@ -439,9 +439,7 @@ const ProxyList = ({ status }: Props) => {
               onChange={(e) => setSearch(e.target.value)}
               className="w-full border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
             />
-
             <FiSearch className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
-
             {search && (
               <button
                 type="button"
@@ -753,7 +751,7 @@ const ProxyList = ({ status }: Props) => {
         open={showHistoryModal}
         onClose={() => setShowHistoryModal(false)}
         data={historyData}
-        title="Key History"
+        title="Proxy Log"
       />
     </div>
   );
