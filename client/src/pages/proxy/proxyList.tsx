@@ -31,18 +31,9 @@ import apiClient from "../../services/apiClient";
 import toast from "react-hot-toast";
 import { MdClose } from "react-icons/md";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import {
-  FiChevronLeft,
-  FiChevronRight,
-  FiChevronsLeft,
-  FiChevronsRight,
-  FiArrowUp,
-  FiArrowDown,
-} from "react-icons/fi";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-import { FiChevronDown, FiChevronUp, FiCopy, FiCheck } from "react-icons/fi";
 import type { IProxy } from "../../interface/proxy.interface";
 
 type Props = {
@@ -269,7 +260,7 @@ const ProxyList = ({ status }: Props) => {
       <button
         onClick={() => handleShowHistory(row)}
         className="relative flex items-center justify-center p-0.5 text-amber-600 transition-all duration-200 rounded-md hover:text-white hover:bg-amber-500 group"
-        title="Approve"
+        title="Log"
       >
         <History className="w-4 h-4 " />
       </button>
