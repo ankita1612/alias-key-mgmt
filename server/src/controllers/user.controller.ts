@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { userService } from "../services/admin.user.service";
+import { userService } from "../services/user.service";
 import IUser, { GetUsersQuery } from "../interface/user.interface";
 import { Types } from "mongoose";
 import AliasKeyModel from "../models/aliasKey.model";

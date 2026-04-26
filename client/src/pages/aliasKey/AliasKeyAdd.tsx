@@ -1,5 +1,5 @@
+import DescriptionEditor from "./DescriptionEditor";
 import { showToast } from "../../utils/CustomToast";
-
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Key } from "lucide-react";
 import Select from "react-select";
@@ -15,7 +15,12 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const schema = yup.object().shape({
   project_name: yup.string().required("Project Name is required"),
-  domain_name: yup.string().required("Domain Name is required"),
+  domain_name: yup
+    .string()
+    .trim()
+    .required("Domain Name is required")
+    .matches(/[a-zA-Z]/, "Must contain at least 1 letter or number")
+    .max(200, "Maximum 200 characters allowed"),
   proxy_id: yup.string().required("Proxy Name is required"),
 
   total_quota: yup
@@ -58,7 +63,10 @@ const schema = yup.object().shape({
       "Total Estimated Cost must be less than or equal to 100 crore",
     )
     .integer("Total Estimated Cost must be an integer"),
-  description: yup.string().optional(),
+  description: yup
+    .string()
+    .nullable()
+    .transform((val) => (val === "<p><br></p>" ? "" : val)),
 });
 
 function AliasKeyAdd() {
@@ -87,6 +95,7 @@ function AliasKeyAdd() {
       cost_calculation: "",
     },
   });
+  const descriptionValue = watch("description");
   const proxyOptions = useMemo(() => {
     return proxies.map((p) => ({
       value: p._id,
@@ -173,6 +182,8 @@ function AliasKeyAdd() {
       }
 
       setLoading(true);
+      const cleanDescription =
+        data.description === "<p><br></p>" ? "" : data.description;
       const send_data = {
         project_name: data.project_name,
         domain_name: data.domain_name,
@@ -180,7 +191,7 @@ function AliasKeyAdd() {
         cost_calculation: data.cost_calculation,
         total_quota: Number(data.total_quota),
         total_estimated_cost: Number(data.total_estimated_cost),
-        description: data.description,
+        description: cleanDescription,
       };
       let res: any;
 
@@ -250,6 +261,7 @@ function AliasKeyAdd() {
                   disabled={mode === "edit"}
                   autoFocus
                   type="text"
+                  maxLength={200}
                   placeholder="e.g., Ecommerce Scraper / Lead Generation"
                   {...register("project_name")}
                   className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
@@ -278,6 +290,7 @@ disabled:border-gray-200
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
                 <input
                   type="text"
+                  maxLength={200}
                   placeholder="e.g., example.com"
                   {...register("domain_name")}
                   className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
@@ -416,17 +429,15 @@ disabled:border-gray-200
             <label className="block mb-2 text-sm">
               Purpose / Description (Optional)
             </label>
-            <div className="relative">
-              <div className="absolute pointer-events-none top-3 left-3"></div>
-              <textarea
-                rows={4}
-                placeholder="Describe the purpose of this key..."
-                {...register("description")}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 resize-y ${
-                  errors.description
-                    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
-                }`}
+
+            {/* <div className="border border-gray-900 rounded-xl overflow-hidden  focus-within:ring-primary/20 transition"> */}
+            <div className="rounded-xl bg-white border text-slate-900 transition text-sm  border-gray-300 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary">
+              <DescriptionEditor
+                key={id || "new"}
+                value={watch("description")}
+                onChange={(val: string) =>
+                  setValue("description", val, { shouldDirty: true })
+                }
               />
             </div>
           </div>

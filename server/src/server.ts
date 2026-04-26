@@ -13,14 +13,17 @@ import os from "os";
 
 import connectDB from "./config/db.config";
 
-import adminAuthRouter from "./routes/admin.auth.route";
-import adminUserRouter from "./routes/admin.user.route";
-import aliasKeyRouter from "./routes/admin.aliasKey.route";
-import proxyRouter from "./routes/proxy.route";
-import proxyAPIRouter from "./routes/admin.proxyAPI.route";
+import adminAuthRouter from "./routes/auth.route";
+import adminUserRouter from "./routes/user.route";
+import aliasKeyRouter from "./routes/aliasKey.route";
+import aliasKeyLogRouter from "./routes/aliasKeyLog.route";
 
-import apiHistoryRouter from "./routes/admin.apiHistory.route";
-import dashboardRouter from "./routes/admin.dashbaord.route";
+import proxyRouter from "./routes/proxy.route";
+import proxyLogRouter from "./routes/proxyLog.route";
+import proxyAPIRouter from "./routes/proxyAPI.route";
+
+import apiHistoryRouter from "./routes/apiHistory.route";
+import dashboardRouter from "./routes/dashbaord.route";
 
 // import reportRouter from "./routes/user.report.route";
 import errorHandler from "./middleware/error.handler";
@@ -63,10 +66,12 @@ if (cluster.isPrimary) {
   app.use("/api/auth", adminAuthRouter);
   app.use("/api/user", adminUserRouter);
   app.use("/api/alias-key", aliasKeyRouter);
+  app.use("/api/alias-key-log", aliasKeyLogRouter);
   app.use("/api/get-proxy-response", proxyAPIRouter);
   app.use("/api/api-history", apiHistoryRouter);
   app.use("/api/dashboard", dashboardRouter);
   app.use("/api/proxy", proxyRouter);
+  app.use("/api/proxy-log", proxyLogRouter);
   app.get("/api/get-response", (req, res) => {
     const { myToken, username, email, salary } = req.query;
     console.log("Received:", { myToken, username, email, salary });

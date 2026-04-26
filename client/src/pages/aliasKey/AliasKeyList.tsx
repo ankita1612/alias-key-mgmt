@@ -1,3 +1,6 @@
+import { History } from "lucide-react";
+import HistoryModal from "./HistoryModal";
+
 import { FiX } from "react-icons/fi";
 import StatusBadge, { getStatusConfig } from "../../utils/StatusBadge";
 import { customTableStyles } from "../datatableDesign";
@@ -32,42 +35,13 @@ import TotalHitsModal from "./TotalHitsModal";
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { IAliasKey } from "../../interface/aliasKey.interface";
-
 import { useAuth } from "../../context/AuthContext";
-
-import { AlertTriangle } from "lucide-react";
 import { MdClose } from "react-icons/md";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import DataTable from "react-data-table-component";
 import apiClient from "../../services/apiClient";
 import toast from "react-hot-toast";
-// const showToast = (
-//   message: string,
-//   type: "success" | "error" | "info" | "loading" = "info",
-// ) => {
-//   toast.dismiss("global-toast"); // 👈 remove existing toast
-
-//   toast.custom((t) => <CustomToast t={{ ...t, message, styleType: type }} />, {
-//     id: "global-toast",
-//     duration: 4000,
-//   });
-// };
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-// const getStatusStyle = (status?: string) => {
-//   switch (status?.toLowerCase()) {
-//     case "active":
-//       return "bg-green-50 text-green-700";
-//     case "inactive":
-//       return "bg-gray-100 text-gray-600";
-//     case "pending":
-//       return "bg-yellow-50 text-yellow-700";
-//     case "rejected":
-//       return "bg-red-50 text-red-700";
-//     default:
-//       return "bg-gray-100 text-gray-600";
-//   }
-// };
-
 const AliasKeyList = () => {
   const navigate = useNavigate();
 
@@ -104,7 +78,8 @@ const AliasKeyList = () => {
   const [showPendingRejectedModal, setShowPendingRejectedModal] =
     useState(false);
   const [showRejectedModal, setShowRejectedModal] = useState(false);
-
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyData, setHistoryData] = useState<any[]>([]);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showActiveInactiveModal, setShowActiveInactiveModal] = useState(false);
   const [newStatus, setNewStatus] = useState<string>("");
@@ -113,6 +88,22 @@ const AliasKeyList = () => {
   >("");
   const [showStats, setShowStats] = useState(false);
   const controllerRef = useRef<AbortController | null>(null);
+
+  const handleShowHistory = async (row: IAliasKey) => {
+    try {
+      setLoading(true);
+      setSelectedRow(row);
+
+      const res = await apiClient.get(`api/alias-key-log/${row._id}`);
+
+      setHistoryData(res.data.data || []);
+      setShowHistoryModal(true);
+    } catch (err) {
+      toast.error("Failed to load history");
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Delete modal
@@ -243,27 +234,6 @@ const AliasKeyList = () => {
     onStatusChange,
     isDeleted,
   }: any) => {
-    // const getStatusConfig = (status: string) => {
-    //   switch (status) {
-    //     case "Active":
-    //       return {
-    //         bg: "bg-green-50",
-    //         text: "text-green-700",
-    //         dot: "bg-green-500",
-    //         border: "border-green-200",
-    //         icon: CheckCircle,
-    //       };
-    //     case "Inactive":
-    //       return {
-    //         bg: "bg-gray-100",
-    //         text: "text-gray-600",
-    //         dot: "bg-gray-400",
-    //         border: "border-gray-300",
-    //         icon: XCircle,
-    //       };
-    //   }
-    // };
-
     const statusConfig = getStatusConfig(row.key_status);
     const Icon = statusConfig.icon;
 
@@ -494,11 +464,15 @@ const AliasKeyList = () => {
     onView,
     isDeleted,
   }: any) => {
+    let canEdit = false;
+    if (row.key_status === "Active" && row.approval_status === "Pending") {
+      canEdit = true;
+    }
     return (
       <div className="flex items-center gap-2">
         <button
           onClick={onView}
-          className="flex items-center justify-center p-1.5 text-blue-600 hover:text-white hover:bg-blue-500 rounded-md transition-all duration-200 group relative"
+          className="relative flex items-center justify-center p-0.5 text-blue-600 transition-all duration-200 rounded-md hover:text-white hover:bg-blue-500 group"
           title="View details"
         >
           <FiEye className="w-4 h-4" />
@@ -506,18 +480,19 @@ const AliasKeyList = () => {
 
         {!isDeleted && (
           <>
-            <button
-              onClick={() => onEdit(row._id)}
-              className="flex items-center justify-center p-1.5 text-amber-500 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-all duration-200"
-              title="Edit"
-            >
-              <FiEdit2 className="w-4 h-4" />
-            </button>
-
-            {row.approval_status == "Pending" && (
+            {canEdit && (
+              <button
+                onClick={() => onEdit(row._id)}
+                className="flex items-center justify-center p-0.5 transition-all duration-200 rounded-md text-amber-500 hover:text-amber-600 hover:bg-amber-50"
+                title="Edit"
+              >
+                <FiEdit2 className="w-4 h-4" />
+              </button>
+            )}
+            {row.approval_status == "Pending" && row.key_status == "Active" && (
               <button
                 onClick={() => onDelete(row._id)}
-                className="flex items-center justify-center p-1.5 text-red-600 hover:text-white hover:bg-red-500 rounded-md transition-all duration-200 group relative"
+                className="relative flex items-center justify-center p-0.5 text-red-600 transition-all duration-200 rounded-md hover:text-white hover:bg-red-500 group"
                 title="Delete"
               >
                 <FiTrash2 className="w-4 h-4" />
@@ -528,12 +503,20 @@ const AliasKeyList = () => {
               row.key_status == "Active" && (
                 <button
                   onClick={() => handleActionClick(row)}
-                  className="text-red-600 transition hover:text-red-700"
+                  className="relative flex items-center justify-center p-0.5 text-green-600 transition-all duration-200 rounded-md hover:text-white hover:bg-green-500 group"
                   title="Approve"
                 >
-                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <CheckCircle className="w-4 h-4" />
                 </button>
               )}
+
+            <button
+              onClick={() => handleShowHistory(row)}
+              className="relative flex items-center justify-center p-0.5 text-amber-600 transition-all duration-200 rounded-md hover:text-white hover:bg-amber-500 group"
+              title="Approve"
+            >
+              <History className="w-4 h-4 " />
+            </button>
           </>
         )}
       </div>
@@ -730,7 +713,14 @@ const AliasKeyList = () => {
       ),
     },
   ];
-
+  const isAnyFilterApplied =
+    search ||
+    keyStatusFilter ||
+    approvalStatusFilter ||
+    startDate ||
+    endDate ||
+    appliedStartDate ||
+    appliedEndDate;
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
       {/* HEADER */}
@@ -848,13 +838,13 @@ const AliasKeyList = () => {
                   setAppliedEndDate(endDate);
                   setPage(1);
                 }}
-                className={`px-2.5 py-2 text-xs font-medium rounded-lg border ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg border ${
                   startDate && endDate
                     ? "text-primary border-primary bg-white hover:bg-primary hover:text-white"
                     : "text-gray-400 bg-gray-200 cursor-not-allowed"
                 }`}
               >
-                Filter
+                Apply
               </button>
 
               <button
@@ -870,7 +860,11 @@ const AliasKeyList = () => {
                   searchRef.current?.focus();
                   setPage(1);
                 }}
-                className="px-2.5 py-2 text-xs font-medium text-primary border border-primary bg-white hover:bg-primary hover:text-white rounded-lg"
+                className={`px-4 py-2 text-sm font-medium rounded-lg border ${
+                  isAnyFilterApplied
+                    ? "text-primary border-primary bg-white hover:bg-primary hover:text-white"
+                    : "text-gray-400 bg-gray-200 cursor-not-allowed"
+                }`}
               >
                 Clear
               </button>
@@ -1165,7 +1159,9 @@ const AliasKeyList = () => {
                     <div className="w-1 h-4 rounded-full bg-secondary"></div>
                     <h3 className={heading_label_style}>Cost Calculation</h3>
                   </div>
-                  <div className={input_style_with_gray_border}>
+                  <div
+                    className={`${input_style_with_gray_border} max-h-40 overflow-y-auto whitespace-pre-wrap`}
+                  >
                     {selectedRow.cost_calculation}
                   </div>
                 </div>
@@ -1177,9 +1173,15 @@ const AliasKeyList = () => {
                     <div className="w-1 h-4 rounded-full bg-secondary"></div>
                     <h3 className={heading_label_style}>Purpose</h3>
                   </div>
-                  <div className={input_style_with_gray_border}>
+                  {/* <div className={input_style_with_gray_border}>
                     {selectedRow.description}
-                  </div>
+                  </div> */}
+                  <div
+                    className={`prose max-w-none ${input_style_with_gray_border} max-h-40 overflow-y-auto whitespace-pre-wrap`}
+                    dangerouslySetInnerHTML={{
+                      __html: selectedRow.description,
+                    }}
+                  />
                 </div>
               )}
 
@@ -1436,9 +1438,16 @@ const AliasKeyList = () => {
                     <div className="w-1 h-4 rounded-full bg-secondary"></div>
                     <h3 className={heading_label_style}>Purpose</h3>
                   </div>
-                  <div className={input_style_with_gray_border}>
+                  {/* <div className={input_style_with_gray_border}>
                     {selectedRow.description}
-                  </div>
+                  </div> */}
+
+                  <div
+                    className={`prose max-w-none ${input_style_with_gray_border}`}
+                    dangerouslySetInnerHTML={{
+                      __html: selectedRow.description,
+                    }}
+                  />
                 </div>
               )}
             </div>
@@ -1622,17 +1631,6 @@ const AliasKeyList = () => {
         />
       )}
       {loading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-3">
-            {/* Spinner */}
-            <div className="w-10 h-10 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
-
-            {/* Optional text */}
-            <p className="text-sm text-gray-700">Loading...</p>
-          </div>
-        </div>
-      )}
-      {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
             {/* Pulsing Circle */}
@@ -1650,6 +1648,18 @@ const AliasKeyList = () => {
           </div>
         </div>
       )}
+      <HistoryModal
+        open={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        data={historyData}
+        title="Key History"
+      />
+      <HistoryModal
+        open={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        data={historyData}
+        title="Key History"
+      />
     </div>
   );
 };

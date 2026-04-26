@@ -1,5 +1,5 @@
 import express from "express";
-import { proxyController } from "../controllers/admin.proxyAPI.controller";
+import { proxyController } from "../controllers/proxyAPI.controller";
 
 const proxyAPIRouter = express.Router();
 proxyAPIRouter

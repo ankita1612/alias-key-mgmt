@@ -160,60 +160,92 @@ function UserDashboard() {
     fetchData();
   }, [fetchData]);
 
+  const colorMap = {
+    "blue-600": {
+      border: "border-blue-600",
+      text: "text-blue-600",
+      bg: "bg-blue-100",
+    },
+    "green-600": {
+      border: "border-green-600",
+      text: "text-green-600",
+      bg: "bg-green-100",
+    },
+    "amber-600": {
+      border: "border-amber-600",
+      text: "text-amber-600",
+      bg: "bg-amber-100",
+    },
+  };
+  const gradientColors = {
+    primary: "from-indigo-500 to-purple-600",
+    success: "from-emerald-500 to-teal-600",
+    warning: "from-amber-500 to-orange-600",
+    info: "from-blue-500 to-cyan-600",
+  };
+  const colorToIconColor = {
+    primary: "blue-600",
+    success: "green-600",
+    warning: "amber-600",
+    info: "blue-600",
+  };
+
   const StatCard = ({
     title,
     value,
     icon: Icon,
     color = "primary",
-    valueColor = "text-gray-900",
+    onClick,
   }: any) => {
-    const gradientColors = {
-      primary: "from-indigo-500 to-purple-600",
-      success: "from-emerald-500 to-teal-600",
-      warning: "from-amber-500 to-orange-600",
-      info: "from-blue-500 to-cyan-600",
-    };
-
-    const borderColors = {
-      primary: "#6366f120",
-      success: "#10b98120",
-      warning: "#f59e0b20",
-      info: "#3b82f620",
-    };
+    const iconColor =
+      colorToIconColor[color as keyof typeof colorToIconColor] || "blue-600";
+    const colors =
+      colorMap[iconColor as keyof typeof colorMap] || colorMap["blue-600"];
 
     return (
       <div
-        className="flex items-center gap-3 px-3 py-3 transition bg-white border rounded-lg shadow-sm hover:shadow-md"
-        style={{
-          borderColor: borderColors[color],
-          borderLeft: `3px solid ${borderColors[color].replace("20", "60")}`,
-        }}
+        onClick={onClick}
+        className={`flex items-center gap-3 px-4 py-3 bg-white border-t-4 rounded-lg shadow-sm transition 
+        ${colors.border} 
+        ${onClick ? "cursor-pointer hover:shadow-md" : ""} group`}
       >
+        {/* LEFT ICON */}
+        <div
+          className={`flex items-center justify-center w-10 h-10 rounded-lg ${colors.bg} group-hover:scale-110 transition-transform`}
+        >
+          <Icon className={`w-5 h-5 ${colors.text}`} />
+        </div>
+
+        {/* RIGHT CONTENT */}
+        <div className="flex flex-col">
+          <p className="text-xs font-medium text-slate-500">{title}</p>
+          <p className="mt-1 text-lg font-semibold text-primary">{value}</p>
+        </div>
+      </div>
+    );
+  };
+  const StatCard1 = ({ title, value, icon: Icon, color = "primary" }: any) => {
+    return (
+      <div className="flex items-center gap-3 px-3 py-3 transition bg-white border rounded-lg shadow-sm hover:shadow-md">
         {/* Icon */}
-        {Icon && (
-          <div
-            className={`flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br ${
-              gradientColors[color]
-            }`}
-          >
-            <Icon className="w-4 h-4 text-white" />
-          </div>
-        )}
+        <div
+          className={`flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br ${
+            gradientColors[color as keyof typeof gradientColors]
+          }`}
+        >
+          <Icon className="w-4 h-4 text-white" />
+        </div>
 
         {/* Content */}
         <div className="flex-1">
           <div className="flex flex-col">
-            {/* VALUE (top, bold) */}
-            <p className={`text-lg font-semibold ${valueColor}`}>{value}</p>
-
-            {/* TITLE (bottom, subtle) */}
-            <p className="text-xs font-medium text-slate-500">{title}</p>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">{title}</p>
+            <p className="mt-1 text-lg font-semibold text-gray-900">{value}</p>
           </div>
         </div>
       </div>
     );
   };
-
   const StatusCard = ({ label, value, color, icon: Icon, percentage }: any) => (
     <div className="flex items-center justify-between p-3 transition-all duration-200 rounded-lg group hover:bg-gray-50">
       <div className="flex items-center space-x-3">
@@ -447,13 +479,13 @@ function UserDashboard() {
               API History - Quota Overview
             </h6>
             <div className="grid gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard
+              <StatCard1
                 title="Total Quota"
                 value={dashboard.apiQuota?.totalQuota?.toLocaleString() || "0"}
                 icon={Zap}
                 color="primary"
               />
-              <StatCard
+              <StatCard1
                 title="Remaining Quota"
                 value={
                   dashboard.apiQuota?.remainingQuota?.toLocaleString() || "0"
@@ -461,8 +493,8 @@ function UserDashboard() {
                 icon={Activity}
                 color="warning"
               />
-              <StatCard
-                title="Used Quota"
+              <StatCard1
+                title="Success Response"
                 value={
                   dashboard.apiQuota?.totalUsedQuota?.toLocaleString() || "0"
                 }
@@ -470,8 +502,8 @@ function UserDashboard() {
                 color="success"
               />
 
-              <StatCard
-                title="Failed Quota"
+              <StatCard1
+                title="Failed Response"
                 value={
                   dashboard.apiQuota?.totalFailedQuota?.toLocaleString() || "0"
                 }
@@ -483,146 +515,156 @@ function UserDashboard() {
             {/* Quick Status Cards */}
 
             {/* Key Status Summary */}
-            <div className="grid gap-3 mb-6 lg:grid-cols-2">
+            <div className="grid gap-4 mb-6 lg:grid-cols-2">
               {/* Active Keys Card - Ultra Compact */}
-              <div className="overflow-hidden transition-all duration-300 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md">
-                <div className="px-3 py-1.5 border-b bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-100">
+              <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md">
+                <div className="px-3 py-1.5 border-b bg-teal-50 border-emerald-100">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <div className="flex items-center justify-center w-6 h-6 rounded-md shadow-sm bg-emerald-500">
                         <CheckCircle className="w-3 h-3 text-white" />
                       </div>
-                      <h3 className="text-xs font-bold text-gray-800">
+
+                      <h6 className=" text-sm font-semibold text-gray-700">
                         Active Keys
-                      </h3>
+                      </h6>
                     </div>
-                    <p className="text-lg font-bold text-emerald-600">
-                      {safeAliasStatusCounts.keyStatus.Active.toLocaleString()}
+                    <p className="text-lg font-bold text-emerald-700">
+                      {dashboard.aliasStatusCounts?.keyStatus?.Active?.toLocaleString() ||
+                        "0"}
                     </p>
                   </div>
                 </div>
 
-                <div className="px-3 py-1.5">
+                <div className="px-3 py-2">
                   <div className="space-y-1.5">
                     {[
                       {
                         label: "Approved",
                         value:
-                          safeAliasStatusCounts.breakdown?.Active?.Approved ||
-                          0,
-                        icon: CheckCircle,
-                        bgColor: "bg-emerald-100",
+                          dashboard.aliasStatusCounts?.breakdown?.Active
+                            ?.Approved || 0,
                         color: "emerald",
+                        icon: CheckCircle,
                       },
                       {
                         label: "Pending",
                         value:
-                          safeAliasStatusCounts.breakdown?.Active?.Pending || 0,
-                        icon: Clock,
-                        bgColor: "bg-amber-100",
+                          dashboard.aliasStatusCounts?.breakdown?.Active
+                            ?.Pending || 0,
                         color: "amber",
+                        icon: Clock,
                       },
                       {
                         label: "Rejected",
                         value:
-                          safeAliasStatusCounts.breakdown?.Active?.Rejected ||
-                          0,
-                        icon: XCircle,
-                        bgColor: "bg-red-100",
+                          dashboard.aliasStatusCounts?.breakdown?.Active
+                            ?.Rejected || 0,
                         color: "red",
+                        icon: XCircle,
                       },
-                    ].map((item) => (
-                      <div
-                        key={item.label}
-                        className="flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-1">
-                          <item.icon
-                            className={`w-2.5 h-2.5 text-${item.color}-500`}
-                          />
-                          <span className="text-xs text-slate-500 font-medium mt-0.5">
-                            {item.label}
-                          </span>
+                    ].map((item) => {
+                      const total =
+                        dashboard.aliasStatusCounts?.keyStatus?.Active || 1;
+                      const percentage = (item.value / total) * 100;
+
+                      return (
+                        <div
+                          key={item.label}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-1">
+                            <item.icon
+                              className={`w-4 h-4 text-${item.color}-500`}
+                            />
+                            <span className="text-sm text-slate-500 font-medium mt-0.5">
+                              {item.label}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-semibold text-gray-900">
+                              {item.value.toLocaleString()}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs font-semibold text-gray-900">
-                            {item.value.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
 
               {/* Inactive Keys Card - Ultra Compact */}
-              <div className="overflow-hidden transition-all duration-300 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md">
-                <div className="px-3 py-1.5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-slate-50">
+              <div className="overflow-hidden transition-shadow duration-300 bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md">
+                <div className="px-3 py-1.5 border-b bg-gray-50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <div className="flex items-center justify-center w-6 h-6 bg-gray-500 rounded-md shadow-sm">
                         <XCircle className="w-3 h-3 text-white" />
                       </div>
-                      <h3 className="text-xs font-bold text-gray-800">
+                      <h6 className=" text-sm font-semibold text-gray-700">
                         Inactive Keys
-                      </h3>
+                      </h6>
                     </div>
-                    <p className="text-lg font-bold text-gray-600">
-                      {safeAliasStatusCounts.keyStatus.Inactive.toLocaleString()}
+                    <p className="text-lg font-bold text-gray-700">
+                      {dashboard.aliasStatusCounts?.keyStatus?.Inactive?.toLocaleString() ||
+                        "0"}
                     </p>
                   </div>
                 </div>
 
-                <div className="px-3 py-1.5">
+                <div className="px-3 py-2">
                   <div className="space-y-1.5">
                     {[
                       {
                         label: "Approved",
                         value:
-                          safeAliasStatusCounts.breakdown?.Inactive?.Approved ||
-                          0,
-                        icon: CheckCircle,
-                        bgColor: "bg-emerald-100",
+                          dashboard.aliasStatusCounts?.breakdown?.Inactive
+                            ?.Approved || 0,
                         color: "emerald",
+                        icon: CheckCircle,
                       },
                       {
                         label: "Pending",
                         value:
-                          safeAliasStatusCounts.breakdown?.Inactive?.Pending ||
-                          0,
-                        icon: Clock,
-                        bgColor: "bg-amber-100",
+                          dashboard.aliasStatusCounts?.breakdown?.Inactive
+                            ?.Pending || 0,
                         color: "amber",
+                        icon: Clock,
                       },
                       {
                         label: "Rejected",
                         value:
-                          safeAliasStatusCounts.breakdown?.Inactive?.Rejected ||
-                          0,
-                        icon: XCircle,
-                        bgColor: "bg-red-100",
+                          dashboard.aliasStatusCounts?.breakdown?.Inactive
+                            ?.Rejected || 0,
                         color: "red",
+                        icon: XCircle,
                       },
-                    ].map((item) => (
-                      <div
-                        key={item.label}
-                        className="flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-1">
-                          <item.icon
-                            className={`w-2.5 h-2.5 text-${item.color}-500`}
-                          />
-                          <span className="text-xs text-slate-500 font-medium mt-0.5">
-                            {item.label}
-                          </span>
+                    ].map((item) => {
+                      const total =
+                        dashboard.aliasStatusCounts?.keyStatus?.Inactive || 1;
+                      const percentage = (item.value / total) * 100;
+
+                      return (
+                        <div
+                          key={item.label}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-1">
+                            <item.icon
+                              className={`w-4 h-4 text-${item.color}-500`}
+                            />
+                            <span className="text-sm text-slate-500 font-medium mt-0.5">
+                              {item.label}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-semibold text-gray-900">
+                              {item.value.toLocaleString()}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs font-semibold text-gray-900">
-                            {item.value.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -678,7 +720,7 @@ function UserDashboard() {
             {/* Charts Section */}
 
             <div className="grid gap-5 mb-6 lg:grid-cols-2">
-              <div className="overflow-hidden duration-300 bg-white border border-gray-100 rounded-md shadow-sm hover:shadow-lg">
+              <div className="overflow-hidden duration-300 bg-white border border-gray-100 shadow-sm hover:shadow-md rounded-xl">
                 <div className="">
                   <div className="flex items-center justify-between px-6 py-2 bg-primary">
                     {/* LEFT */}

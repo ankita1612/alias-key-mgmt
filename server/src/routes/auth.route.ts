@@ -5,9 +5,9 @@ import {
   isRequestValidated,
   changePasswordValidator,
   updateProfileValidator,
-} from "../validations/admin.auth.validations";
+} from "../validations/auth.validations";
 import authentication from "../middleware/auth.middleware";
-import { authController } from "../controllers/admin.auth.controller";
+import { authController } from "../controllers/auth.controller";
 
 adminAuthRouter.post(
   "/login",

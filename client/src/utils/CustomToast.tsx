@@ -1,3 +1,5 @@
+import { FiCheckCircle, FiXCircle, FiInfo, FiLoader } from "react-icons/fi";
+
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { FiX } from "react-icons/fi";
@@ -83,10 +85,35 @@ export const showToast = (
   message: string,
   type: "success" | "error" | "info" | "loading" = "info",
 ) => {
-  toast.dismiss("global-toast"); // 👈 remove existing toast
+  toast.dismiss("global-toast");
 
-  toast.custom((t) => <CustomToast t={{ ...t, message, styleType: type }} />, {
-    id: "global-toast",
-    duration: 4000,
-  });
+  const getIcon = () => {
+    switch (type) {
+      case "success":
+        return <FiCheckCircle className="text-green-500" />;
+      case "error":
+        return <FiXCircle className="text-red-500" />;
+      case "loading":
+        return <FiLoader className="animate-spin text-blue-500" />;
+      default:
+        return <FiInfo className="text-indigo-500" />;
+    }
+  };
+
+  toast.custom(
+    (t) => (
+      <CustomToast
+        t={{
+          ...t,
+          message,
+          styleType: type,
+          icon: getIcon(), // ✅ FIX
+        }}
+      />
+    ),
+    {
+      id: "global-toast",
+      duration: 4000,
+    },
+  );
 };

@@ -127,11 +127,11 @@ function AdminDashboard() {
         response?: { data?: { message?: string } };
       };
       if (error.name !== "CanceledError") {
-        toast.error(
-          error.response?.data?.message ||
-            error.message ||
-            "Failed to load dashboard data",
-        );
+        // toast.error(
+        //   error.response?.data?.message ||
+        //     error.message ||
+        //     "Failed to load dashboard data",
+        // );
       }
     } finally {
       setLoading(false);
@@ -316,29 +316,44 @@ function AdminDashboard() {
     approvalStatus: { Approved: 0, Pending: 0, Rejected: 0 },
     keyStatus: { Active: 0, Inactive: 0 },
   };
-
+  const colorMap = {
+    "blue-600": {
+      border: "border-blue-600",
+      text: "text-blue-600",
+      bg: "bg-blue-100",
+    },
+    "green-600": {
+      border: "border-green-600",
+      text: "text-green-600",
+      bg: "bg-green-100",
+    },
+    "amber-600": {
+      border: "border-amber-600",
+      text: "text-amber-600",
+      bg: "bg-amber-100",
+    },
+  };
   const TopStatCard = ({
     title,
     value,
     icon: Icon,
-    iconColor,
+    iconColor = "blue-600",
     onClick,
   }: any) => {
-    const iconBg = iconColor?.replace("text-", "bg-")?.replace("-600", "-100");
+    const colors = colorMap[iconColor] || colorMap["blue-600"];
 
     return (
       <div
         onClick={onClick}
-        className={`flex items-center gap-3 px-4 py-3 transition bg-white border-t-4 rounded-lg shadow-sm border-menuActive 
+        className={`flex items-center gap-3 px-4 py-3 bg-white border-t-4 rounded-lg shadow-sm transition 
+      ${colors.border} 
       ${onClick ? "cursor-pointer hover:shadow-md" : ""} group`}
       >
         {/* LEFT ICON */}
         <div
-          className={`flex items-center justify-center w-10 h-10 rounded-lg transition-transform duration-200 ${
-            iconBg || "bg-gray-100"
-          } group-hover:scale-110`}
+          className={`flex items-center justify-center w-10 h-10 rounded-lg ${colors.bg} group-hover:scale-110 transition-transform`}
         >
-          <Icon className={`w-5 h-5 ${iconColor}`} />
+          <Icon className={`w-5 h-5 ${colors.text}`} />
         </div>
 
         {/* RIGHT CONTENT */}
@@ -397,21 +412,21 @@ function AdminDashboard() {
                 title="Total Users"
                 value={dashboard.totalUsers.toLocaleString()}
                 icon={Users}
-                iconColor="text-blue-600"
+                iconColor="blue-600"
                 onClick={undefined}
               />
               <TopStatCard
                 title="Total Proxy"
                 value={dashboard.totalProxy.toLocaleString()}
                 icon={FaExchangeAlt}
-                iconColor="text-purple-600"
+                iconColor="amber-600"
                 onClick={undefined}
               />
               <TopStatCard
                 title="Total API Requests"
                 value={dashboard.totalRequests.toLocaleString()}
                 icon={Activity}
-                iconColor="text-green-600"
+                iconColor="green-600"
                 onClick={undefined}
               />
             </div>
@@ -438,7 +453,7 @@ function AdminDashboard() {
                 color="warning"
               />
               <StatCard
-                title="Success Quota"
+                title="Success Response"
                 value={
                   dashboard.apiQuota?.totalUsedQuota?.toLocaleString() || "0"
                 }
@@ -448,7 +463,7 @@ function AdminDashboard() {
               />
 
               <StatCard
-                title="Failed Quota"
+                title="Failed Response"
                 value={
                   dashboard.apiQuota?.totalFailedQuota?.toLocaleString() || "0"
                 }
@@ -468,9 +483,10 @@ function AdminDashboard() {
                       <div className="flex items-center justify-center w-6 h-6 rounded-md shadow-sm bg-emerald-500">
                         <CheckCircle className="w-3 h-3 text-white" />
                       </div>
-                      <h4 className="text-xs font-bold text-emerald-800">
+
+                      <h6 className=" text-sm font-semibold text-gray-700">
                         Active Keys
-                      </h4>
+                      </h6>
                     </div>
                     <p className="text-lg font-bold text-emerald-700">
                       {dashboard.aliasStatusCounts?.keyStatus?.Active?.toLocaleString() ||
@@ -518,14 +534,14 @@ function AdminDashboard() {
                         >
                           <div className="flex items-center gap-1">
                             <item.icon
-                              className={`w-2.5 h-2.5 text-${item.color}-500`}
+                              className={`w-4 h-4 text-${item.color}-500`}
                             />
-                            <span className="text-xs text-slate-500 font-medium mt-0.5">
+                            <span className="text-sm text-slate-500 font-medium mt-0.5">
                               {item.label}
                             </span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="text-xs font-semibold text-gray-900">
+                            <span className="text-sm font-semibold text-gray-900">
                               {item.value.toLocaleString()}
                             </span>
                           </div>
@@ -544,9 +560,9 @@ function AdminDashboard() {
                       <div className="flex items-center justify-center w-6 h-6 bg-gray-500 rounded-md shadow-sm">
                         <XCircle className="w-3 h-3 text-white" />
                       </div>
-                      <h3 className="text-xs font-bold text-gray-800">
+                      <h6 className=" text-sm font-semibold text-gray-700">
                         Inactive Keys
-                      </h3>
+                      </h6>
                     </div>
                     <p className="text-lg font-bold text-gray-700">
                       {dashboard.aliasStatusCounts?.keyStatus?.Inactive?.toLocaleString() ||
@@ -594,14 +610,14 @@ function AdminDashboard() {
                         >
                           <div className="flex items-center gap-1">
                             <item.icon
-                              className={`w-2.5 h-2.5 text-${item.color}-500`}
+                              className={`w-4 h-4 text-${item.color}-500`}
                             />
-                            <span className="text-xs text-slate-500 font-medium mt-0.5">
+                            <span className="text-sm text-slate-500 font-medium mt-0.5">
                               {item.label}
                             </span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="text-xs font-semibold text-gray-900">
+                            <span className="text-sm font-semibold text-gray-900">
                               {item.value.toLocaleString()}
                             </span>
                           </div>
@@ -615,7 +631,7 @@ function AdminDashboard() {
 
             {/* Charts Grid */}
             <div className="grid gap-5 mb-6 lg:grid-cols-2">
-              <div className="overflow-hidden duration-300 bg-white border border-gray-100 rounded-md shadow-sm hover:shadow-lg">
+              <div className="overflow-hidden duration-300 bg-white border border-gray-100 shadow-sm hover:shadow-md rounded-xl">
                 <div className="">
                   <div className="flex items-center justify-between px-6 py-2 bg-primary">
                     {/* LEFT */}

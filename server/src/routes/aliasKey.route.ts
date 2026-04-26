@@ -5,7 +5,7 @@ import {
   isRequestValidated,
   validateEdit,
   validateId,
-} from "../validations/admin.aliasKey.validations";
+} from "../validations/aliasKey.validations";
 const aliasKeyRouter = express.Router();
 import authentication from "../middleware/auth.middleware";
 aliasKeyRouter.post(

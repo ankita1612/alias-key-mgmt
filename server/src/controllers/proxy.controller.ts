@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import AliasKeyModel from "../models/aliasKey.model";
 import ProxyModel from "../models/proxy.model";
+import { ProxyLogModel } from "../models/proxyLog.model";
 import { toJsonString } from "curlconverter";
 import mongoose from "mongoose";
 
@@ -82,6 +83,19 @@ class ProxyController {
         project_name: data.project_name?.trim(),
       });
 
+      // ✅ LOG: Create action
+      await ProxyLogModel.create({
+        proxy_id: proxy._id,
+        action: "CREATE",
+        desc: `Proxy "${proxy.proxy_name}" created`,
+        user_id: req.user?.id,
+        meta: {
+          proxy_name: proxy.proxy_name,
+          domain_name: proxy.domain_name,
+          project_name: proxy.project_name,
+        },
+      });
+
       res.status(201).json({
         success: true,
         message: "Proxy created successfully",
@@ -121,8 +135,8 @@ class ProxyController {
         const isNumber = !isNaN(Number(search));
 
         match.$or = [
-          { proxy_name: { $regex: search, $options: "i" } },          
-          { curl: { $regex: search, $options: "i" } },          
+          { proxy_name: { $regex: search, $options: "i" } },
+          { curl: { $regex: search, $options: "i" } },
           ...(isNumber ? [{ credit: Number(search) }] : []),
         ];
       }
@@ -178,35 +192,71 @@ class ProxyController {
   };
 
   // ✅ UPDATE
-  updateData = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { id } = req.params;
+updateData = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
 
-      const updated = await ProxyModel.findOneAndUpdate(
-        { _id: id, is_deleted: false },
-        {
-          domain_name: req.body.domain_name,
-          project_name: req.body.project_name,
-        },
-        { new: true },
-      );
+    const oldProxy = await ProxyModel.findOne({
+      _id: id,
+      is_deleted: false,
+    });
 
-      if (!updated) {
-        return res.status(404).json({
-          success: false,
-          message: "Proxy not found",
-        });
-      }
-
-      res.status(200).json({
-        success: true,
-        message: "Proxy updated successfully",
-        data: updated,
+    if (!oldProxy) {
+      return res.status(404).json({
+        success: false,
+        message: "Proxy not found",
       });
-    } catch (error) {
-      next(error);
     }
-  };
+
+    const updated = await ProxyModel.findOneAndUpdate(
+      { _id: id, is_deleted: false },
+      {
+        domain_name: req.body.domain_name,
+        project_name: req.body.project_name,
+      },
+      { new: true }
+    );
+
+    // ✅ Detect only changed fields
+    const meta: any = {};
+    let hasChanges = false;
+
+    if (req.body.domain_name !== oldProxy.domain_name) {
+      meta.domain_name = {
+        old: oldProxy.domain_name,
+        new: req.body.domain_name,
+      };
+      hasChanges = true;
+    }
+
+    if (req.body.project_name !== oldProxy.project_name) {
+      meta.project_name = {
+        old: oldProxy.project_name,
+        new: req.body.project_name,
+      };
+      hasChanges = true;
+    }
+
+    // ✅ Only log if something actually changed
+    if (hasChanges) {
+      await ProxyLogModel.create({
+        proxy_id: updated._id,
+        action: "UPDATE",
+        desc: `Proxy "${updated.proxy_name}" updated`,
+        user_id: req.user?.id,
+        meta,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Proxy updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
   // ✅ DELETE
   deleteData = async (req: Request, res: Response, next: NextFunction) => {
@@ -228,6 +278,20 @@ class ProxyController {
           message: "Proxy not found",
         });
       }
+
+      // ✅ LOG: Delete action
+      await ProxyLogModel.create({
+        proxy_id: deleted._id,
+        action: "DELETE",
+        desc: `Proxy "${deleted.proxy_name}" deleted`,
+        user_id: req.user?.id,
+        meta: {
+          proxy_name: deleted.proxy_name,
+          domain_name: deleted.domain_name,
+          project_name: deleted.project_name,
+          deleted_at: deleted.deleted_at,
+        },
+      });
 
       res.status(200).json({
         success: true,
@@ -277,7 +341,7 @@ class ProxyController {
           },
         },
 
-        // 🔹 Join API History
+        // 🔹 Join API desc
         {
           $lookup: {
             from: "api_history",

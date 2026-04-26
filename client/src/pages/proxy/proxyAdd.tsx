@@ -297,8 +297,10 @@ function ProxyAdd() {
         response?: { data?: { message?: string } };
         message?: string;
       };
-      toast.error(
+
+      showToast(
         err?.response?.data?.message || err?.message || "Something went wrong",
+        "error",
       );
 
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -350,6 +352,7 @@ function ProxyAdd() {
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
                 <input
                   type="text"
+                  maxLength={200}
                   placeholder="Enter Proxy Name"
                   {...register("project_name")}
                   className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
@@ -368,6 +371,7 @@ function ProxyAdd() {
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
                 <input
                   type="text"
+                  maxLength={200}
                   placeholder="Enter Domain Name"
                   {...register("domain_name")}
                   className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
@@ -387,6 +391,7 @@ function ProxyAdd() {
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
                 <input
+                  maxLength={200}
                   disabled={mode === "edit"}
                   type="text"
                   placeholder="Enter Proxy Name"
@@ -416,6 +421,7 @@ disabled:border-gray-200
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"></div>
                 <input
                   disabled={mode === "edit"}
+                  maxLength={200}
                   type="text"
                   placeholder="Enter Proxy Token"
                   {...register("proxy_token")}

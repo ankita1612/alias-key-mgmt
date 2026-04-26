@@ -1,3 +1,5 @@
+export const domainRegex = /^(?!:\/\/)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+
 export const getStatusStyle = (status?: string) => {
   switch (status?.toLowerCase()) {
     case "active":
@@ -16,7 +18,7 @@ export const model_body_part = "flex-1 px-6 py-4 overflow-y-auto";
 export const model_divider = "px-6 py-2 border-t border-slate-200";
 export const model_botton_container = "flex justify-end gap-3 px-6 pb-6";
 export const close_cancel_button =
-  "px-4 py-2 text-sm font-medium text-gray-700 transition bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200";
+  "px-5 py-2.5 text-sm font-medium text-slate-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 over:border-gray-400 hover:shadow-md hover:-translate-y-0.5 active:scale-95 active:translate-y-0 transition-all duration-200 ease-in-out";
 export const char_max_len_listing = 60;
 export const heading_label_style = "text-base font-semibold text-gray-700";
 export const label_style = "text-gray-900";

@@ -1,11 +1,11 @@
 import express from "express";
-import { userController } from "../controllers/admin.user.controller";
+import { userController } from "../controllers/user.controller";
 import {
   validateAdd,
   isRequestValidated,
   validateEdit,
   validateId,
-} from "../validations/admin.user.validations";
+} from "../validations/user.validations";
 const userRouter = express.Router();
 import authentication from "../middleware/auth.middleware";
 userRouter.post("/", validateAdd, isRequestValidated, userController.addUser);

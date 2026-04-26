@@ -68,7 +68,7 @@ const AdminLayout = () => {
         onMouseLeave={handleMouseLeave}
         className={`
           bg-primary text-gray-200 flex flex-col shadow-2xl
-          transition-all duration-300 ease-in-out
+          transition-all duration-400 ease-in-out
          ${
            isMobile
              ? `fixed top-0 left-0 h-full z-50 w-64 transform ${
@@ -98,7 +98,7 @@ const AdminLayout = () => {
             <div
               className={`
                 flex items-center justify-between flex-1
-                overflow-hidden transition-all duration-300
+                overflow-hidden transition-all duration-400
                 ${
                   showExpanded
                     ? "max-w-full opacity-100 translate-x-0"
@@ -153,7 +153,7 @@ const AdminLayout = () => {
         <nav
           className={`
             flex-1 py-6 space-y-1
-            transition-all duration-300
+            transition-all duration-400
             ${showExpanded ? "overflow-y-auto" : "overflow-visible"}
           `}
         >

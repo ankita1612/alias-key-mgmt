@@ -5,7 +5,7 @@ import IUser, {
   IUpdateProfile,
 } from "../interface/user.interface";
 
-import { authService } from "../services/admin.auth.service";
+import { authService } from "../services/auth.service";
 class AuthController {
   login = async (
     req: Request<{}, {}, ILogin>,

@@ -6,6 +6,8 @@ const msgTitle = "Key";
 import { UserType } from "../interface/user.interface";
 import ApiHistoryModel from "../models/apiHistory.model";
 import AliasKeyModel from "../models/aliasKey.model";
+import { AliasKeyLogModel } from "../models/aliasKeyLog.model";
+
 //import redisClient from "../config/redis.config";
 //import IUser from "../interface/IUserAliasKey.interface";
 
@@ -18,7 +20,27 @@ const generateAliasKey = () => {
   }
   return key;
 };
+
 class AliasKeyController {
+  addToAliasKeyLog = async (
+    alias_id: string,
+    action:string,
+    desc: string,
+    user_id: string,
+    meta?: any, // ✅ object, not string
+  ) => {
+    try {
+      await AliasKeyLogModel.create({
+        alias_id,
+        action
+,        desc, // ✅ correct field
+        user_id,
+        meta, // ✅ correct field
+      });
+    } catch (error) {
+      console.error("Log creation failed:", error);
+    }
+  };
   // ✅ CREATE
   addData = async (
     req: Request<{}, {}, IUserAliasKey>,
@@ -67,6 +89,21 @@ class AliasKeyController {
         result.alias_key = aliasKey;
       }
 
+      const logMeta = {
+        project_name: result.project_name,
+        domain_name: result.domain_name,
+        proxy_id: result.proxy_id,
+        total_quota: result.total_quota,
+        cost_calculation: result.cost_calculation,
+        description: result.description,
+        approval_status: result.approval_status,
+        key_status: result.key_status,
+      };
+      let logText;
+      if (userId.role === "Admin")
+        logText = `Alias key '${result.alias_key || "-"}' created`;
+      else logText = `Alias key created`;
+      await this.addToAliasKeyLog(result._id,"CREATE", logText, req.user.id, logMeta);
       res.status(201).json({
         success: true,
         message: `${msgTitle} created successfully`,
@@ -476,7 +513,7 @@ class AliasKeyController {
                   },
                 },
               },
-               {
+              {
                 $expr: {
                   $regexMatch: {
                     input: { $toString: "$remaining_quota" },
@@ -776,7 +813,7 @@ class AliasKeyController {
                   },
                 },
               },
-               {
+              {
                 $expr: {
                   $regexMatch: {
                     input: { $toString: "$remaining_quota" },
@@ -1044,7 +1081,30 @@ class AliasKeyController {
         res.status(400).json({ success: false, message: "Invalid ID" });
         return;
       }
+      const oldData = await AliasKeyModel.findById(id);
+      if (!oldData) {
+        return res.status(404).json({ success: false, message: "Not found" });
+      }
 
+      const updateFields = {
+        domain_name: req.body.domain_name,
+        description: req.body.description,
+        cost_calculation: req.body.cost_calculation,
+      };
+
+      const changes: any = {};
+
+      for (const key in updateFields) {
+        if (
+          updateFields[key] !== undefined &&
+          updateFields[key] !== oldData[key]
+        ) {
+          changes[key] = {
+            old: oldData[key],
+            new: updateFields[key],
+          };
+        }
+      }
       const data = await AliasKeyModel.findByIdAndUpdate(
         id,
         {
@@ -1056,6 +1116,19 @@ class AliasKeyController {
           new: true,
         },
       );
+      if (Object.keys(changes).length > 0) {
+        const changeText = Object.entries(changes)
+          .map(([k, v]: any) => `${k}: '${v.old}' -> '${v.new}'`)
+          .join(", ");
+
+        await this.addToAliasKeyLog(
+          id,
+          "UPDATE",
+          "Alias updated",
+          req.user.id,
+          changes, // { field: { old, new } }
+        );
+      }
 
       if (!data) {
         res.status(404).json({
@@ -1089,15 +1162,27 @@ class AliasKeyController {
         return;
       }
 
-      const data = await AliasKeyModel.findByIdAndDelete(id);
+      // ✅ Fetch first
+      const existing = await AliasKeyModel.findById(id);
 
-      if (!data) {
+      if (!existing) {
         res.status(404).json({
           success: false,
           message: `${msgTitle} not found`,
         });
         return;
       }
+
+      // ✅ Log before delete
+      await this.addToAliasKeyLog(
+        id,
+        "DELETE",
+        `Alias key '${existing.alias_key || "-"}' deleted`,
+        req.user.id,
+      );
+
+      // ✅ Delete
+      await AliasKeyModel.findByIdAndDelete(id);
 
       res.status(200).json({
         success: true,
@@ -1107,68 +1192,107 @@ class AliasKeyController {
       next(error);
     }
   };
-  changeRequest = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> => {
-    try {
-      const { id, action, rejection_reason } = req.body;
+ changeRequest = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { id, action, rejection_reason } = req.body;
 
-      const existing = await AliasKeyModel.findById(id);
-
-      if (!existing) {
-        throw new Error("Alias key not found");
-      }
-
-      // ✅ Only allow once
-      if (existing.approval_status !== "Pending") {
-        throw new Error("Action already performed");
-      }
-
-      let updateData: any = {};
-
-      if (action === "Approved") {
-        const aliasKey = await this.generateUniqueAliasKey();
-
-        updateData = {
-          alias_key: aliasKey,
-          approval_status: "Approved",
-          remaining_quota: existing.total_quota, // ✅ IMPORTANT LINE
-        };
-      } else if (action === "Rejected") {
-        updateData = {
-          approval_status: "Rejected",
-          rejection_reason: rejection_reason,
-        };
-      }
-
-      const updated = await AliasKeyModel.findByIdAndUpdate(
-        id,
-        { $set: updateData },
-        { new: true },
-      );
-
-      // Update Redis cache if alias_key exists
-      // if (updated && updated.alias_key && action === "Active") {
-      //   await redisClient.setEx(
-      //     `alias_key:${updated.alias_key}`,
-      //     300,
-      //     JSON.stringify(updated),
-      //   );
-      // }
-
-      res.status(200).json({
-        success: true,
-        message: `Alias key ${
-          action === "Approved" ? "activated" : "rejected"
-        } successfully`,
-        data: updated, // optional but useful
-      });
-    } catch (error) {
-      next(error);
+    if (!["Approved", "Rejected"].includes(action)) {
+      throw new Error("Invalid action");
     }
-  };
+
+    const existing = await AliasKeyModel.findById(id);
+
+    if (!existing) {
+      throw new Error("Alias key not found");
+    }
+
+    // if (existing.approval_status !== "Pending") {
+    //   throw new Error("Action already performed");
+    // }
+
+    let updateData: any = {};
+    let logText = "";
+    let meta: any = {};
+
+    // ✅ APPROVE
+    if (action === "Approved") {
+      const aliasKey = await this.generateUniqueAliasKey();
+
+      updateData = {
+        alias_key: aliasKey,
+        approval_status: "Approved",
+        remaining_quota: existing.total_quota,
+      };
+
+      logText = `Alias key approved`;
+
+      meta = {
+        alias_key: {
+          old: existing.alias_key || null,
+          new: aliasKey,
+        },
+        approval_status: {
+          old: existing.approval_status,
+          new: "Approved",
+        },
+        remaining_quota: {
+          old: existing.remaining_quota || 0,
+          new: existing.total_quota,
+        },
+      };
+    }
+
+    // ❌ REJECT
+    else if (action === "Rejected") {
+      updateData = {
+        approval_status: "Rejected",
+        rejection_reason,
+      };
+
+      logText = `Alias key rejected`;
+
+      meta = {
+        approval_status: {
+          old: existing.approval_status,
+          new: "Rejected",
+        },
+        rejection_reason: {
+          old: existing.rejection_reason || null,
+          new: rejection_reason,
+        },
+      };
+    }
+
+    const updated = await AliasKeyModel.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true },
+    );
+// 
+    // ✅ Better action naming
+   await this.addToAliasKeyLog(
+  id,
+  "UPDATE",      
+  logText,      
+  req.user.id,
+  meta
+);
+
+    res.status(200).json({
+      success: true,
+      message: `Alias key ${
+        action === "Approved" ? "approved" : "rejected"
+      } successfully`,
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
   makeActiveInactive = async (
     req: Request,
     res: Response,
@@ -1191,7 +1315,14 @@ class AliasKeyController {
       // 🔥 Toggle logic
       const newStatus =
         existing.key_status === "Active" ? "Inactive" : "Active";
-
+      await this.addToAliasKeyLog(
+        id,
+        "UPDATE",
+        `Status changed from ${existing.key_status} to ${newStatus}`,
+        req.user.id,
+        {         
+        },
+      );
       const updated = await AliasKeyModel.findByIdAndUpdate(
         id,
         { $set: { key_status: newStatus } },

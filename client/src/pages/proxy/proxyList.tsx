@@ -1,3 +1,5 @@
+import { History } from "lucide-react";
+import { getLogStyle } from "../../utils/commonHistory";
 import React, { useEffect, useState, useRef } from "react";
 import {
   model_divider,
@@ -41,6 +43,7 @@ import {
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 import { FiChevronDown, FiChevronUp, FiCopy, FiCheck } from "react-icons/fi";
+import type { IProxy } from "../../interface/proxy.interface";
 
 function CurlCell({ curl }: { curl: string }) {
   const [expanded, setExpanded] = useState(false);
@@ -112,8 +115,10 @@ const ProxyList = ({ status }: Props) => {
   const [selectedRow, setSelectedRow] = useState<IProxy | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showActiveInactiveModal, setShowActiveInactiveModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [newStatus, setNewStatus] = useState(false);
-
+  const [historyData, setHistoryData] = useState<any[]>([]);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [mobileView, setMobileView] = useState(false);
   const deleteModalRef = useRef<HTMLDivElement>(null);
   const actionModalRef = useRef<HTMLDivElement>(null);
@@ -254,7 +259,21 @@ const ProxyList = ({ status }: Props) => {
 
     setPage(1);
   };
+  const handleShowHistory = async (row: IProxy) => {
+    try {
+      setLoading(true);
+      setSelectedRow(row);
 
+      const res = await apiClient.get(`api/proxy-log/${row._id}`);
+
+      setHistoryData(res.data.data || []);
+      setShowHistoryModal(true);
+    } catch (err) {
+      toast.error("Failed to load history");
+    } finally {
+      setLoading(false);
+    }
+  };
   const ActionColumn = (row: IProxy) => (
     <div className="flex items-center gap-1">
       {status === "active" && (
@@ -286,6 +305,13 @@ const ProxyList = ({ status }: Props) => {
         title="View"
       >
         <FiEye className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => handleShowHistory(row)}
+        className="relative flex items-center justify-center p-0.5 text-amber-600 transition-all duration-200 rounded-md hover:text-white hover:bg-amber-500 group"
+        title="Approve"
+      >
+        <History className="w-4 h-4 " />
       </button>
     </div>
   );
@@ -768,6 +794,97 @@ const ProxyList = ({ status }: Props) => {
                 <span className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></span>
                 <span className="w-1 h-1 rounded-full bg-primary animate-bounce"></span>
               </span>
+            </div>
+          </div>
+        </div>
+      )}
+      {showHistoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 bg-black/60 backdrop-blur-md">
+          <div
+            // ref={actionModalRef}
+            className="relative w-full max-w-3xl overflow-hidden transition-all duration-300 transform bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in-95"
+          >
+            {/* Close Icon */}
+            <button
+              onClick={() => setShowHistoryModal(false)}
+              className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 group"
+            >
+              <MdClose className="w-4 h-4 transition-transform group-hover:scale-110" />
+            </button>
+
+            {/* Header - Kept as requested */}
+            <div className="flex items-center justify-between px-6 py-6 border-b border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-800">
+                Key History Details
+              </h2>
+            </div>
+
+            {/* BODY */}
+            <div className="flex-1 px-8 py-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
+              {historyData.length === 0 ? (
+                <p className="text-sm text-center text-gray-500">
+                  No history available
+                </p>
+              ) : (
+                <div className="relative pl-6 space-y-6 border-l border-gray-200">
+                  {historyData.map((log, index) => {
+                    const style = getLogStyle(log.desc);
+
+                    return (
+                      <div key={index} className="relative">
+                        {/* Timeline dot */}
+                        <span className="absolute -left-[30px] flex items-center justify-center w-6 h-6 bg-white border rounded-full">
+                          <span>{style.icon}</span>
+                        </span>
+
+                        {/* Card */}
+                        <div className="p-4 transition border rounded-lg shadow-sm bg-gray-50 hover:shadow-md">
+                          {/* Top Row */}
+                          <div className="flex items-center justify-between">
+                            <h4 className={`font-medium ${style.color}`}>
+                              {log.desc}
+                            </h4>
+
+                            <span className="text-xs text-gray-400">
+                              {new Date(log.created_date).toLocaleString()}
+                            </span>
+                          </div>
+
+                          {/* User */}
+                          <div className="mt-1 text-xs text-gray-500">
+                            By:{" "}
+                            <span className="font-medium text-gray-700">
+                              {log.user_id?.first_name || "System"}
+                            </span>
+                          </div>
+
+                          {/* Meta (expandable feel) */}
+                          {log.logMeta && (
+                            <div className="p-2 mt-3 overflow-x-auto text-xs text-gray-600 bg-white border rounded">
+                              <pre className="whitespace-pre-wrap">
+                                {log.logMeta}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* FOOTER */}
+            <div className={model_divider}></div>
+
+            {/* Actions */}
+            <div className={model_botton_container}>
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                className={close_cancel_button}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

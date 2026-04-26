@@ -10,6 +10,9 @@ import {
   label_style,
   input_style,
   input_style_with_gray_border,
+  model_divider,
+  model_botton_container,
+  close_cancel_button,
 } from "../../utils/CommonFn";
 import { MdFirstPage, MdLastPage } from "react-icons/md";
 import { CheckCircle, XCircle } from "lucide-react";
@@ -484,6 +487,7 @@ const KeyMonitorActive = () => {
       name: "No.",
       cell: (_: any, index: number) => (page - 1) * limit + index + 1,
       minWidth: "70px",
+      width: "70px",
     },
 
     {
@@ -630,15 +634,6 @@ const KeyMonitorActive = () => {
       selector: (row: IAliasKey) => row.key_status,
       sortable: true,
       sortField: "key_status",
-      // cell: (row: IAliasKey) => (
-      //   <span
-      //     className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getStatusStyle(
-      //       row.key_status,
-      //     )}`}
-      //   >
-      //     <StatusBadge status={row.key_status} />
-      //   </span>
-      // ),
       cell: (row: IAliasKey) => (
         <KeyStatusBadge
           type="key_status"
@@ -678,7 +673,13 @@ const KeyMonitorActive = () => {
       grow: 0,
     },
   ];
-
+  const isAnyFilterApplied =
+    search ||
+    keyStatusFilter ||
+    startDate ||
+    endDate ||
+    appliedStartDate ||
+    appliedEndDate;
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
       {/* HEADER */}
@@ -782,13 +783,13 @@ const KeyMonitorActive = () => {
                   setAppliedEndDate(endDate);
                   setPage(1);
                 }}
-                className={`px-2.5 py-2 text-xs font-medium rounded-lg border ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg border ${
                   startDate && endDate
                     ? "text-primary border-primary bg-white hover:bg-primary hover:text-white"
                     : "text-gray-400 bg-gray-200 cursor-not-allowed"
                 }`}
               >
-                Filter
+                Apply
               </button>
 
               <button
@@ -803,7 +804,11 @@ const KeyMonitorActive = () => {
                   searchRef.current?.focus();
                   setPage(1);
                 }}
-                className="px-2.5 py-2 text-xs font-medium text-primary border border-primary bg-white hover:bg-primary hover:text-white rounded-lg"
+                className={`px-4 py-2 text-sm font-medium rounded-lg border ${
+                  isAnyFilterApplied
+                    ? "text-primary border-primary bg-white hover:bg-primary hover:text-white"
+                    : "text-gray-400 bg-gray-200 cursor-not-allowed"
+                }`}
               >
                 Clear
               </button>
@@ -838,6 +843,16 @@ const KeyMonitorActive = () => {
                   table: {
                     style: {
                       width: "100%",
+                    },
+                  },
+                  rows: {
+                    style: {
+                      cursor: "pointer",
+                    },
+                  },
+                  cells: {
+                    style: {
+                      pointerEvents: "auto", // ✅ ensures clicks bubble
                     },
                   },
                 }}
@@ -1197,13 +1212,13 @@ const KeyMonitorActive = () => {
             </div>
 
             {/* Divider */}
-            <div className="border-t border-gray-100"></div>
+            <div className={model_divider}></div>
 
             {/* Footer - Unchanged */}
-            <div className="flex justify-end px-6 py-4">
+            <div className={model_botton_container}>
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="px-5 py-2 text-sm font-medium text-gray-700 transition-all duration-200 bg-gray-100 rounded-lg hover:bg-gray-200 hover:shadow-sm active:scale-95"
+                className={close_cancel_button}
               >
                 Close
               </button>
