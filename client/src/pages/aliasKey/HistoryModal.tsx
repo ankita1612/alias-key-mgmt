@@ -187,7 +187,7 @@ const HistoryModal: React.FC<Props> = ({ open, onClose, data, title }) => {
                                       className="flex items-start gap-3 p-2 border rounded-lg bg-gray-50"
                                     >
                                       {/* KEY */}
-                                      <span className="font-medium text-gray-900 capitalize whitespace-nowrap">
+                                      <span className="font-medium text-gray-900 capitalize whitespace-nowrap w-[100px] truncate inline-block">
                                         {key.replace(/_/g, " ")}
                                       </span>
 
@@ -210,17 +210,20 @@ const HistoryModal: React.FC<Props> = ({ open, onClose, data, title }) => {
                                               // 🔥 LARGE TEXT → BOX WITH SCROLL
                                               <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2">
                                                 {/* OLD */}
-                                                <div className="min-w-0 px-2 rounded ">
-                                                  <div className="overflow-auto text-xs text-gray-600 break-words max-h-24">
-                                                    {value.old ?? "-"}
-                                                  </div>
-                                                </div>
+                                                {key != "rejection_reason" && (
+                                                  <>
+                                                    <div className="min-w-0 px-2 rounded ">
+                                                      <div className="overflow-auto text-xs text-gray-600 break-words max-h-24">
+                                                        {value.old ?? "-"}
+                                                      </div>
+                                                    </div>
 
-                                                {/* ARROW */}
-                                                <div className="flex items-center justify-center h-full">
-                                                  <MdArrowForward className="text-lg text-gray-400" />
-                                                </div>
-
+                                                    {/* ARROW */}
+                                                    <div className="flex items-center justify-center h-full">
+                                                      <MdArrowForward className="text-lg text-gray-400" />
+                                                    </div>
+                                                  </>
+                                                )}
                                                 {/* NEW */}
                                                 <div className="min-w-0 px-2 rounded">
                                                   <div className="overflow-auto text-xs text-gray-600 break-words max-h-24">
@@ -231,15 +234,19 @@ const HistoryModal: React.FC<Props> = ({ open, onClose, data, title }) => {
                                             ) : (
                                               // ✅ SMALL TEXT → INLINE
                                               <div className="flex items-center gap-2">
-                                                <span className="px-2 py-0.5 rounded max-h-24 overflow-y-auto break-words">
-                                                  {value.old ?? "-"}
-                                                </span>
+                                                {key != "rejection_reason" && (
+                                                  <>
+                                                    <span className="px-2 py-0.5 rounded max-h-24 overflow-y-auto break-words">
+                                                      {value.old ?? "-"}
+                                                    </span>
 
-                                                <span className="text-gray-400">
-                                                  →
-                                                </span>
+                                                    <div className="flex items-center justify-center h-full">
+                                                      <MdArrowForward className="text-lg text-gray-400" />
+                                                    </div>
+                                                  </>
+                                                )}
 
-                                                <span className="px-2 py-0.5 bg-green-50 text-green-600 rounded max-h-24 overflow-y-auto break-words">
+                                                <span className="px-2 py-0.5  text-gray-600 rounded max-h-24 overflow-y-auto break-words">
                                                   {value.new ?? "-"}
                                                 </span>
                                               </div>
