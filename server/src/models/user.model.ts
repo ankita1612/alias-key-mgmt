@@ -25,7 +25,7 @@ const userSchema = new Schema<IUser>(
       enum: Object.values(UserType),
       default: UserType.USER,
     },
-    deletedAt: {
+    deleted_at: {
       type: Date,
       default: null,
     },

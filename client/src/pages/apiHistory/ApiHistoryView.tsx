@@ -279,7 +279,7 @@ function ApiHistoryView() {
                       <div className="flex items-center gap-2">
                         <FiAlertCircle className="w-4 h-4 text-red-500" />
                         <span className="p-0 text-sm text-red-700 rounded-lg bg-red-50">
-                          This proxy has been deleted and is no longer available
+                          This proxy has been deleted.
                         </span>
                       </div>
                     </div>

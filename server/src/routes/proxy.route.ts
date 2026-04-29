@@ -32,6 +32,12 @@ proxyRouter.delete(
   proxyController.deleteData,
 );
 proxyRouter.get(
+  "/restore/:id",
+  authentication,
+  validateId,
+  proxyController.restoreData,
+);
+proxyRouter.get(
   "/get-detail/:id",
   authentication,
   validateId,

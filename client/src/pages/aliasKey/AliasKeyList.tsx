@@ -1,8 +1,8 @@
 import { History } from "lucide-react";
 import HistoryModal from "./HistoryModal";
 import KeyDetailModal from "./KeyDetailModal";
+import { ArchiveRestore } from "lucide-react";
 
-import { FiX } from "react-icons/fi";
 import StatusBadge, { getStatusConfig } from "../../utils/StatusBadge";
 import { customTableStyles } from "../datatableDesign";
 import { showToast } from "../../utils/CustomToast";
@@ -55,6 +55,8 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
   const [appliedEndDate, setAppliedEndDate] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteAction, setDeleteAction] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [apiData, setApiData] = useState<IAliasKey[]>([]);
   const [page, setPage] = useState(1);
@@ -156,8 +158,9 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
     showActiveInactiveModal,
     showRejectedModal,
   ]);
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = (id: string, action: string) => {
     setDeleteId(id);
+    setDeleteAction(action);
     setShowDeleteModal(true);
   };
   const handleConfirmDelete = async () => {
@@ -174,6 +177,28 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
     } catch (error: any) {
       setApiData(previousData);
       toast.error(error.response?.data?.message || "Delete failed");
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteId(null);
+    }
+  };
+  const handleConfirmRestore = async () => {
+    if (!deleteId) return;
+
+    const previousData = apiData;
+    setApiData((prev) => prev.filter((p) => p._id !== deleteId));
+
+    try {
+      const res = await apiClient.get(
+        `${BACKEND_URL}/api/alias-key/restore/${deleteId}`,
+      );
+      toast.success(res.data.message);
+    } catch (error: unknown) {
+      const err = error as Error & {
+        response?: { data?: { message?: string } };
+      };
+      setApiData(previousData);
+      toast.error(err?.response?.data?.message || "Restore failed");
     } finally {
       setShowDeleteModal(false);
       setDeleteId(null);
@@ -242,16 +267,19 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
     const Icon = statusConfig.icon;
 
     const commonClass = `inline-flex items-center gap-1.5 px-2.5 py-1 font-medium rounded-full border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`;
-
+    const allow_change_status = alias_key_status == "active" ? true : false;
     if (userRole === "Admin") {
       return (
         <button
           disabled={isDeleted}
-          onClick={() =>
-            onStatusChange(
-              row,
-              row.key_status === "Active" ? "Inactive" : "Active",
-            )
+          onClick={
+            allow_change_status
+              ? () =>
+                  onStatusChange(
+                    row,
+                    row.key_status === "Active" ? "Inactive" : "Active",
+                  )
+              : undefined
           }
           className={commonClass}
           title="Click to change status"
@@ -466,7 +494,7 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
     row,
     userRole,
     onEdit,
-    onDelete,
+
     onView,
     isDeleted,
   }: any) => {
@@ -478,6 +506,15 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
     ) {
       canEdit = true;
     }
+
+    let can_delete = false;
+    //alert(user?.role);
+    if (user?.role == "User") {
+      can_delete = row.approval_status === "Pending" && user?.role === "User";
+    } else if (user?.role == "Admin" && alias_key_status == "active") {
+      can_delete = true;
+    }
+
     return (
       <div className="flex items-center gap-2">
         <button
@@ -499,17 +536,31 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
                 <FiEdit2 className="w-4 h-4" />
               </button>
             )}
-            {/* {row.approval_status == "Pending" && row.key_status == "Active" && ( */}
-            {row.is_deleted != true && (
-              <button
-                onClick={() => onDelete(row._id)}
-                className="relative flex items-center justify-center p-0.5 text-red-600 transition-all duration-200 rounded-md hover:text-white hover:bg-red-500 group"
-                title="Delete"
-              >
-                <FiTrash2 className="w-4 h-4" />
-              </button>
-            )}
-            {userRole === "Admin" &&
+          </>
+        )}
+        {/* {row.approval_status == "Pending" && row.key_status == "Active" && ( */}
+        {can_delete && (
+          <button
+            onClick={() => handleDeleteClick(row._id, "delete")}
+            className="relative flex items-center justify-center p-0.5 text-red-600 transition-all duration-200 rounded-md hover:text-white hover:bg-red-500 group"
+            title="Delete"
+          >
+            <FiTrash2 className="w-4 h-4" />
+          </button>
+        )}
+        {alias_key_status === "deleted" && (
+          <button
+            onClick={() => handleDeleteClick(row._id, "restore")}
+            className="flex items-center justify-center p-1.5 text-blue-600 hover:text-white hover:bg-blue-500 rounded-md transition-all duration-200 group relative"
+            title="Restore"
+          >
+            <ArchiveRestore className="w-4 h-4" />
+          </button>
+        )}
+        {!isDeleted && (
+          <>
+            {alias_key_status == "active" &&
+              userRole === "Admin" &&
               row.approval_status == "Pending" &&
               row.key_status == "Active" && (
                 <button
@@ -520,16 +571,15 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
                   <CheckCircle className="w-4 h-4" />
                 </button>
               )}
-
-            <button
-              onClick={() => handleShowHistory(row)}
-              className="relative flex items-center justify-center p-0.5 text-amber-600 transition-all duration-200 rounded-md hover:text-white hover:bg-amber-500 group"
-              title="Log"
-            >
-              <History className="w-4 h-4 " />
-            </button>
           </>
         )}
+        <button
+          onClick={() => handleShowHistory(row)}
+          className="relative flex items-center justify-center p-0.5 text-amber-600 transition-all duration-200 rounded-md hover:text-white hover:bg-amber-500 group"
+          title="Log"
+        >
+          <History className="w-4 h-4 " />
+        </button>
       </div>
     );
   };
@@ -564,23 +614,9 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
       grow: 2, // Give more space to Key column
       cell: (row: IAliasKey) => (
         <div className="relative flex items-center gap-2 group">
-          <span
-            className={`font-semibold ${row.proxy?.is_deleted ? "text-gray-400 line-through" : "text-gray-900"} break-all`}
-          >
+          <span className={`font-semibold text-gray-900 break-all`}>
             {row.alias_key || "-"}
           </span>
-          {row.proxy?.is_deleted && (
-            <>
-              {/* Cross Icon */}
-              <FiX className="w-4 h-4 text-red-500" />
-
-              {/* Tooltip on Hover */}
-              <div className="absolute z-10 invisible px-2 py-1 ml-2 text-xs text-white transition-all duration-200 bg-gray-900 rounded-md opacity-0 pointer-events-none group-hover:visible group-hover:opacity-100 whitespace-nowrap left-full">
-                Proxy Deleted
-                <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-1.5 h-1.5 bg-gray-900 rotate-45"></div>
-              </div>
-            </>
-          )}
         </div>
       ),
     },
@@ -639,7 +675,8 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
       selector: (row: any) => row.remaining_quota,
       sortable: true,
       sortField: "remaining_quota",
-      width: "120px",
+      minWidth: "170px",
+
       cell: (row: IAliasKey) => <span>{row.remaining_quota || "0"}</span>,
     },
     {
@@ -661,6 +698,24 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
       width: "140px",
       minWidth: "140px",
     },
+    ...(alias_key_status === "deleted"
+      ? [
+          {
+            name: "Deleted",
+            sortable: true,
+            width: "130px",
+            sortField: "deleted_at",
+            cell: (row: any) =>
+              row.deleted_at
+                ? new Date(row.deleted_at).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })
+                : "-",
+          },
+        ]
+      : []),
     {
       name: "Status",
       selector: (row: IAliasKey) => row.key_status || "-",
@@ -681,7 +736,7 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
     {
       name: "Approval Status",
       selector: (row: IAliasKey) => row.approval_status || "-",
-      width: "150px",
+      width: "180px",
       sortable: true,
       cell: (row: IAliasKey) => (
         <ApprovalStatusBadge
@@ -708,11 +763,19 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
           onEdit={(id: string) => {
             navigate(`/alias-key/add/${id}`);
           }}
-          onDelete={(id: string) => handleDeleteClick(id)}
           onView={() => handleshowKeyDetail(row)}
           isDeleted={row.proxy?.is_deleted}
         />
       ),
+    },
+  ];
+
+  const conditionalRowStyles = [
+    {
+      when: (row) => row?.proxy?.is_deleted, // or row.is_deleted (based on your data)
+      style: {
+        backgroundColor: "#fef2f2", // Tailwind red-50
+      },
     },
   ];
   const isAnyFilterApplied =
@@ -929,6 +992,7 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
                 }}
                 responsive
                 onRowClicked={(row) => handleshowKeyDetail(row)}
+                conditionalRowStyles={conditionalRowStyles}
               />
             </div>
           </div>
@@ -952,17 +1016,20 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
               <h2 className="text-lg font-semibold text-slate-800">
-                Key Delete
+                {deleteAction == "delete" ? "Key Delete" : "Key Restore"}
               </h2>
             </div>
 
             {/* Warning Content */}
             <div className="flex-1 px-6 py-4 overflow-y-auto">
-              <p className="text-sm font-normal">
-                Are you sure you want to delete key?
-              </p>
+              {deleteAction == "delete" ? (
+                <p className="text-sm ">Are you sure you want to delete key?</p>
+              ) : (
+                <p className="text-sm ">
+                  Are you sure you want to restore key?
+                </p>
+              )}
             </div>
-
             {/* Divider */}
             <div className={model_divider}></div>
 
@@ -975,12 +1042,21 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
                 Cancel
               </button>
 
-              <button
-                onClick={handleConfirmDelete}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition bg-red-500 rounded-md hover:bg-red-600"
-              >
-                Delete
-              </button>
+              {deleteAction == "delete" ? (
+                <button
+                  onClick={handleConfirmDelete}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition bg-red-500 rounded-md hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              ) : (
+                <button
+                  onClick={handleConfirmRestore}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition bg-blue-500 rounded-md hover:bg-blue-600"
+                >
+                  Restore
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1262,7 +1338,7 @@ const AliasKeyList = ({ alias_key_status }: Props) => {
                     <div className="flex items-center gap-2">
                       <FiAlertCircle className="w-4 h-4 text-red-500" />
                       <span className="p-0 text-sm text-red-700 rounded-lg bg-red-50">
-                        This proxy has been deleted and is no longer available
+                        This proxy has been deleted.
                       </span>
                     </div>
                   </div>

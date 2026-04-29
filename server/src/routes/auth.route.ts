@@ -17,18 +17,5 @@ adminAuthRouter.post(
 );
 adminAuthRouter.post("/logout", authController.logout);
 adminAuthRouter.get("/profile", authentication, authController.profile);
-adminAuthRouter.post(
-  "/change_password",
-  authentication,
-  isRequestValidated,
-  changePasswordValidator,
-  authController.changePassword,
-);
-adminAuthRouter.post(
-  "/update_profile",
-  authentication,
-  isRequestValidated,
-  updateProfileValidator,
-  authController.updateProfile,
-);
+
 export default adminAuthRouter;

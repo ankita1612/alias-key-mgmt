@@ -1,4 +1,6 @@
-export const domainRegex = /^(?!:\/\/)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+export const domainRegex = /^(?=.*[A-Za-z])[A-Za-z0-9./_-]+$/;
+export const domainMsg =
+  "Only letters, numbers, ., /, -, _ are allowed and must contain at least 1 letter";
 
 export const getStatusStyle = (status?: string) => {
   switch (status?.toLowerCase()) {

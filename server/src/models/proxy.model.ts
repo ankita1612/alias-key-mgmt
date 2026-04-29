@@ -11,7 +11,6 @@ export interface IProxy extends Document {
   description?: string;
   query_params: Record<string, string>;
   credit: number;
-  counter: number;
   is_deleted?: boolean;
   deleted_at?: Date;
 }
@@ -60,10 +59,7 @@ const ProxySchema: Schema = new Schema(
       type: Number,
       default: 0,
     },
-    counter: {
-      type: Number,
-      default: 0,
-    },
+
     is_deleted: {
       type: Boolean,
       default: false,

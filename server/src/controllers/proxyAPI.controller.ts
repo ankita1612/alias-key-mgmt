@@ -2,7 +2,6 @@ import { ProxyLogModel } from "../models/proxyLog.model";
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 import AliasKeyModel from "../models/aliasKey.model";
-import {AliasKeyLogModel}  from "../models/aliasKeyLog.model";
 import ProxyModel from "../models/proxy.model";
 //import { axiosInstance } from "../utils/axiosInstance";
 //import { parseCurl } from "../utils/parseCurl";
@@ -106,10 +105,12 @@ class ProxyController {
   getProxyResponse = async (req: Request, res: Response) => {
     const startTime = Date.now();
 
-    const alias_key = req.query.alias_key || req.body.alias_key;
+    const alias_key = req.query.alias_key || req.body?.alias_key;
 
     if (!alias_key) {
-      return res.status(400).json({ message: "Key is required" });
+      return res
+        .status(400)
+        .json({ success: "fail", message: "Key is required" });
     }
 
     try {
@@ -121,7 +122,10 @@ class ProxyController {
       const allRequestParams = JSON.parse(JSON.stringify(requestParams));
 
       delete requestParams.alias_key;
-      const existingKey = await AliasKeyModel.findOne({ alias_key:alias_key , is_deleted: false }).lean();
+      const existingKey = await AliasKeyModel.findOne({
+        alias_key: alias_key,
+        is_deleted: false,
+      }).lean();
 
       if (!existingKey) {
         return res.status(400).json({
@@ -198,19 +202,6 @@ class ProxyController {
         { alias_key, remaining_quota: { $gt: 0 } },
         { $inc: { remaining_quota: -1 } },
       );
-
-if (quotaUpdate.modifiedCount > 0) {
-  AliasKeyLogModel.create({
-    alias_id: existingKey._id,
-    action: "UPDATE",
-    desc: "Quota deducted",
-    user_id: existingKey.user_id,
-    meta: {
-      type: "quota_decrement",
-      used: 1,
-    },
-  }).catch(console.error);
-}
 
       if (quotaUpdate.modifiedCount === 0) {
         return this.handleResponse(
@@ -301,26 +292,13 @@ if (quotaUpdate.modifiedCount > 0) {
         });
         const creditToAdd = Number(apiResponse?.data?.credit || 0);
 
-       if (creditToAdd > 0) {
-  const proxyUpdate = await ProxyModel.updateOne(
-    { _id: existingKey.proxy_id },
-    { $inc: { credit: creditToAdd } },
-  );
+        if (creditToAdd > 0) {
+          const proxyUpdate = await ProxyModel.updateOne(
+            { _id: existingKey.proxy_id },
+            { $inc: { credit: creditToAdd } },
+          );
+        }
 
-  if (proxyUpdate.modifiedCount > 0) {
-    ProxyLogModel.create({
-      proxy_id: existingKey.proxy_id,
-      action: "UPDATE",
-      desc: "Credit added from API response",
-      user_id: existingKey.user_id,
-      meta: {
-        type: "credit_increment",
-        added: creditToAdd,
-      },
-    }).catch(console.error);
-  }
-}
-       
         return this.handleResponse(
           res,
           existingKey.user_id,
@@ -335,22 +313,11 @@ if (quotaUpdate.modifiedCount > 0) {
         );
       } catch (error: any) {
         // ✅ Increment quota back on failure
-       const rollbackUpdate =  await AliasKeyModel.updateOne(
+        const rollbackUpdate = await AliasKeyModel.updateOne(
           { alias_key },
           { $inc: { remaining_quota: 1 } },
         );
-if (rollbackUpdate.modifiedCount > 0) {
-  AliasKeyLogModel.create({
-    alias_id: existingKey._id,
-    action: "UPDATE",
-    desc: "Quota restored due to API failure",
-    user_id: existingKey.user_id,
-    meta: {
-      type: "quota_rollback",
-      restored: 1,
-    },
-  }).catch(console.error);
-}
+
         // ✅ Axios error handling
         if (error.response) {
           // Server responded with error (4xx, 5xx)

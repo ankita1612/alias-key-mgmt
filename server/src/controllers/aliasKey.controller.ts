@@ -24,7 +24,7 @@ const generateAliasKey = () => {
 class AliasKeyController {
   addToAliasKeyLog = async (
     alias_id: string,
-    action:string,
+    action: string,
     desc: string,
     user_id: string,
     meta?: any, // ✅ object, not string
@@ -32,8 +32,8 @@ class AliasKeyController {
     try {
       await AliasKeyLogModel.create({
         alias_id,
-        action
-,        desc, // ✅ correct field
+        action,
+        desc, // ✅ correct field
         user_id,
         meta, // ✅ correct field
       });
@@ -74,7 +74,7 @@ class AliasKeyController {
         ...(req?.user?.role == UserType.ADMIN && {
           remaining_quota: data.total_quota,
         }),
-         is_deleted: false,
+        is_deleted: false,
       });
 
       if (req?.user?.role === UserType.ADMIN) {
@@ -101,10 +101,15 @@ class AliasKeyController {
         key_status: result.key_status,
       };
       let logText;
-      if (userId.role === "Admin")
-        logText = `Key '${result.alias_key || "-"}' created`;
-      else logText = `Key created`;
-      await this.addToAliasKeyLog(result._id,"CREATE", logText, req.user.id, logMeta);
+      if (userId.role === "Admin") logText = `Key Created`;
+      else logText = `Key Created`;
+      await this.addToAliasKeyLog(
+        result._id,
+        "CREATE",
+        logText,
+        req.user.id,
+        logMeta,
+      );
       res.status(201).json({
         success: true,
         message: `${msgTitle} created successfully`,
@@ -185,7 +190,7 @@ class AliasKeyController {
         key_status: { $in: ["Active", "Inactive"] }, // ✅ FIXED condition
       };
       match.approval_status = "Approved";
-      match.is_deleted = false; 
+      match.is_deleted = false;
 
       // 🔥 Add status filter
       if (
@@ -498,11 +503,11 @@ class AliasKeyController {
       if (approval_statusFilter) {
         match.approval_status = approval_statusFilter;
       }
-if (req.query.is_deleted === "true") {
-  match.is_deleted = true;
-} else {
-  match.is_deleted = false; // default
-}
+      if (req.query.is_deleted === "true") {
+        match.is_deleted = true;
+      } else {
+        match.is_deleted = false; // default
+      }
       // 🔥 Add date range filter
       if (startDate || endDate) {
         match.createdAt = {};
@@ -813,9 +818,9 @@ if (req.query.is_deleted === "true") {
         return;
       }
       const oldData = await AliasKeyModel.findOne({
-      _id: id,
-      is_deleted: false,
-    });
+        _id: id,
+        is_deleted: false,
+      });
       if (!oldData) {
         return res.status(404).json({ success: false, message: "Not found" });
       }
@@ -858,7 +863,7 @@ if (req.query.is_deleted === "true") {
         await this.addToAliasKeyLog(
           id,
           "UPDATE",
-          "Key updated",
+          "Key Updated",
           req.user.id,
           changes, // { field: { old, new } }
         );
@@ -887,7 +892,7 @@ if (req.query.is_deleted === "true") {
     req: Request<{ id: string }>,
     res: Response,
     next: NextFunction,
-  )=> {
+  ) => {
     try {
       const { id } = req.params;
 
@@ -908,15 +913,10 @@ if (req.query.is_deleted === "true") {
       }
 
       // ✅ Log before delete
-      await this.addToAliasKeyLog(
-        id,
-        "DELETE",
-        `Key '${existing.alias_key || "-"}' deleted`,
-        req.user.id,
-      );
+      await this.addToAliasKeyLog(id, "DELETE", `Key Deleted`, req.user.id);
 
       // ✅ Delete
-     
+
       const deleted = await AliasKeyModel.findByIdAndUpdate(
         id,
         {
@@ -924,122 +924,168 @@ if (req.query.is_deleted === "true") {
           deleted_at: new Date(),
         },
         { new: true },
-      ); 
+      );
       if (!deleted) {
-         res.status(404).json({
+        res.status(404).json({
           success: false,
           message: "Key not found",
         });
       }
       res.status(200).json({
         success: true,
-        message: `${msgTitle} deleted successfully`,
+        message: `Key deleted successfully`,
       });
     } catch (error) {
       next(error);
     }
   };
- changeRequest = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> => {
-  try {
-    const { id, action, rejection_reason } = req.body;
+  restoreData = async (
+    req: Request<{ id: string }>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const { id } = req.params;
 
-    if (!["Approved", "Rejected"].includes(action)) {
-      throw new Error("Invalid action");
+      if (!Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid ID",
+        });
+      }
+
+      const existing = await AliasKeyModel.findById(id);
+
+      if (!existing) {
+        return res.status(404).json({
+          success: false,
+          message: `${msgTitle} not found`,
+        });
+      }
+
+      // ✅ Restore first
+      const restored = await AliasKeyModel.findByIdAndUpdate(
+        id,
+        {
+          is_deleted: false,
+          deleted_at: null,
+        },
+        { new: true },
+      );
+
+      if (!restored) {
+        return res.status(404).json({
+          success: false,
+          message: "Key not found",
+        });
+      }
+
+      // ✅ Log AFTER success
+      await this.addToAliasKeyLog(id, "RESTORE", "Key restored", req.user.id);
+
+      return res.status(200).json({
+        success: true,
+        message: "Key restored successfully",
+      });
+    } catch (error) {
+      next(error);
     }
+  };
+  changeRequest = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const { id, action, rejection_reason } = req.body;
 
-    const existing = await AliasKeyModel.findById(id);
+      if (!["Approved", "Rejected"].includes(action)) {
+        throw new Error("Invalid action");
+      }
 
-    if (!existing) {
-      throw new Error("Key not found");
+      const existing = await AliasKeyModel.findById(id);
+
+      if (!existing) {
+        throw new Error("Key not found");
+      }
+
+      // if (existing.approval_status !== "Pending") {
+      //   throw new Error("Action already performed");
+      // }
+
+      let updateData: any = {};
+      let logText = "";
+      let meta: any = {};
+
+      // ✅ APPROVE
+      if (action === "Approved") {
+        const aliasKey = await this.generateUniqueAliasKey();
+
+        updateData = {
+          alias_key: aliasKey,
+          approval_status: "Approved",
+          remaining_quota: existing.total_quota,
+        };
+
+        logText = `Key Approved`;
+
+        meta = {
+          alias_key: {
+            old: existing.alias_key || null,
+            new: aliasKey,
+          },
+          approval_status: {
+            old: existing.approval_status,
+            new: "Approved",
+          },
+          remaining_quota: {
+            old: existing.remaining_quota || 0,
+            new: existing.total_quota,
+          },
+        };
+      }
+
+      // ❌ REJECT
+      else if (action === "Rejected") {
+        updateData = {
+          approval_status: "Rejected",
+          rejection_reason,
+        };
+
+        logText = `Key Rejected`;
+
+        meta = {
+          approval_status: {
+            old: existing.approval_status,
+            new: "Rejected",
+          },
+          rejection_reason: {
+            old: existing.rejection_reason || null,
+            new: rejection_reason,
+          },
+        };
+      }
+
+      const updated = await AliasKeyModel.findByIdAndUpdate(
+        id,
+        { $set: updateData },
+        { new: true },
+      );
+      //
+      // ✅ Better action naming
+      await this.addToAliasKeyLog(id, "UPDATE", logText, req.user.id, meta);
+
+      res.status(200).json({
+        success: true,
+        message: `Key ${
+          action === "Approved" ? "approved" : "rejected"
+        } successfully`,
+        data: updated,
+      });
+    } catch (error) {
+      next(error);
     }
-
-    // if (existing.approval_status !== "Pending") {
-    //   throw new Error("Action already performed");
-    // }
-
-    let updateData: any = {};
-    let logText = "";
-    let meta: any = {};
-
-    // ✅ APPROVE
-    if (action === "Approved") {
-      const aliasKey = await this.generateUniqueAliasKey();
-
-      updateData = {
-        alias_key: aliasKey,
-        approval_status: "Approved",
-        remaining_quota: existing.total_quota,
-      };
-
-      logText = `Key approved`;
-
-      meta = {
-        alias_key: {
-          old: existing.alias_key || null,
-          new: aliasKey,
-        },
-        approval_status: {
-          old: existing.approval_status,
-          new: "Approved",
-        },
-        remaining_quota: {
-          old: existing.remaining_quota || 0,
-          new: existing.total_quota,
-        },
-      };
-    }
-
-    // ❌ REJECT
-    else if (action === "Rejected") {
-      updateData = {
-        approval_status: "Rejected",
-        rejection_reason,
-      };
-
-      logText = `Key Rejected`;
-
-      meta = {
-        approval_status: {
-          old: existing.approval_status,
-          new: "Rejected",
-        },
-        rejection_reason: {
-          old: existing.rejection_reason || null,
-          new: rejection_reason,
-        },
-      };
-    }
-
-    const updated = await AliasKeyModel.findByIdAndUpdate(
-      id,
-      { $set: updateData },
-      { new: true },
-    );
-// 
-    // ✅ Better action naming
-   await this.addToAliasKeyLog(
-  id,
-  "UPDATE",      
-  logText,      
-  req.user.id,
-  meta
-);
-
-    res.status(200).json({
-      success: true,
-      message: `Key ${
-        action === "Approved" ? "approved" : "rejected"
-      } successfully`,
-      data: updated,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  };
   makeActiveInactive = async (
     req: Request,
     res: Response,
@@ -1067,8 +1113,7 @@ if (req.query.is_deleted === "true") {
         "UPDATE",
         `Status changed from ${existing.key_status} to ${newStatus}`,
         req.user.id,
-        {         
-        },
+        {},
       );
       const updated = await AliasKeyModel.findByIdAndUpdate(
         id,

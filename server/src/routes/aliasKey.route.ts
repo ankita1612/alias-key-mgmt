@@ -28,7 +28,7 @@ aliasKeyRouter.post(
   aliasKeyController.addData,
 );
 aliasKeyRouter.get(
-  "/key-monotor",
+  "/key-monitor",
   authentication,
   aliasKeyController.getDatasKeyMonitor,
 );
@@ -47,6 +47,12 @@ aliasKeyRouter.delete(
   authentication,
   validateId,
   aliasKeyController.deleteData,
+);
+aliasKeyRouter.get(
+  "/restore/:id",
+  authentication,
+  validateId,
+  aliasKeyController.restoreData,
 );
 aliasKeyRouter.get(
   "/:id",

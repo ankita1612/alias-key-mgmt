@@ -5,7 +5,7 @@ import { param } from "express-validator";
 
 export const validateId = [param("id").isMongoId().withMessage("Invalid ID")];
 export const validateAdd = [
-  body("name").trim().notEmpty().withMessage("name is required"),
+  body("first_name").trim().notEmpty().withMessage("first_name is required"),
   body("email")
     .trim()
     .notEmpty()
@@ -16,7 +16,7 @@ export const validateAdd = [
   body("status").trim().notEmpty().withMessage("status is required"),
 ];
 export const validateEdit = [
-  body("name").trim().notEmpty().withMessage("name is required"),
+  body("first_name").trim().notEmpty().withMessage("first_name is required"),
   body("status").trim().notEmpty().withMessage("status is required"),
 ];
 export const isRequestValidated = (

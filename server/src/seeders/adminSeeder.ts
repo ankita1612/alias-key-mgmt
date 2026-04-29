@@ -35,7 +35,7 @@ const seedAdmin = async () => {
     for (const user of users) {
       const existingUser = await User.findOne({
         email: user.email,
-        deletedAt: null,
+        deleted_at: null,
       });
 
       if (existingUser) {

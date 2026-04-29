@@ -1,14 +1,20 @@
-import { MdArrowForward } from "react-icons/md";
 import React, { useState, useEffect } from "react";
-import { MdClose, MdExpandMore, MdExpandLess } from "react-icons/md";
+import { MdClose } from "react-icons/md";
+import { ArchiveRestore } from "lucide-react";
+import { PlusCircle } from "lucide-react";
+
 import {
   model_divider,
   model_botton_container,
   close_cancel_button,
+  input_style,
+  label_style,
 } from "../../utils/CommonFn";
 import { AiFillCheckCircle, AiFillCloseCircle } from "react-icons/ai";
 import { MdInfo } from "react-icons/md";
 import { FaTrash, FaPen, FaPlus } from "react-icons/fa";
+import { TrendingDown } from "lucide-react";
+import { PlayCircle, PauseCircle } from "lucide-react";
 
 interface LogStyleInput {
   action?: string;
@@ -16,6 +22,46 @@ interface LogStyleInput {
 }
 
 export const getLogStyle = ({ action, desc }: LogStyleInput) => {
+  const text = desc?.toLowerCase() || "";
+  console.log(text);
+  if (text.includes("approved")) {
+    return {
+      icon: <AiFillCheckCircle className="w-4 h-4 text-green-500" />,
+      color: "text-green-600",
+      bg: "bg-green-50",
+    };
+  } else if (text.includes("rejected")) {
+    return {
+      icon: <AiFillCloseCircle className="w-4 h-4 text-red-500" />,
+      color: "text-red-600",
+      bg: "bg-red-50",
+    };
+  } else if (text.includes("deducted")) {
+    return {
+      icon: <TrendingDown className="w-4 h-4 text-red-500" />,
+      color: "text-red-600",
+      bg: "bg-red-50",
+    };
+  } else if (text.includes("inactive to active")) {
+    return {
+      icon: <PlayCircle className="w-4 h-4 text-blue-500" />,
+      color: "text-red-600",
+      bg: "bg-red-50",
+    };
+  } else if (text.includes("active to inactive")) {
+    return {
+      icon: <PauseCircle className="w-4 h-4 text-gray-500" />,
+      color: "text-red-600",
+      bg: "bg-red-50",
+    };
+  } else if (text.includes("credit added")) {
+    return {
+      icon: <PlusCircle className="w-4 h-4 text-blue-500" />,
+      color: "text-red-600",
+      bg: "bg-red-50",
+    };
+  }
+
   const act = action?.toUpperCase();
 
   // ✅ PRIORITY: action-based
@@ -25,42 +71,27 @@ export const getLogStyle = ({ action, desc }: LogStyleInput) => {
       color: "text-green-600",
       bg: "bg-green-50",
     };
-  }
-
-  if (act === "UPDATE") {
+  } else if (act === "UPDATE") {
     return {
       icon: <FaPen className="w-4 h-4 text-blue-500" />,
       color: "text-blue-600",
       bg: "bg-blue-50",
     };
-  }
-
-  if (act === "DELETE") {
+  } else if (act === "DELETE") {
     return {
       icon: <FaTrash className="w-4 h-4 text-red-500" />,
       color: "text-red-600",
       bg: "bg-red-50",
     };
+  } else if (act === "RESTORE") {
+    return {
+      icon: <ArchiveRestore className="w-4 h-4 text-blue-500" />,
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+    };
   }
 
   // ✅ SECONDARY: desc-based (for special cases)
-  const text = desc?.toLowerCase() || "";
-
-  if (text.includes("approved")) {
-    return {
-      icon: <AiFillCheckCircle className="w-4 h-4 text-green-500" />,
-      color: "text-green-600",
-      bg: "bg-green-50",
-    };
-  }
-
-  if (text.includes("rejected")) {
-    return {
-      icon: <AiFillCloseCircle className="w-4 h-4 text-red-500" />,
-      color: "text-red-600",
-      bg: "bg-red-50",
-    };
-  }
 
   // ✅ fallback
   return {
@@ -119,8 +150,9 @@ const HistoryModal: React.FC<Props> = ({ open, onClose, data, title }) => {
               No history available
             </p>
           ) : (
-            <div className="relative pl-6 space-y-6 border-l border-gray-200">
+            <div className="relative pl-6 space-y-2">
               {data.map((log, index) => {
+                const isLast = index === data.length - 1;
                 const style = getLogStyle({
                   action: log.action,
                   desc: log.desc,
@@ -133,22 +165,24 @@ const HistoryModal: React.FC<Props> = ({ open, onClose, data, title }) => {
                 return (
                   <div key={index} className="relative group">
                     {/* Timeline Dot */}
-                    <span className="absolute -left-[40px] w-7 h-7 flex items-center justify-center bg-white border-2 border-gray-200 rounded-full shadow-sm group-hover:scale-110 transition">
+                    {/* Vertical line (only if NOT last) */}
+                    {!isLast && (
+                      <span className="absolute left-[-28px] top-7 w-px h-full bg-gray-200" />
+                    )}
+                    <span className="absolute -left-[42px] w-7 h-7 flex items-center justify-center bg-white border-2 border-gray-200 rounded-full shadow-sm group-hover:scale-110 transition">
                       {style.icon}
                     </span>
 
                     {/* Card */}
-                    <div className="p-4 transition bg-white border border-gray-100 shadow-sm rounded-xl hover:shadow-md">
+                    <div className="px-2 py-2 transition bg-white border border-gray-100 shadow-sm rounded-xl hover:shadow-md">
                       {/* Top */}
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <h4 className={`font-semibold ${style.color}`}>
-                            {log.desc}
-                          </h4>
+                          <h4 className={label_style}>{log.desc}</h4>
 
-                          <div className="mt-1 text-sm text-gray-500">
+                          <div className="mt-0 text-sm text-gray-500">
                             By{" "}
-                            <span className="font-medium text-gray-700">
+                            <span className={input_style}>
                               {log.user_id?.first_name || "System"}
                             </span>
                           </div>
@@ -159,116 +193,6 @@ const HistoryModal: React.FC<Props> = ({ open, onClose, data, title }) => {
                           {new Date(log.created_date).toLocaleTimeString()}
                         </span>
                       </div>
-
-                      {/* Meta Toggle */}
-                      {log.meta && Object.keys(log.meta).length > 0 && (
-                        <div className="mt-3">
-                          <button
-                            onClick={() => toggleExpand(index)}
-                            className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                          >
-                            {isOpen ? "Hide changes" : "View changes"}
-                            {isOpen ? <MdExpandLess /> : <MdExpandMore />}
-                          </button>
-
-                          {/* Expanded Meta */}
-                          {isOpen && (
-                            <div className="mt-3 space-y-2 text-xs">
-                              {Object.entries(log.meta).map(
-                                ([key, value]: any) => {
-                                  const isDiff =
-                                    typeof value === "object" && value !== null;
-                                  const isCreate =
-                                    log.action?.toUpperCase() === "CREATE";
-
-                                  return (
-                                    <div
-                                      key={key}
-                                      className="flex items-start gap-3 p-2 border rounded-lg bg-gray-50"
-                                    >
-                                      {/* KEY */}
-                                      <span className="font-medium text-gray-900 capitalize whitespace-nowrap w-[100px] truncate inline-block">
-                                        {key.replace(/_/g, " ")}
-                                      </span>
-
-                                      {/* VALUE */}
-                                      <div className="flex flex-col flex-1 min-w-0 text-xs text-gray-700">
-                                        {/* ✅ CREATE */}
-                                        {isCreate && (
-                                          <div className="self-start w-full px-2 overflow-y-auto text-gray-600 break-words max-h-24">
-                                            {isDiff
-                                              ? (value.new ?? "-")
-                                              : (value ?? "-")}
-                                          </div>
-                                        )}
-
-                                        {/* ✅ UPDATE */}
-                                        {!isCreate && isDiff && (
-                                          <>
-                                            {isLongText(value.old) ||
-                                            isLongText(value.new) ? (
-                                              // 🔥 LARGE TEXT → BOX WITH SCROLL
-                                              <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2">
-                                                {/* OLD */}
-                                                {key != "rejection_reason" && (
-                                                  <>
-                                                    <div className="min-w-0 px-2 rounded ">
-                                                      <div className="overflow-auto text-xs text-gray-600 break-words max-h-24">
-                                                        {value.old ?? "-"}
-                                                      </div>
-                                                    </div>
-
-                                                    {/* ARROW */}
-                                                    <div className="flex items-center justify-center h-full">
-                                                      <MdArrowForward className="text-lg text-gray-400" />
-                                                    </div>
-                                                  </>
-                                                )}
-                                                {/* NEW */}
-                                                <div className="min-w-0 px-2 rounded">
-                                                  <div className="overflow-auto text-xs text-gray-600 break-words max-h-24">
-                                                    {value.new ?? "-"}
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            ) : (
-                                              // ✅ SMALL TEXT → INLINE
-                                              <div className="flex items-center gap-2">
-                                                {key != "rejection_reason" && (
-                                                  <>
-                                                    <span className="px-2 py-0.5 rounded max-h-24 overflow-y-auto break-words">
-                                                      {value.old ?? "-"}
-                                                    </span>
-
-                                                    <div className="flex items-center justify-center h-full">
-                                                      <MdArrowForward className="text-lg text-gray-400" />
-                                                    </div>
-                                                  </>
-                                                )}
-
-                                                <span className="px-2 py-0.5  text-gray-600 rounded max-h-24 overflow-y-auto break-words">
-                                                  {value.new ?? "-"}
-                                                </span>
-                                              </div>
-                                            )}
-                                          </>
-                                        )}
-
-                                        {/* ✅ NON-DIFF */}
-                                        {!isCreate && !isDiff && (
-                                          <div className="px-2 py-1 overflow-y-auto text-green-600 break-words rounded bg-green-50 max-h-24">
-                                            {value ?? "-"}
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                },
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </div>
                 );

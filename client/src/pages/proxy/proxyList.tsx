@@ -1,19 +1,13 @@
 import { History } from "lucide-react";
 import HistoryModal from "../aliasKey/HistoryModal";
 import React, { useEffect, useState, useRef } from "react";
+import { ArchiveRestore } from "lucide-react";
+
 import {
   model_divider,
   model_botton_container,
   close_cancel_button,
-  getStatusStyle,
   char_max_len_listing,
-  generateProxyUrl,
-  handleCopy,
-  fallbackCopy,
-  heading_label_style,
-  label_style,
-  input_style,
-  input_style_with_gray_border,
 } from "../../utils/CommonFn";
 import {
   FiSearch,
@@ -55,6 +49,7 @@ const ProxyList = ({ status }: Props) => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteAction, setDeleteAction] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [apiData, setApiData] = useState<IProxy[]>([]);
   const location = useLocation();
@@ -91,8 +86,9 @@ const ProxyList = ({ status }: Props) => {
     setSelectedCurl("");
   };
   const controllerRef = useRef<AbortController | null>(null);
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = (id: string, action: string) => {
     setDeleteId(id);
+    setDeleteAction(action);
     setShowDeleteModal(true);
   };
   const handleConfirmDelete = async () => {
@@ -112,6 +108,28 @@ const ProxyList = ({ status }: Props) => {
       };
       setApiData(previousData);
       toast.error(err?.response?.data?.message || "Delete failed");
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteId(null);
+    }
+  };
+  const handleConfirmRestore = async () => {
+    if (!deleteId) return;
+
+    const previousData = apiData;
+    setApiData((prev) => prev.filter((p) => p._id !== deleteId));
+
+    try {
+      const res = await apiClient.get(
+        `${BACKEND_URL}/api/proxy/restore/${deleteId}`,
+      );
+      toast.success(res.data.message);
+    } catch (error: unknown) {
+      const err = error as Error & {
+        response?: { data?: { message?: string } };
+      };
+      setApiData(previousData);
+      toast.error(err?.response?.data?.message || "Restore failed");
     } finally {
       setShowDeleteModal(false);
       setDeleteId(null);
@@ -236,14 +254,6 @@ const ProxyList = ({ status }: Props) => {
           >
             <FiEdit2 className="w-4 h-4" />
           </button>
-
-          <button
-            onClick={() => handleDeleteClick(row._id)}
-            className="flex items-center justify-center p-1.5 text-red-600 hover:text-white hover:bg-red-500 rounded-md transition-all duration-200 group relative"
-            title="Delete"
-          >
-            <FiTrash2 className="w-4 h-4" />
-          </button>
         </>
       )}{" "}
       <button
@@ -257,6 +267,24 @@ const ProxyList = ({ status }: Props) => {
       >
         <FiEye className="w-4 h-4" />
       </button>
+      {status === "active" && (
+        <button
+          onClick={() => handleDeleteClick(row._id, "delete")}
+          className="flex items-center justify-center p-1.5 text-red-600 hover:text-white hover:bg-red-500 rounded-md transition-all duration-200 group relative"
+          title="Delete"
+        >
+          <FiTrash2 className="w-4 h-4" />
+        </button>
+      )}{" "}
+      {status === "deleted" && (
+        <button
+          onClick={() => handleDeleteClick(row._id, "restore")}
+          className="flex items-center justify-center p-1.5 text-blue-600 hover:text-white hover:bg-blue-500 rounded-md transition-all duration-200 group relative"
+          title="Restore"
+        >
+          <ArchiveRestore className="w-4 h-4" />
+        </button>
+      )}
       <button
         onClick={() => handleShowHistory(row)}
         className="relative flex items-center justify-center p-0.5 text-amber-600 transition-all duration-200 rounded-md hover:text-white hover:bg-amber-500 group"
@@ -532,13 +560,21 @@ const ProxyList = ({ status }: Props) => {
             {/* Header - Kept as requested */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
               <h2 className="text-lg font-semibold text-slate-800">
-                Proxy Delete
+                {deleteAction == "delete" ? "Proxy Delete" : "Proxy Restore"}
               </h2>
             </div>
 
             {/* Warning Content */}
             <div className="flex-1 px-6 py-4 overflow-y-auto">
-              <p className="text-sm ">Are you sure you want to delete proxy?</p>
+              {deleteAction == "delete" ? (
+                <p className="text-sm ">
+                  Are you sure you want to delete proxy?
+                </p>
+              ) : (
+                <p className="text-sm ">
+                  Are you sure you want to restore proxy?
+                </p>
+              )}
             </div>
 
             {/* Divider */}
@@ -552,13 +588,21 @@ const ProxyList = ({ status }: Props) => {
               >
                 Cancel
               </button>
-
-              <button
-                onClick={handleConfirmDelete}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition bg-red-500 rounded-md hover:bg-red-600"
-              >
-                Delete
-              </button>
+              {deleteAction == "delete" ? (
+                <button
+                  onClick={handleConfirmDelete}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition bg-red-500 rounded-md hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              ) : (
+                <button
+                  onClick={handleConfirmRestore}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition bg-blue-500 rounded-md hover:bg-blue-600"
+                >
+                  Restore
+                </button>
+              )}
             </div>
           </div>
         </div>

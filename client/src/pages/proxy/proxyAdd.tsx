@@ -1,13 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import { showToast } from "../../utils/CustomToast";
-
+import { domainRegex, domainMsg } from "../../utils/CommonFn";
 import toast from "react-hot-toast";
 import apiClient from "../../services/apiClient";
 import { useForm, type Resolver, type SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate, useParams } from "react-router";
-import { FaExchangeAlt } from "react-icons/fa";
 
 type ProxyFormValues = {
   proxy_name: string;
@@ -21,9 +20,47 @@ type ProxyFormValues = {
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const schema = yup.object().shape({
-  proxy_name: yup.string().trim().required("Proxy Name is required"),
+  project_name: yup
+    .string()
+    .notRequired()
+    .test("valid-domain", domainMsg, (value) => {
+      if (!value) return true;
 
-  proxy_token: yup.string().trim().required("Proxy Token is required"),
+      const v = value.trim();
+      if (!v) return false;
+
+      return domainRegex.test(v);
+    }),
+  domain_name: yup
+    .string()
+    .notRequired()
+    .test("valid-domain", domainMsg, (value) => {
+      if (!value) return true;
+
+      const v = value.trim();
+      if (!v) return false;
+
+      return domainRegex.test(v);
+    }),
+  proxy_name: yup
+    .string()
+    .trim()
+    .required("Proxy Name is required")
+    .test("valid-domain", domainMsg, (value) => {
+      const v = value.trim();
+      if (!v) return false;
+      return domainRegex.test(v);
+    }),
+
+  proxy_token: yup
+    .string()
+    .trim()
+    .required("Proxy Token is required")
+    .test("valid-domain", domainMsg, (value) => {
+      const v = value.trim();
+      if (!v) return false;
+      return domainRegex.test(v);
+    }),
 
   curl: yup
     .string()
@@ -69,9 +106,6 @@ const schema = yup.object().shape({
 
     return true;
   }),
-
-  domain_name: yup.string().notRequired(),
-  project_name: yup.string().notRequired(),
 });
 
 const parseCurlParams = (curl: string) => {
@@ -280,10 +314,18 @@ function ProxyAdd() {
     }
     setLoading(true);
     try {
-      const send_data: ProxyFormValues = {
-        ...data,
-        curl_token: selectedCurlToken,
-      };
+      let send_data;
+      if (mode === "add") {
+        send_data = {
+          ...data,
+          curl_token: selectedCurlToken,
+        };
+      } else {
+        send_data = {
+          project_name: data.project_name,
+          domain_name: data.domain_name,
+        };
+      }
       let res: ApiResponse | undefined;
 
       if (mode === "add") {
@@ -354,15 +396,23 @@ function ProxyAdd() {
                 <input
                   type="text"
                   maxLength={200}
-                  placeholder="Enter Proxy Name"
+                  placeholder="Enter Project Name"
                   {...register("project_name")}
-                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
-                    errors.project_name
-                      ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                      : "border-gray-300 focus:ring-primary/20 focus:border-primary"
-                  }`}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 
+focus:outline-none focus:ring-2 transition text-sm 
+disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200
+${
+  errors.project_name
+    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+    : "border-gray-300 focus:ring-primary/20 focus:border-primary/20"
+}`}
                 />
               </div>
+              {errors.project_name && (
+                <p className="mt-1.5 text-sm text-red-500">
+                  {errors.project_name.message}
+                </p>
+              )}
             </div>
             <div>
               <label className="block mb-2 text-sm">
@@ -375,13 +425,21 @@ function ProxyAdd() {
                   maxLength={200}
                   placeholder="Enter Domain Name"
                   {...register("domain_name")}
-                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
-                    errors.domain_name
-                      ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                      : "border-gray-300 focus:ring-primary/20 focus:border-primary"
-                  }`}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 
+focus:outline-none focus:ring-2 transition text-sm 
+disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200
+${
+  errors.domain_name
+    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+    : "border-gray-300 focus:ring-primary/20 focus:border-primary/20"
+}`}
                 />
               </div>
+              {errors.domain_name && (
+                <p className="mt-1.5 text-sm text-red-500">
+                  {errors.domain_name.message}
+                </p>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -397,15 +455,14 @@ function ProxyAdd() {
                   type="text"
                   placeholder="Enter Proxy Name"
                   {...register("proxy_name")}
-                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
-disabled:text-gray-400 
-disabled:cursor-not-allowed 
-disabled:border-gray-200
- ${
-   errors.proxy_name
-     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-     : "border-gray-300 focus:ring-primary/20 focus:border-primary"
- }`}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 
+focus:outline-none focus:ring-2 transition text-sm 
+disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200
+${
+  errors.proxy_name
+    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+    : "border-gray-300 focus:ring-primary/20 focus:border-primary/20"
+}`}
                 />
               </div>
               {errors.proxy_name && (
@@ -426,15 +483,14 @@ disabled:border-gray-200
                   type="text"
                   placeholder="Enter Proxy Token"
                   {...register("proxy_token")}
-                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
-disabled:text-gray-400 
-disabled:cursor-not-allowed 
-disabled:border-gray-200
- ${
-   errors.proxy_token
-     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-     : "border-gray-300 focus:ring-primary/20 focus:border-primary"
- }`}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 
+focus:outline-none focus:ring-2 transition text-sm 
+disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200
+${
+  errors.proxy_token
+    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+    : "border-gray-300 focus:ring-primary/20 focus:border-primary/20"
+}`}
                 />
               </div>
               {errors.proxy_token && (
@@ -455,14 +511,13 @@ disabled:border-gray-200
                 type="text"
                 placeholder="Paste full curl command (e.g., curl https://api.example.com ...)"
                 {...register("curl")}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
-disabled:text-gray-400 
-disabled:cursor-not-allowed 
-disabled:border-gray-200
+                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 
+focus:outline-none focus:ring-2 transition text-sm 
+disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200
 ${
   errors.curl
     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+    : "border-gray-300 focus:ring-primary/20 focus:border-primary/20 "
 }`}
               />
               {errors.curl && (

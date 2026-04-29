@@ -63,55 +63,58 @@ const COLORS = {
 };
 
 interface DashboardData {
-  totalAliasKeys: number;
-  activeAliasKeys: number;
-  inactiveAliasKeys: number;
-  approvedAliasKeys: number;
-  pendingAliasKeys: number;
-  rejectedAliasKeys: number;
-  totalAliasRequestsCurrentMonth: number;
-  lastRequestMinutesAgo: number | null;
-  lastRequestAt: string | null;
-  totalRequests: number;
-  totalRequestsAllTime: number;
-  aliasStatusCounts?: {
-    approvalStatus: {
-      Approved: number;
-      Pending: number;
-      Rejected: number;
+  success: boolean;
+  data: {
+    totalAliasKeys: number;
+    activeAliasKeys: number;
+    inactiveAliasKeys: number;
+    approvedAliasKeys: number;
+    pendingAliasKeys: number;
+    rejectedAliasKeys: number;
+    totalAliasRequestsCurrentMonth: number;
+    lastRequestMinutesAgo: number | null;
+    lastRequestAt: string | null;
+    totalRequests: number;
+    totalRequestsAllTime: number;
+    aliasStatusCounts?: {
+      approvalStatus: {
+        Approved: number;
+        Pending: number;
+        Rejected: number;
+      };
+      keyStatus: {
+        Active: number;
+        Inactive: number;
+      };
+      breakdown?: {
+        Active: { Approved: number; Pending: number; Rejected: number };
+        Inactive: { Approved: number; Pending: number; Rejected: number };
+      };
     };
-    keyStatus: {
-      Active: number;
-      Inactive: number;
+    responseOverviewTotal: number;
+    apiStatusCounts: {
+      SUCCESS: number;
+      LIMIT_EXCEED: number;
+      INTERNAL_SERVER: number;
+      KEY_NOT_ACTIVE: number;
+      EXTERNAL_ERROR: number;
+      INVALID_PROXY: number;
+      PARAM_MISSING: number;
     };
-    breakdown?: {
-      Active: { Approved: number; Pending: number; Rejected: number };
-      Inactive: { Approved: number; Pending: number; Rejected: number };
+    quota: {
+      totalQuota: number;
+      usedQuota: number;
+      remainingQuota: number;
+      usedPercent: number;
     };
+    // apiQuota: {
+    //   totalQuota: number;
+    //   totalUsedQuota: number;
+    //   totalFailedQuota: number;
+    //   remainingQuota: number;
+    // };
+    requestsLast7Days: Array<{ date: string; count: number }>;
   };
-  responseOverviewTotal: number;
-  apiStatusCounts: {
-    SUCCESS: number;
-    LIMIT_EXCEED: number;
-    INTERNAL_SERVER: number;
-    KEY_NOT_ACTIVE: number;
-    EXTERNAL_ERROR: number;
-    INVALID_PROXY: number;
-    PARAM_MISSING: number;
-  };
-  quota: {
-    totalQuota: number;
-    usedQuota: number;
-    remainingQuota: number;
-    usedPercent: number;
-  };
-  apiQuota: {
-    totalQuota: number;
-    totalUsedQuota: number;
-    totalFailedQuota: number;
-    remainingQuota: number;
-  };
-  requestsLast7Days: Array<{ date: string; count: number }>;
 }
 
 function UserDashboard() {
@@ -134,8 +137,8 @@ function UserDashboard() {
       const response = await apiClient.get<DashboardData>(
         `/api/dashboard?timeFilter=${timeFilter}`,
       );
-      if (response.data) {
-        setDashboard(response.data);
+      if (response?.data?.data) {
+        setDashboard(response.data.data);
         setLastUpdated(new Date());
       }
     } catch (caughtError) {
@@ -475,7 +478,7 @@ function UserDashboard() {
             </div>
 
             {/* API History - Quota Overview */}
-            <h6 className="pb-2 text-sm font-semibold text-gray-700">
+            {/* <h6 className="pb-2 text-sm font-semibold text-gray-700">
               API History - Quota Overview
             </h6>
             <div className="grid gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -510,7 +513,7 @@ function UserDashboard() {
                 icon={XCircle}
                 color="info"
               />
-            </div>
+            </div> */}
 
             {/* Quick Status Cards */}
 
@@ -760,7 +763,7 @@ function UserDashboard() {
                         icon: CheckCircle,
                       },
                       {
-                        label: "Inctive Keys",
+                        label: "Inactive Keys",
                         value: dashboard?.apiStatusCounts?.KEY_NOT_ACTIVE,
                         color: COLORS.neutral,
                         icon: Key,
@@ -784,7 +787,7 @@ function UserDashboard() {
                         icon: AlertTriangle,
                       },
                       {
-                        label: "API call error",
+                        label: "API Call Error",
                         value:
                           dashboard?.apiStatusCounts?.EXTERNAL_ERROR +
                           dashboard?.apiStatusCounts?.INTERNAL_SERVER,

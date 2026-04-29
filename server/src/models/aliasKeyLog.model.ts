@@ -8,9 +8,9 @@ const AliasKeyLogSchema = new Schema<IAliasKeyLogDocument>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "alias_keys", // ✅ MUST MATCH EXACTLY
     },
-     action: {
+    action: {
       type: String,
-      enum: ["CREATE", "UPDATE", "DELETE"],
+      enum: ["CREATE", "UPDATE", "DELETE", "RESTORE"],
       required: true,
     },
     desc: {

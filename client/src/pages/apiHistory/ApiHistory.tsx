@@ -1,3 +1,4 @@
+import StatusBadge from "../../utils/StatusBadge";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { capitalize, getStatusConfig } from "../../utils/CommonFn";
 import React, { useEffect, useState, useRef, useCallback } from "react";
@@ -157,11 +158,9 @@ const ApiHistory = () => {
         const statusConfig = getStatusConfig(status);
 
         return (
-          <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}
-          >
-            {capitalize(row.response_status) || "-"}
-          </span>
+          <>
+            <StatusBadge status={row.response_status}></StatusBadge>
+          </>
         );
       },
     },
@@ -279,7 +278,12 @@ const ApiHistory = () => {
               setDebouncedSearch("");
               setPage(1);
             }}
-            className="px-4 py-3 text-xs font-medium bg-white border rounded-lg text-primary border-primary hover:bg-primary hover:text-white"
+            disabled={!isFilterActive}
+            className={`px-4 py-2 text-sm font-medium rounded-lg border ${
+              isFilterActive
+                ? "text-primary border-primary bg-white hover:bg-primary hover:text-white"
+                : "text-gray-400 bg-gray-200 cursor-not-allowed"
+            }`}
           >
             Clear
           </button>

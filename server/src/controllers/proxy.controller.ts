@@ -4,6 +4,7 @@ import ProxyModel from "../models/proxy.model";
 import { ProxyLogModel } from "../models/proxyLog.model";
 import { toJsonString } from "curlconverter";
 import mongoose from "mongoose";
+import { AliasKeyLogModel } from "../models/aliasKeyLog.model";
 
 function extractPostData(curl: string) {
   const match =
@@ -88,7 +89,7 @@ class ProxyController {
       await ProxyLogModel.create({
         proxy_id: proxy._id,
         action: "CREATE",
-        desc: `Proxy created`,
+        desc: `Proxy Created`,
         user_id: req.user?.id,
         meta: {
           proxy_name: proxy.proxy_name,
@@ -195,71 +196,71 @@ class ProxyController {
   };
 
   // ✅ UPDATE
-updateData = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
+  updateData = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
 
-    const oldProxy = await ProxyModel.findOne({
-      _id: id,
-      is_deleted: false,
-    });
-
-    if (!oldProxy) {
-      return res.status(404).json({
-        success: false,
-        message: "Proxy not found",
+      const oldProxy = await ProxyModel.findOne({
+        _id: id,
+        is_deleted: false,
       });
-    }
 
-    const updated = await ProxyModel.findOneAndUpdate(
-      { _id: id, is_deleted: false },
-      {
-        domain_name: req.body.domain_name,
-        project_name: req.body.project_name,
-      },
-      { new: true }
-    );
+      if (!oldProxy) {
+        return res.status(404).json({
+          success: false,
+          message: "Proxy not found",
+        });
+      }
 
-    // ✅ Detect only changed fields
-    const meta: any = {};
-    let hasChanges = false;
+      const updated = await ProxyModel.findOneAndUpdate(
+        { _id: id, is_deleted: false },
+        {
+          domain_name: req.body.domain_name,
+          project_name: req.body.project_name,
+        },
+        { new: true },
+      );
 
-    if (req.body.domain_name !== oldProxy.domain_name) {
-      meta.domain_name = {
-        old: oldProxy.domain_name,
-        new: req.body.domain_name,
-      };
-      hasChanges = true;
-    }
+      // ✅ Detect only changed fields
+      const meta: any = {};
+      let hasChanges = false;
 
-    if (req.body.project_name !== oldProxy.project_name) {
-      meta.project_name = {
-        old: oldProxy.project_name,
-        new: req.body.project_name,
-      };
-      hasChanges = true;
-    }
+      if (req.body.domain_name !== oldProxy.domain_name) {
+        meta.domain_name = {
+          old: oldProxy.domain_name,
+          new: req.body.domain_name,
+        };
+        hasChanges = true;
+      }
 
-    // ✅ Only log if something actually changed
-    if (hasChanges) {
-      await ProxyLogModel.create({
-        proxy_id: updated._id,
-        action: "UPDATE",
-        desc: `Proxy updated`,
-        user_id: req.user?.id,
-        meta,
+      if (req.body.project_name !== oldProxy.project_name) {
+        meta.project_name = {
+          old: oldProxy.project_name,
+          new: req.body.project_name,
+        };
+        hasChanges = true;
+      }
+
+      // ✅ Only log if something actually changed
+      if (hasChanges) {
+        await ProxyLogModel.create({
+          proxy_id: updated._id,
+          action: "UPDATE",
+          desc: `Proxy Updated`,
+          user_id: req.user?.id,
+          meta,
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Proxy updated successfully",
+        data: updated,
       });
+    } catch (error) {
+      next(error);
     }
-
-    res.status(200).json({
-      success: true,
-      message: "Proxy updated successfully",
-      data: updated,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  };
 
   // ✅ DELETE
   deleteData = async (req: Request, res: Response, next: NextFunction) => {
@@ -282,23 +283,93 @@ updateData = async (req: Request, res: Response, next: NextFunction) => {
         });
       }
 
-      // ✅ LOG: Delete action
+      // ✅ Log for proxy
       await ProxyLogModel.create({
-        proxy_id: deleted._id,
+        proxy_id: id,
         action: "DELETE",
-        desc: `Proxy deleted`,
+        desc: `Proxy Deleted`,
         user_id: req.user?.id,
-        // meta: {
-        //   proxy_name: deleted.proxy_name,
-        //   domain_name: deleted.domain_name,
-        //   project_name: deleted.project_name,
-        //   deleted_at: deleted.deleted_at,
-        // },
       });
+
+      // ✅ 1. Find alias keys
+      const aliasKeys = await AliasKeyModel.find({
+        proxy_id: deleted._id,
+        is_deleted: false,
+      }).select("_id alias_key");
+
+      // ✅ 2. Prepare logs
+      const logs = aliasKeys.map((alias) => ({
+        alias_id: alias._id,
+        action: "DELETE",
+        desc: `Proxy deleted for key`,
+        user_id: req.user?.id,
+        meta: {
+          proxy_id: deleted._id,
+          proxy_name: deleted.proxy_name,
+        },
+      }));
+
+      // ✅ 3. Insert logs
+      if (logs.length > 0) {
+        await AliasKeyLogModel.insertMany(logs);
+      }
 
       res.status(200).json({
         success: true,
         message: "Proxy deleted successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+  restoreData = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+
+      const restored = await ProxyModel.findByIdAndUpdate(
+        id,
+        {
+          is_deleted: false,
+          deleted_at: null,
+        },
+        { new: true },
+      );
+
+      if (!restored) {
+        return res.status(404).json({
+          success: false,
+          message: "Proxy not found",
+        });
+      }
+      await ProxyLogModel.create({
+        proxy_id: id,
+        action: "RESTORE",
+        desc: `Proxy Restored`,
+        user_id: req.user?.id,
+      });
+      const aliasKeys = await AliasKeyModel.find({
+        proxy_id: restored._id,
+        is_deleted: false,
+      }).select("_id alias_key");
+
+      const logs = aliasKeys.map((alias) => ({
+        alias_id: alias._id,
+        action: "RESTORE",
+        desc: `Proxy restored for key`,
+        user_id: req.user?.id,
+        meta: {
+          proxy_id: restored._id,
+          proxy_name: restored.proxy_name,
+        },
+      }));
+
+      if (logs.length > 0) {
+        await AliasKeyLogModel.insertMany(logs);
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Proxy restored successfully",
       });
     } catch (error) {
       next(error);

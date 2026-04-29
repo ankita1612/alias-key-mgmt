@@ -12,7 +12,7 @@ const ProxyLogSchema = new Schema<IProxyLogDocument>(
     },
     action: {
       type: String,
-      enum: ["CREATE", "UPDATE", "DELETE"],
+      enum: ["CREATE", "UPDATE", "DELETE", "RESTORE"],
       required: true,
     },
     desc: {

@@ -33,9 +33,7 @@ const Login = () => {
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: yupResolver(schema),
-    mode: "onSubmit",
   });
-
   const onSubmit = async (data: loginInterface) => {
     try {
       const userData = {
@@ -89,14 +87,13 @@ const Login = () => {
               type="email"
               placeholder="Enter email"
               autoComplete="email"
-              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
-disabled:text-gray-400 
-disabled:cursor-not-allowed 
-disabled:border-gray-200
+              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 
+focus:outline-none focus:ring-2 transition text-sm 
+disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200
 ${
   errors.email
     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+    : "border-gray-300 focus:ring-primary/20 focus:border-primary/20"
 }`}
               {...register("email")}
             />
@@ -120,14 +117,13 @@ ${
               type={showPassword ? "text" : "password"} // 👈 toggle
               placeholder="Enter password"
               autoComplete="current-password"
-              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
-disabled:text-gray-400 
-disabled:cursor-not-allowed 
-disabled:border-gray-200
+              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 
+focus:outline-none focus:ring-2 transition text-sm 
+disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200
 ${
   errors.password
     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
+    : "border-gray-300 focus:ring-primary/20 focus:border-primary/20"
 }`}
               {...register("password")}
             />

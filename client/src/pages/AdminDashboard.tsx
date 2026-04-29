@@ -33,45 +33,48 @@ import {
 import { Navigate } from "react-router-dom";
 
 interface AdminDashboardData {
-  totalUsers: number;
-  userGrowthPercent: number;
-  approvedAliasKeys: number;
-  pendingApprovals: number;
-  totalRequests: number;
-  responseOverviewTotal: number;
-  totalAliasKeys: number;
-  requestSuccessRate: number;
-  aliasStatusCounts: {
-    approvalStatus: {
-      Approved: number;
-      Pending: number;
-      Rejected: number;
+  success: boolean;
+  data: {
+    totalUsers: number;
+    userGrowthPercent: number;
+    approvedAliasKeys: number;
+    pendingApprovals: number;
+    totalRequests: number;
+    responseOverviewTotal: number;
+    totalAliasKeys: number;
+    requestSuccessRate: number;
+    aliasStatusCounts: {
+      approvalStatus: {
+        Approved: number;
+        Pending: number;
+        Rejected: number;
+      };
+      keyStatus: {
+        Active: number;
+        Inactive: number;
+      };
+      breakdown?: {
+        Active: { Approved: number; Pending: number; Rejected: number };
+        Inactive: { Approved: number; Pending: number; Rejected: number };
+      };
     };
-    keyStatus: {
-      Active: number;
-      Inactive: number;
+    apiStatusCounts: {
+      SUCCESS: number;
+      LIMIT_EXCEED: number;
+      INTERNAL_SERVER: number;
+      KEY_NOT_ACTIVE: number;
+      EXTERNAL_ERROR: number;
+      INVALID_PROXY: number;
+      PARAM_MISSING: number;
     };
-    breakdown?: {
-      Active: { Approved: number; Pending: number; Rejected: number };
-      Inactive: { Approved: number; Pending: number; Rejected: number };
-    };
-  };
-  apiStatusCounts: {
-    SUCCESS: number;
-    LIMIT_EXCEED: number;
-    INTERNAL_SERVER: number;
-    KEY_NOT_ACTIVE: number;
-    EXTERNAL_ERROR: number;
-    INVALID_PROXY: number;
-    PARAM_MISSING: number;
-  };
-  requestsLast7Days: Array<{ date: string; count: number }>;
-  totalProxy: number;
-  apiQuota: {
-    totalQuota: number;
-    totalUsedQuota: number;
-    totalFailedQuota: number;
-    remainingQuota: number;
+    requestsLast7Days: Array<{ date: string; count: number }>;
+    totalProxy: number;
+    // apiQuota: {
+    //   totalQuota: number;
+    //   totalUsedQuota: number;
+    //   totalFailedQuota: number;
+    //   remainingQuota: number;
+    // };
   };
 }
 
@@ -117,7 +120,7 @@ function AdminDashboard() {
         `/api/dashboard?timeFilter=${timeFilter}`,
       );
       if (response.data) {
-        setDashboard(response.data);
+        setDashboard(response.data.data);
         setLastUpdated(new Date());
       }
     } catch (caughtError) {
@@ -432,7 +435,7 @@ function AdminDashboard() {
             </div>
 
             {/* API History - Quota Monitoring */}
-            <h6 className="pb-2 text-sm font-semibold text-gray-700">
+            {/* <h6 className="pb-2 text-sm font-semibold text-gray-700">
               API History - Quota Overview
             </h6>
             <div className="grid gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -471,7 +474,7 @@ function AdminDashboard() {
                 icon={XCircle}
                 color="info"
               />
-            </div>
+            </div> */}
 
             {/* Key Status Summary */}
             <div className="grid gap-4 mb-6 lg:grid-cols-2">
@@ -668,7 +671,7 @@ function AdminDashboard() {
                           icon: CheckCircle,
                         },
                         {
-                          label: "Inctive Keys",
+                          label: "Inactive Keys",
                           value: dashboard?.apiStatusCounts?.KEY_NOT_ACTIVE,
                           color: COLORS.neutral,
                           icon: Key,
@@ -692,7 +695,7 @@ function AdminDashboard() {
                           icon: AlertTriangle,
                         },
                         {
-                          label: "API call error",
+                          label: "API Call Error",
                           value:
                             dashboard?.apiStatusCounts?.EXTERNAL_ERROR +
                             dashboard?.apiStatusCounts?.INTERNAL_SERVER,

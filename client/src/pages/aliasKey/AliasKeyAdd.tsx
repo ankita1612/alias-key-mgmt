@@ -2,6 +2,8 @@ import DescriptionEditor from "./DescriptionEditor";
 import { showToast } from "../../utils/CustomToast";
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Key } from "lucide-react";
+import { domainRegex, domainMsg } from "../../utils/CommonFn";
+
 import Select from "react-select";
 import toast from "react-hot-toast";
 import apiClient from "../../services/apiClient";
@@ -14,12 +16,25 @@ import type { IAliasKey } from "../../interface/aliasKey.interface";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const schema = yup.object().shape({
-  project_name: yup.string().trim().required("Project Name is required"),
+  project_name: yup
+    .string()
+    .trim()
+    .required("Project Name is required")
+    .test("valid-domain", domainMsg, (value) => {
+      const v = value.trim();
+      if (!v) return false;
+      return domainRegex.test(v);
+    }),
   domain_name: yup
     .string()
     .trim()
     .required("Domain Name is required")
-    .matches(/[a-zA-Z]/, "Must contain at least 1 letter or number")
+
+    .test("valid-domain", domainMsg, (value) => {
+      const v = value.trim();
+      if (!v) return false;
+      return domainRegex.test(v);
+    })
     .max(200, "Maximum 200 characters allowed"),
   proxy_id: yup.string().required("Proxy Name is required"),
 
@@ -87,6 +102,7 @@ function AliasKeyAdd() {
     formState: { errors, isDirty },
   } = useForm<IAliasKey>({
     resolver: yupResolver(schema),
+    mode: "onChange",
     defaultValues: {
       project_name: "",
       domain_name: "",
@@ -264,15 +280,14 @@ function AliasKeyAdd() {
                   maxLength={200}
                   placeholder="e.g., Ecommerce Scraper / Lead Generation"
                   {...register("project_name")}
-                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
-disabled:text-gray-400 
-disabled:cursor-not-allowed 
-disabled:border-gray-200
- ${
-   errors.project_name
-     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-     : "border-gray-300 focus:ring-primary/20 focus:border-primary"
- }`}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 
+focus:outline-none focus:ring-2 transition text-sm 
+disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200
+${
+  errors.project_name
+    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+    : "border-gray-300 focus:ring-primary/20 focus:border-primary/20 "
+}`}
                 />
                 {errors.project_name && (
                   <p className="mt-1.5 text-sm text-red-500">
@@ -293,11 +308,14 @@ disabled:border-gray-200
                   maxLength={200}
                   placeholder="e.g., example.com"
                   {...register("domain_name")}
-                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
-                    errors.domain_name
-                      ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                      : "border-gray-300 focus:ring-primary/20 focus:border-primary"
-                  }`}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 
+focus:outline-none focus:ring-2 transition text-sm 
+disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200
+${
+  errors.domain_name
+    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+    : "border-gray-300 focus:ring-primary/20 focus:border-primary/20 "
+}`}
                 />
               </div>
               {errors.domain_name && (
@@ -320,7 +338,10 @@ disabled:border-gray-200
                 placeholder="Select Proxy"
                 isSearchable
                 onChange={(selected: any) => {
-                  setValue("proxy_id", selected?.value);
+                  setValue("proxy_id", selected?.value, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  });
                 }}
                 value={proxyOptions.find(
                   (opt) => opt.value === watch("proxy_id"),
@@ -329,18 +350,36 @@ disabled:border-gray-200
                 styles={{
                   control: (base, state) => ({
                     ...base,
-                    minHeight: "44px", // 👈 matches input height (~py-3)
+                    minHeight: "44px",
                     height: "44px",
                     borderRadius: "10px",
-                    borderColor: state.isFocused ? "#d1d5db" : base.borderColor,
-                    boxShadow: state.isFocused ? "0 0 0 1px #d1d5db" : "none",
+
+                    // ✅ Border
+                    borderColor: errors.proxy_id
+                      ? "#ef4444"
+                      : state.isFocused
+                        ? "rgba(63,77,103,0.2)" // focus:border-3F4D67/20
+                        : "#d1d5db", // border-gray-300
+
+                    // ✅ Ring (focus effect)
+                    boxShadow: errors.proxy_id
+                      ? "0 0 0 1px rgba(239,68,68,0.3)"
+                      : state.isFocused
+                        ? "0 0 0 2px rgba(63,77,103,0.2)" // focus:ring-3F4D67/20
+                        : "none",
+
                     "&:hover": {
-                      borderColor: "#d1d5db",
+                      borderColor: errors.proxy_id
+                        ? "#ef4444"
+                        : state.isFocused
+                          ? "rgba(63,77,103,0.2)"
+                          : "#9ca3af",
                     },
                   }),
+
                   placeholder: (base) => ({
                     ...base,
-                    color: "#94a3b8", // slate-400 (same as your input)
+                    color: "#94a3b8",
                     fontSize: "14px",
                   }),
                 }}
@@ -364,17 +403,19 @@ disabled:border-gray-200
                   {...register("total_quota", { valueAsNumber: true })}
                   onChange={(e) => {
                     const val = e.target.value.replace(/[^0-9]/g, ""); // keep only numbers
-                    setValue("total_quota", val); // ✅ correct usage
+                    setValue("total_quota", val, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    }); // ✅ correct usage
                   }}
-                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
-disabled:text-gray-400 
-disabled:cursor-not-allowed 
-disabled:border-gray-200
- ${
-   errors.total_quota
-     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-     : "border-gray-300 focus:ring-primary/20 focus:border-primary"
- }`}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 
+focus:outline-none focus:ring-2 transition text-sm 
+disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200
+${
+  errors.total_quota
+    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+    : "border-gray-300 focus:ring-primary/20 focus:border-primary/20 "
+}`}
                 />
               </div>
               {errors.total_quota && (
@@ -397,18 +438,20 @@ disabled:border-gray-200
                     valueAsNumber: true,
                   })}
                   onChange={(e) => {
-                    const val = e.target.value.replace(/[^0-9]/g, ""); // keep only numbers
-                    setValue("total_estimated_cost", val); // ✅ correct usage
+                    const val = e.target.value.replace(/[^0-9]/g, "");
+                    setValue("total_estimated_cost", val, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    });
                   }}
-                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 disabled:bg-gray-100 
-disabled:text-gray-400 
-disabled:cursor-not-allowed 
-disabled:border-gray-200
- ${
-   errors.total_estimated_cost
-     ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-     : "border-gray-300 focus:ring-primary/20 focus:border-primary"
- }`}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 
+focus:outline-none focus:ring-2 transition text-sm 
+disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200
+${
+  errors.total_estimated_cost
+    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+    : "border-gray-300 focus:ring-primary/20 focus:border-primary/20 "
+}`}
                 />
                 {errors.total_estimated_cost && (
                   <p className="mt-1.5 text-sm text-red-500">
@@ -428,11 +471,14 @@ disabled:border-gray-200
                 rows={4}
                 placeholder="Define cost per request or formula (e.g., ₹0.01 per request)"
                 {...register("cost_calculation")}
-                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-panel focus:border-transparent transition text-sm border-slate-300 ${
-                  errors.cost_calculation
-                    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
-                    : "border-gray-300 focus:ring-primary/20 focus:border-primary"
-                }`}
+                className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-400 
+focus:outline-none focus:ring-2 transition text-sm 
+disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200
+${
+  errors.cost_calculation
+    ? "border-red-500 focus:ring-red-500/20 focus:border-red-500"
+    : "border-gray-300 focus:ring-primary/20 focus:border-primary/20 "
+}`}
               />
             </div>
             {errors.cost_calculation && (

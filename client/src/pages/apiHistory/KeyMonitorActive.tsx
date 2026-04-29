@@ -368,7 +368,7 @@ const KeyMonitorActive = () => {
     setLoading(true);
     try {
       const { data } = await apiClient.get(
-        BACKEND_URL + "/api/alias-key/key-monotor",
+        BACKEND_URL + "/api/alias-key/key-monitor",
         {
           signal: controller.signal,
           params: {
@@ -500,23 +500,9 @@ const KeyMonitorActive = () => {
       grow: 2,
       cell: (row: IAliasKey) => (
         <div className="relative flex items-center gap-2 group">
-          <span
-            className={`font-semibold ${row.proxy?.is_deleted ? "text-gray-400 line-through" : "text-gray-900"} break-all`}
-          >
+          <span className={`font-semibold text-gray-900 break-all`}>
             {row.alias_key || "-"}
           </span>
-          {row.proxy?.is_deleted && (
-            <>
-              {/* Cross Icon */}
-              <FiX className="w-4 h-4 text-red-500" />
-
-              {/* Tooltip on Hover */}
-              <div className="absolute z-10 invisible px-2 py-1 ml-2 text-xs text-white transition-all duration-200 bg-gray-900 rounded-md opacity-0 pointer-events-none group-hover:visible group-hover:opacity-100 whitespace-nowrap left-full">
-                Proxy Deleted
-                <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-1.5 h-1.5 bg-gray-900 rotate-45"></div>
-              </div>
-            </>
-          )}
         </div>
       ),
     },
@@ -576,8 +562,8 @@ const KeyMonitorActive = () => {
       selector: (row: any) => row.remaining_quota,
       sortable: true,
       sortField: "remaining_quota",
-      width: "150px",
-      minWidth: "100px",
+
+      minWidth: "170px",
       cell: (row: IAliasKey) => <span>{row.remaining_quota || "0"}</span>,
     },
     {
@@ -681,6 +667,14 @@ const KeyMonitorActive = () => {
     endDate ||
     appliedStartDate ||
     appliedEndDate;
+  const conditionalRowStyles = [
+    {
+      when: (row) => row?.proxy?.is_deleted, // or row.is_deleted (based on your data)
+      style: {
+        backgroundColor: "#fef2f2", // Tailwind red-50
+      },
+    },
+  ];
   return (
     <div className="overflow-hidden bg-white border border-gray-200 rounded-md shadow-sm">
       {/* HEADER */}
@@ -859,6 +853,7 @@ const KeyMonitorActive = () => {
                 }}
                 responsive
                 onRowClicked={(row) => navigate(`/api-history/${row._id}`)}
+                conditionalRowStyles={conditionalRowStyles}
               />
             </div>
           </div>

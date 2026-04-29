@@ -5,7 +5,7 @@ export default interface IUser {
   password: string;
   status: Status;
   role: string;
-  deletedAt?: Date | null;
+  deleted_at?: Date | null;
 }
 export enum Status {
   ACTIVE = "Active",

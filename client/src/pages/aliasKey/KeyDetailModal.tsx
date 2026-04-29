@@ -44,8 +44,11 @@ const KeyDetailModal: React.FC<Props> = ({
         className="relative w-full max-w-4xl overflow-hidden bg-white shadow-2xl rounded-2xl"
       >
         {/* Close */}
-        <button onClick={onClose} className="absolute right-4 top-4">
-          <MdClose />
+        <button
+          onClick={onClose}
+          className="absolute z-10 flex items-center justify-center w-10 h-10 transition-all duration-200 bg-white top-4 right-4 hover:text-gray-600 group"
+        >
+          <MdClose className="w-5 h-5 transition-transform group-hover:scale-110" />
         </button>
 
         {/* Header */}
@@ -116,20 +119,20 @@ const KeyDetailModal: React.FC<Props> = ({
               {/* Status */}
               <div>
                 <div className={label_style}>Status</div>
-                <span className={`inline-block px-3 py-1 text-sm`}>
-                  <StatusBadge
-                    status={
-                      selectedRow.proxy?.is_deleted === true
-                        ? "deleted"
-                        : selectedRow.key_status
-                    }
-                  />
+                <span className={input_style}>
+                  <StatusBadge status={selectedRow.key_status} />
                 </span>
               </div>
               <div>
                 <div className={label_style}>Approval Status</div>
-                <span className={`inline-block px-3 py-1 text-sm`}>
+                <span className={input_style}>
                   <StatusBadge status={selectedRow.approval_status} />
+                </span>
+              </div>
+              <div>
+                <div className={label_style}>Total Hits</div>
+                <span className={input_style}>
+                  {selectedRow.total_history_records}
                 </span>
               </div>
 
@@ -286,7 +289,7 @@ const KeyDetailModal: React.FC<Props> = ({
                 <div className="flex items-center gap-2">
                   <FiAlertCircle className="w-4 h-4 text-red-500" />
                   <span className="p-0 text-sm text-red-700 rounded-lg bg-red-50">
-                    This proxy has been deleted and is no longer available
+                    This proxy has been deleted.
                   </span>
                 </div>
               </div>
